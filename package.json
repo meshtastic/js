@@ -1,0 +1,23 @@
+{
+  "name": "meshtasticjs",
+  "version": "0.1.0",
+  "description": "browser library for interfacing with meshtastic devices",
+  "module": "src/index.js",
+  "main": "dist/meshtastic.js",
+  "dependencies": {
+    "protobufjs": "^6.10.1"
+  },
+  "devDependencies": {
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12"
+  },
+  "scripts": {
+    "build": "npx webpack --config webpack.config.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "meshtastic bluetooth library meshtasticjs"
+  ],
+  "author": "Tobias Huttinger",
+  "license": "ISC"
+}
