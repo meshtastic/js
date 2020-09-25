@@ -100,7 +100,7 @@ export class nodeDB extends EventTarget {
             return undefined;
         }
         
-        return this.nodes.get(nodeNumber)[1];
+        return this.nodes.get(nodeNumber);
 
     }
 
