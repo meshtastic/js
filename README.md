@@ -7,7 +7,7 @@ Meshtastic.js is a javascript library that provides an interface to Meshtastic d
 Supported features:
 - Connect to multiple meshtastic devices via bluetooth
 - Start configuration process on connect
-- Provide device info and node database
+- Get device info and node database
 - Receive messages from device
 - Send messages (text, position, data, packet)
 - Set device preferences
