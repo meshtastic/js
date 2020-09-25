@@ -83,6 +83,8 @@ For more examples see /examples. Documentation follows.
 
 ## Compatibility
 
+The library is tested with meshtastic devices running firmware versions 0.9.5 and 1.0.0.
+
 Since meshtastic.js relies on the bluetooth web api (https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API) it currently does only work in the later versions of Google Chrome, Opera and Microsoft Edge. On windows systems, the meshtastic device has to be paired via windows settings beforehand once.
 
 ### Version Details
