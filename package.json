@@ -19,5 +19,5 @@
     "meshtastic bluetooth library meshtasticjs"
   ],
   "author": "Tobias Huttinger",
-  "license": "ISC"
+  "license": "Apache-2.0"
 }
