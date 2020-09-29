@@ -64,7 +64,7 @@ Now we can connect to the device asynchronously. It returns a promise, so it mus
 
 **Important: the connect action must be called from a user interaction (e.g. button press), otherwise the browsers won't allow the connect.**
 ```
-connectionOne.connect(false, false, false)
+connectionOne.connect()
         .then(result => { 
             // This code gets executed when the connection has been established
             console.log("Successfully connected!"); 
