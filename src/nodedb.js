@@ -104,13 +104,14 @@ export class nodeDB extends EventTarget {
 
     }
 
-    // ToDo: Add sort by field option, return map
+
+    // ToDo: Add sort by field option
     getNodeList() {
 
-        return Array.from(this.nodes);
+        return this.nodes;
     }
 
-    nodeNumToId(nodeNumber) {
+    nodeNumToUserId(nodeNumber) {
 
         let node = this.nodes.get(nodeNumber);
 
@@ -121,6 +122,24 @@ export class nodeDB extends EventTarget {
         return node.user.id;
 
     }
+
+
+    userIdToNodeNum(userId) {
+
+        var nodeNumber = undefined;
+
+        this.nodes.forEach((node, num, map) => {
+            if (node.hasOwnProperty('user') === true) {
+                if (node.user.id === userId) {
+                    nodeNumber = node.num;
+                }
+            }
+        });
+
+        return nodeNumber;
+        
+    }
+
 
     _dispatchInterfaceEvent(eventType, payload) {
         this.dispatchEvent(
