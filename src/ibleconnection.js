@@ -104,16 +104,25 @@ export class IBLEConnection extends IMeshDevice {
 
     async _readFromRadio() {
 
-        try {
-            let readBuffer = await this._readFromCharacteristic(this.fromRadioCharacteristic);
+        var readBuffer = new ArrayBuffer(1);
+        
+        // read as long as the previous read buffer is bigger 0
+        while (readBuffer.byteLength > 0) {
 
-            let fromRadioUInt8Array = await this._handleFromRadio(new Uint8Array(readBuffer, 0));
-            return fromRadioUInt8Array;
-            
-        } catch (e) {
-            throw new Error("Error in meshtasticjs.IBLEConnection.readFromRadio: " + e.message);
-        }
+            try {
+                readBuffer = await this._readFromCharacteristic(this.fromRadioCharacteristic);
                 
+                if (readBuffer.byteLength > 0) {
+                    await this._handleFromRadio(new Uint8Array(readBuffer, 0));
+                }
+                
+            } catch (e) {
+                throw new Error("Error in meshtasticjs.IBLEConnection.readFromRadio: " + e.message);
+            }
+
+
+        }
+
     }
 
 

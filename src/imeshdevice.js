@@ -15,6 +15,12 @@ export class IMeshDevice extends EventTarget {
     // disconnected     # Gets called when link to device is disconnected
     // configDone       # Gets called when device has been configured (myInfo, radio and node data received). device interface is now ready to be used
 
+    # Child classes must implement:
+    connect()
+    disconnect()
+    _readFromRadio()
+    _writeToRadio()
+
     # State variables
     bool isConnected;
     bool isReconnecting;
@@ -248,10 +254,10 @@ export class IMeshDevice extends EventTarget {
     }
 
 
-    async startConfig() {
+    async configure() {
 
         if (this.isConnected === false) {
-            throw new Error('Error in meshtasticjs.MeshInterface.startConfig: Interface is not connected');
+            throw new Error('Error in meshtasticjs.MeshInterface.configure: Interface is not connected');
         }
 
         this.isConfigStarted = true;
@@ -271,6 +277,10 @@ export class IMeshDevice extends EventTarget {
         await this._writeToRadio(typedArrayToBuffer(protobufUInt8Array));
 
         await this._readFromRadio();
+
+        if (this.isConfigDone === false) {
+            throw new Error('Error in meshtasticjs.MeshInterface.configure: configuring device was not successful');
+        }
 
         return 0;
 
@@ -316,6 +326,10 @@ export class IMeshDevice extends EventTarget {
             throw new Error('Error in meshtasticjs.IMeshDevice.handleFromRadio: ' + e.message);
         }
 
+        
+        if (this.client.debugMode) { console.log(fromRadioObj); };
+
+
         if (this.isConfigDone === true) {
 
             this._dispatchInterfaceEvent('fromRadio', fromRadioObj);
@@ -355,19 +369,13 @@ export class IMeshDevice extends EventTarget {
 
         } else if (fromRadioObj.hasOwnProperty('rebooted')) {
 
-            await this.startConfig();
+            await this.configure();
 
         } else {
             // Don't throw error here, continue and just log to console
             if (this.client.debugMode) { console.log('Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received'); }
 
         }
-
-        if (this.isConfigStarted === true) {
-            await this._readFromRadio();
-        }
-
-        if (this.client.debugMode) { console.log(fromRadioObj); };
 
         return fromRadioObj;
     }
@@ -410,7 +418,7 @@ export class IMeshDevice extends EventTarget {
 
         if (noAutoConfig !== true) {
             try {
-                await this.startConfig();
+                await this.configure();
                 return;
             }
             catch (e) {
