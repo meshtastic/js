@@ -1,6 +1,8 @@
+import { SettingsManager } from "./settingsmanager.js"
 import { Client } from "./client.js"
 import { IBLEConnection } from "./ibleconnection.js"
-import { nodeDB } from "./nodedb.js"
-var version = "0.1.0"
+import { IHTTPConnection } from "./ihttpconnection.js"
+import { NodeDB } from "./nodedb.js"
+var version = "0.2.0"
 
-export { Client, IBLEConnection, nodeDB, version }
+export { SettingsManager, Client, IBLEConnection, IHTTPConnection, NodeDB, version }

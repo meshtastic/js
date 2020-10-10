@@ -1,16 +1,5 @@
 import * as constants from "./constants.js"
 
-// Converts plain object structure into protobuf object
-export function objectToProtoObj(typeName, plainObject, protobufjs) {
-    var type = protobufjs.lookupType(typeName);
-    let errMsg = type.verify(plainObject);
-    if (errMsg) {
-        throw new Error('Error in meshtasticjs.objectToProtoObj:' + e.message);
-    }
-    return type.fromObject(plainObject);
-}
-
-
 export function bufferToHex(arrayBuffer) { 
     return Array.prototype.map.call(new Uint8Array(arrayBuffer), x => ('00' + x.toString(16)).slice(-2)).join('');
 }

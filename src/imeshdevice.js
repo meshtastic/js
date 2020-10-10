@@ -1,6 +1,7 @@
 import * as constants from "./constants.js"
-import { typedArrayToBuffer } from "./utils.js"
-import { nodeDB } from "./nodedb.js"
+import { SettingsManager } from "./settingsmanager.js"
+import { NodeDB } from "./nodedb.js"
+import { ProtobufHandler } from "./protobufhandler.js";
 
 export class IMeshDevice extends EventTarget {
 
@@ -34,23 +35,21 @@ export class IMeshDevice extends EventTarget {
     var user;
     var myInfo;
 
-    var client;
-    var protobufjs;
+    var protobufHandler;
     *******************/
 
-    constructor(client) {
+    constructor() {
 
         super();
-
-        this.client = client;
-        this.protobufjs = client.protobufjs;
 
         this.isConnected = false;
         this.isReconnecting = false;
         this.isConfigDone = false;
         this.isConfigStarted = false;
 
-        this.nodes = new nodeDB(this.client.protobufjs);
+        this.protobufHandler = new ProtobufHandler();
+
+        this.nodes = new NodeDB();
         this.nodes.addEventListener('nodeListChanged', this._onNodeListChanged.bind(this));
 
         this.radioConfig = undefined;
@@ -64,7 +63,7 @@ export class IMeshDevice extends EventTarget {
 
     async sendText(text, destinationId=constants.BROADCAST_ADDR, wantAck=false, wantResponse=false) {
 
-        let dataType = this.protobufjs.lookupTypeOrEnum("Data.Type");
+        let dataType = this.protobufHandler.getType("Data.Type");
         dataType = dataType.values["CLEAR_TEXT"];
 
         // DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
@@ -77,11 +76,9 @@ export class IMeshDevice extends EventTarget {
 
 
     async sendData(byteData, destinationId=constants.BROADCAST_ADDR, dataType, wantAck=false, wantResponse=false) {
-        
-        var MeshPacket = this.protobufjs.lookupType("MeshPacket");
 
         if (dataType === undefined) {
-            dataType = this.protobufjs.lookupTypeOrEnum("Data.Type");
+            dataType = this.protobufHandler.getType("Data.Type");
             dataType = dataType.values["OPAQUE"];
 
         }
@@ -105,29 +102,22 @@ export class IMeshDevice extends EventTarget {
 
     async sendPosition(latitude=0.0, longitude=0.0, altitude=0, timeSec=0, destinationId=constants.BROADCAST_ADDR, wantAck=false, wantResponse=false) {
 
-        var MeshPacket = this.protobufjs.lookupType("MeshPacket");
-
-
         var position = {};
         
         if(latitude != 0.0) {
             position.latitudeI = Math.floor(latitude / 1e-7);
-
         }
 
         if(longitude != 0.0) {
             position.longitudeI = Math.floor(longitude / 1e-7);
-
         }
 
         if(altitude != 0) {
             position.altitude = Math.floor(altitude);
-
         }
 
         if (timeSec == 0) {
             timeSec = Math.floor(Date.now() / 1000);
-
         }
         position.time = timeSec;
 
@@ -138,17 +128,6 @@ export class IMeshDevice extends EventTarget {
         
         var meshPacket = { decoded: subPacket };
 
-        
-
-        try {
-            let errMsg = MeshPacket.verify(meshPacket);
-            if (errMsg) {
-                throw Error(errMsg);
-            }
-        } catch (e) {
-            throw 'Error in meshtasticjs.MeshInterface.sendPosition: ${e.message}';
-        }
-
         return await this.sendPacket(meshPacket, destinationId, wantAck);
     }
 
@@ -158,8 +137,6 @@ export class IMeshDevice extends EventTarget {
         if (this.isDeviceReady() === false) {
             throw new Error('Error in meshtasticjs.MeshInterface.sendPacket: Device is not ready');
         }
-
-        var ToRadio = this.protobufjs.lookupType("ToRadio");
 
         var rcptNodeNum;
 
@@ -178,22 +155,11 @@ export class IMeshDevice extends EventTarget {
             meshPacket.id = this._generatePacketId();
         }
 
-
-        var toRadio = { packet: meshPacket };
-
-        try {
-            let errMsg = ToRadio.verify(toRadio);
-            if (errMsg) {
-                throw Error(errMsg);
-            }
-        } catch (e) {
-            throw new Error('Error in meshtasticjs.MeshInterface.sendPacket:' + e.message);
-        }
+        let packet = { packet: meshPacket };
     
-        let toRadioObj = ToRadio.fromObject(toRadio);
-        let protobufUInt8Array = ToRadio.encode(toRadioObj).finish();
-        await this._writeToRadio(typedArrayToBuffer(protobufUInt8Array));
-        return toRadioObj;
+        let toRadio = this.protobufHandler.toProtobuf('ToRadio', packet);
+        await this._writeToRadio(toRadio.uint8array);
+        return toRadio.obj;
     }
 
 
@@ -202,8 +168,6 @@ export class IMeshDevice extends EventTarget {
         if (this.radioConfig === undefined || this.isDeviceReady() === false) {
             throw new Error('Error: meshtasticjs.IMeshDevice.setRadioConfig: Radio config has not been read from device, can\'t set new one. Try reconnecting.');
         }
-
-        var ToRadio = this.protobufjs.lookupType("ToRadio");
 
         if (!configOptionsObj.hasOwnProperty('channelSettings') && !configOptionsObj.hasOwnProperty('preferences')) {
             throw new Error('Error: meshtasticjs.IMeshDevice.setRadioConfig: Invalid config options object provided');
@@ -219,13 +183,9 @@ export class IMeshDevice extends EventTarget {
 
         let setRadio = { setRadio: this.radioConfig };
 
-        let toRadioObj = ToRadio.fromObject(setRadio);
-        let protobufUInt8Array = ToRadio.encode(toRadioObj).finish();
-        await this._writeToRadio(typedArrayToBuffer(protobufUInt8Array));
-
-        return toRadioObj;
-       
-
+        let toRadio = this.protobufHandler.toProtobuf('ToRadio', setRadio);
+        await this._writeToRadio(toRadio.uint8array);
+        return toRadio.obj;
     }
 
 
@@ -235,8 +195,6 @@ export class IMeshDevice extends EventTarget {
             throw new Error('Error: meshtasticjs.IMeshDevice.setOwner: Owner config has not been read from device, can\'t set new one. Try reconnecting.');
         }
         
-        var ToRadio = this.protobufjs.lookupType("ToRadio");
-
         if (typeof ownerDataObj !== 'object') {
             throw new Error('Error: meshtasticjs.IMeshDevice.setRadioConfig: Invalid config options object provided');
         }
@@ -245,12 +203,9 @@ export class IMeshDevice extends EventTarget {
         
         let setOwner = { setOwner: this.user };
         
-        let toRadioObj = ToRadio.fromObject(setOwner);
-        let protobufUInt8Array = ToRadio.encode(toRadioObj).finish();
-        await this._writeToRadio(typedArrayToBuffer(protobufUInt8Array));
-
-        return toRadioObj;
-       
+        let toRadio = this.protobufHandler.toProtobuf('ToRadio', setOwner);
+        await this._writeToRadio(toRadio.uint8array);
+        return toRadio.obj;
     }
 
 
@@ -262,19 +217,11 @@ export class IMeshDevice extends EventTarget {
 
         this.isConfigStarted = true;
 
-        var ToRadio = this.protobufjs.lookupType("ToRadio");
+        let wantConfig = {};
+        wantConfig.wantConfigId = constants.MY_CONFIG_ID;
+        let toRadio = this.protobufHandler.toProtobuf('ToRadio', wantConfig);
 
-
-        var toRadio = {};
-
-        toRadio.wantConfigId = constants.MY_CONFIG_ID;
-
-        let toRadioObj = ToRadio.fromObject(toRadio);
-
-
-        let protobufUInt8Array = ToRadio.encode(toRadioObj).finish();
-
-        await this._writeToRadio(typedArrayToBuffer(protobufUInt8Array));
+        await this._writeToRadio(toRadio.uint8array);
 
         await this._readFromRadio();
 
@@ -310,24 +257,24 @@ export class IMeshDevice extends EventTarget {
 
     async _handleFromRadio(fromRadioUInt8Array) {
 
-        var FromRadio = this.protobufjs.lookupType("FromRadio");
+
         var fromRadioObj;
 
 
         if (fromRadioUInt8Array.byteLength < 1) {
-            if (this.client.debugMode) { console.log("Empty buffer received"); } 
+            if (SettingsManager.debugMode) { console.log("Empty buffer received"); } 
             return 0;
         }
 
 
         try {
-            fromRadioObj = FromRadio.decode(fromRadioUInt8Array); 
+            fromRadioObj =  this.protobufHandler.fromProtobuf('FromRadio', fromRadioUInt8Array); 
         } catch (e) {
             throw new Error('Error in meshtasticjs.IMeshDevice.handleFromRadio: ' + e.message);
         }
 
         
-        if (this.client.debugMode) { console.log(fromRadioObj); };
+        if (SettingsManager.debugMode) { console.log(fromRadioObj); };
 
 
         if (this.isConfigDone === true) {
@@ -373,7 +320,7 @@ export class IMeshDevice extends EventTarget {
 
         } else {
             // Don't throw error here, continue and just log to console
-            if (this.client.debugMode) { console.log('Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received'); }
+            if (SettingsManager.debugMode) { console.log('Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received'); }
 
         }
 
@@ -438,7 +385,7 @@ export class IMeshDevice extends EventTarget {
     _onConfigured() {
         this.isConfigDone = true;
         this._dispatchInterfaceEvent('configDone', this);
-        if (this.client.debugMode) { console.log('Configured device with node number ' + this.myInfo.myNodeNum); }
+        if (SettingsManager.debugMode) { console.log('Configured device with node number ' + this.myInfo.myNodeNum); }
     }
 
 

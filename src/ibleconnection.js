@@ -1,6 +1,7 @@
 import * as constants from "./constants.js"
+import { SettingsManager } from "./settingsmanager.js"
 import { IMeshDevice } from "./imeshdevice.js"
-import { exponentialBackoff } from "./utils.js"
+import { exponentialBackoff, typedArrayToBuffer } from "./utils.js"
 
 export class IBLEConnection extends IMeshDevice {
 
@@ -18,9 +19,9 @@ export class IBLEConnection extends IMeshDevice {
     bool userInitiatedDisconnect;
     *******************/
 
-    constructor(client) {
+    constructor() {
 
-        super(client);
+        super();
 
         this.userInitiatedDisconnect = false;
 
@@ -34,7 +35,7 @@ export class IBLEConnection extends IMeshDevice {
     async connect(requestDeviceFilterParams=false, noAutoConfig=false) {
 
         if (this.isConnected === true) {
-            if (this.client.debugMode) { console.log('meshtasticjs.IBLEConnection.connect: device already connected'); }
+            if (SettingsManager.debugMode) { console.log('meshtasticjs.IBLEConnection.connect: device already connected'); }
             //throw new Error('Error in meshtasticjs.IBLEConnection.connect: Device is already connected');
             return;
 
@@ -87,10 +88,10 @@ export class IBLEConnection extends IMeshDevice {
         this.userInitiatedDisconnect = true; // Don't reconnect
 
         if (this.isConnected === false && this.isReconnecting === false) {
-            if (this.client.debugMode) { console.log('meshtasticjs.IBLEConnection.disconnect: device already disconnected'); }
+            if (SettingsManager.debugMode) { console.log('meshtasticjs.IBLEConnection.disconnect: device already disconnected'); }
             return;
         } else if (this.isConnected === false && this.isReconnecting === true) {
-            if (this.client.debugMode) { console.log('meshtasticjs.IBLEConnection.disconnect: reconnect cancelled'); }
+            if (SettingsManager.debugMode) { console.log('meshtasticjs.IBLEConnection.disconnect: reconnect cancelled'); }
         }
         
         await this.connection.disconnect();
@@ -128,7 +129,9 @@ export class IBLEConnection extends IMeshDevice {
 
     async _writeToRadio(ToRadioUInt8Array) {
 
-        await this.toRadioCharacteristic.writeValue(ToRadioUInt8Array);
+        let ToRadioBuffer = typedArrayToBuffer(ToRadioUInt8Array);
+
+        await this.toRadioCharacteristic.writeValue(ToRadioBuffer);
 
     }
 
@@ -179,7 +182,7 @@ export class IBLEConnection extends IMeshDevice {
 
     async _connectToDevice(device) {
         // Human-readable name of the device.
-        if (this.client.debugMode) { console.log('selected ' + device.name + ', trying to connect now'); }
+        if (SettingsManager.debugMode) { console.log('selected ' + device.name + ', trying to connect now'); }
 
         let connection;
 
@@ -218,11 +221,11 @@ export class IBLEConnection extends IMeshDevice {
 
         try {
             this.toRadioCharacteristic = await service.getCharacteristic(constants.TORADIO_UUID);
-            if (this.client.debugMode) { console.log("successfully got characteristic "); console.log(this.toRadioCharacteristic); }
+            if (SettingsManager.debugMode) { console.log("successfully got characteristic "); console.log(this.toRadioCharacteristic); }
             this.fromRadioCharacteristic = await service.getCharacteristic(constants.FROMRADIO_UUID);
-            if (this.client.debugMode) { console.log("successfully got characteristic "); console.log(this.toRadioCharacteristic); }
+            if (SettingsManager.debugMode) { console.log("successfully got characteristic "); console.log(this.toRadioCharacteristic); }
             this.fromNumCharacteristic = await service.getCharacteristic(constants.FROMNUM_UUID);
-            if (this.client.debugMode) { console.log("successfully got characteristic "); console.log(this.toRadioCharacteristic); }
+            if (SettingsManager.debugMode) { console.log("successfully got characteristic "); console.log(this.toRadioCharacteristic); }
             
         }
         catch (e) {
@@ -239,7 +242,7 @@ export class IBLEConnection extends IMeshDevice {
         await this.fromNumCharacteristic.startNotifications();
         this.fromNumCharacteristic.addEventListener('characteristicvaluechanged', this._handleBLENotification.bind(this)); // bind.this makes the object reference to IBLEConnection accessible within the callback
 
-        if (this.client.debugMode) { console.log('BLE notifications activated'); }
+        if (SettingsManager.debugMode) { console.log('BLE notifications activated'); }
     }
 
     // GATT connection state events (connect, disconnect)
@@ -252,7 +255,7 @@ export class IBLEConnection extends IMeshDevice {
 
 
     _handleBLENotification(event) {
-        if (this.client.debugMode) { console.log('BLE notification received'); console.log(event); }
+        if (SettingsManager.debugMode) { console.log('BLE notification received'); console.log(event); }
         this._readFromRadio();
     }
 

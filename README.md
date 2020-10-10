@@ -31,7 +31,6 @@ If you do not want this, meshtastic.js supports different methods for how the li
 This creates a new meshtastic client instance and initializes the client:
 ```
 var meshtasticClient = new meshtasticjs.Client;
-meshtasticClient.init();
 
 ```
 

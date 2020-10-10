@@ -1,20 +1,20 @@
 import * as constants from "./constants.js"
-import { objectToProtoObj } from "./utils.js"
+import { SettingsManager } from "./settingsmanager.js"
+import { ProtobufHandler } from "./protobufhandler.js"
 
-export class nodeDB extends EventTarget {
+export class NodeDB extends EventTarget {
     
     /******************
     var nodes;
-    var client;
-    var protobufjs;
+    var protobufHandler;
     *******************/
 
-    constructor(protobufjs) {
+    constructor() {
 
         super();
 
         this.nodes = new Map();
-        this.protobufjs = protobufjs;
+        this.protobufHandler = new ProtobufHandler();
 
     }
 
@@ -39,7 +39,7 @@ export class nodeDB extends EventTarget {
             }
 
             try {
-                this.nodes.set(nodeNumber, objectToProtoObj('NodeInfo', nodeInfo, this.protobufjs));
+                this.nodes.set(nodeNumber, protobufHandler.toProtobuf('NodeInfo', nodeInfo).obj);
             } catch (e) {
                 throw new Error('Error in meshtasticjs.nodeDB.addUserData:' + e.message);
             }
@@ -69,7 +69,7 @@ export class nodeDB extends EventTarget {
             }
 
             try {
-                this.nodes.set(nodeNumber, objectToProtoObj('NodeInfo', nodeInfo, this.protobufjs));
+                this.nodes.set(nodeNumber, protobufHandler.toProtobuf('NodeInfo', nodeInfo).obj);
             } catch (e) {
                 throw new Error('Error in meshtasticjs.nodeDB.addPositionData:' + e.message);
             }
