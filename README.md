@@ -88,7 +88,8 @@ Send a text message via the device over the meshtastic radio. If no recipient no
 
 **All calls (if not using then/catch promise syntax) should be wrapped in a try/catch to handle errors.**
 
-For more examples see /examples. [Documentation/API Reference](https://thepoweroftwo.github.io/meshtastic.js) (work in progress)
+For more examples see /examples. 
+[Documentation/API Reference](https://thepoweroftwo.github.io/meshtastic.js) (work in progress)
 
 
 ## Compatibility
