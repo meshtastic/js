@@ -1,6 +1,6 @@
 import * as constants from "./constants.js"
 import { SettingsManager } from "./settingsmanager.js"
-import { ProtobufHandler } from "./protobufhandler.js"
+import { ProtobufHandler } from "./protobufs/protobufhandler.js"
 
 export class NodeDB extends EventTarget {
     

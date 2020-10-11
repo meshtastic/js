@@ -7,15 +7,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Create new client instance
     meshtasticClient = new meshtasticjs.Client;
-   
-    // Init the client in production mode
-    try {
-        let debugMode = false;
-        meshtasticClient.init(debugMode);
-    }
-    catch (e) {
-        console.log('Error in main app: ' + e.message);
-    }
 
 });
 

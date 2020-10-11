@@ -1,5 +1,5 @@
-import { SettingsManager } from "./settingsmanager.js"
-import { Root as protobufjs } from "../node_modules/protobufjs/index.js"
+import { SettingsManager } from "../settingsmanager.js"
+import { default as protobufjs } from "./meshproto.js"
 
 
 export class ProtobufHandler {
@@ -16,18 +16,7 @@ export class ProtobufHandler {
         } 
         ProtobufHandler.instance = this;
 
-
-        let protobufJSONData = require('../proto/meshproto.json');
-
-        try {
-            this.protobufjs = protobufjs.fromJSON(protobufJSONData);
-        }
-        catch (e) {
-            throw new Error('Error in meshtasticjs.ProtobufHandler init: ' + e.message);
-        }
-
-        // FIXME debug mode global var?
-        if (SettingsManager.debugMode) { console.log('protobufjs loaded and initialized'); console.log(this.protobufjs); }
+        if (SettingsManager.debugMode) { console.log('protobufjs loaded and initialized'); console.log(protobufjs); }
 
     }
 
@@ -37,7 +26,7 @@ export class ProtobufHandler {
 
         var protobufObj;
 
-        let protobufType = this.protobufjs.lookupType(objectName);
+        let protobufType = protobufjs.lookupType(objectName);
 
         try {
             protobufObj = protobufType.decode(protobufUInt8Array); 
@@ -57,7 +46,7 @@ export class ProtobufHandler {
             uint8array: undefined
         };
         
-        let protobufType = this.protobufjs.lookupType(protobufTypeName);
+        let protobufType = protobufjs.lookupType(protobufTypeName);
 
         try {
             let errMsg = protobufType.verify(object);
@@ -78,7 +67,7 @@ export class ProtobufHandler {
 
     getType(typeString) {
 
-        return this.protobufjs.lookupTypeOrEnum(typeString);
+        return protobufjs.lookupTypeOrEnum(typeString);
 
     }
 

@@ -2,7 +2,7 @@ import * as constants from "./constants.js"
 import { SettingsManager } from "./settingsmanager.js"
 import { IBLEConnection } from "./ibleconnection.js"
 import { IHTTPConnection } from "./ihttpconnection.js"
-import { ProtobufHandler } from "./protobufhandler.js"
+import { ProtobufHandler } from "./protobufs/protobufhandler.js"
 
 export class Client {
 

@@ -2,10 +2,8 @@ const path = require('path');
 
 // Build for multiple targets
 module.exports = [
-  createConfig('var', true),
   createConfig('commonjs2'),
-  createConfig('amd'),
-  createConfig('umd')
+  createConfig('umd', true)
 ];
 
 function createConfig(target, defaultTarget) {

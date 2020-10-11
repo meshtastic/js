@@ -21,7 +21,7 @@ Supported features:
 <script src="path/to/meshtastic.js"></script>
 ```
 This includes meshtastic.js into an html file and makes it available through the global variable meshtasticjs.
-If you do not want this, meshtastic.js supports different methods for how the library is exposed (var, amd, umd, commonjs). If unsure, choose the default one (meshtastic.js).
+Since the file follows the Universal Module Definition, it can also be used as a commonjs or amd module (https://github.com/umdjs/umd).
 
 
 ## Usage
@@ -31,7 +31,6 @@ If you do not want this, meshtastic.js supports different methods for how the li
 This creates a new meshtastic client instance and initializes the client:
 ```
 var meshtasticClient = new meshtasticjs.Client;
-meshtasticClient.init();
 
 ```
 

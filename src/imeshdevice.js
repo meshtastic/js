@@ -1,7 +1,7 @@
 import * as constants from "./constants.js"
 import { SettingsManager } from "./settingsmanager.js"
 import { NodeDB } from "./nodedb.js"
-import { ProtobufHandler } from "./protobufhandler.js";
+import { ProtobufHandler } from "./protobufs/protobufhandler.js";
 
 export class IMeshDevice extends EventTarget {
 
