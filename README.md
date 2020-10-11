@@ -13,7 +13,7 @@ Supported features:
 - Set device preferences
 - Set owner data
 
-The documentation/reference can be found here: (work in progress)
+The documentation/reference can be found here: https://thepoweroftwo.github.io/meshtastic.js (work in progress)
 
 ## Installation
 
