@@ -8,11 +8,13 @@
     "protobufjs": "^6.10.1"
   },
   "devDependencies": {
+    "jsdoc": "^3.6.6",
     "webpack": "^4.44.2",
     "webpack-cli": "^3.3.12"
   },
   "scripts": {
     "build": "npx webpack --config webpack.config.js",
+    "generate-docs": "./node_modules/.bin/jsdoc ./src/ -r ./README.md -d ./docs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

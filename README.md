@@ -13,6 +13,8 @@ Supported features:
 - Set device preferences
 - Set owner data
 
+The documentation/reference can be found here: (work in progress)
+
 ## Installation
 
 ### Including the script
@@ -116,13 +118,14 @@ to fetch the needed dependencies.
 To build:
 ```
 npm run build
+npm run generate-docs
 ```
 
 
 ## Development
 
 Roadmap for version 1.0:
-- Support for serial usb connections
+- Support for HTTP and serial usb connections
 - More granular error management
 - ES6 Module Support (the library is designed as an ES6 module, but protobuf.js needed for protocol buffers is not... yet?)
 

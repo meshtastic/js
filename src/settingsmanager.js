@@ -1,3 +1,7 @@
+/**
+ * Handles library-wide settings
+ * @property {boolean} debugMode
+ */
 export class SettingsManager {
 
     /******************
@@ -8,13 +12,17 @@ export class SettingsManager {
 
     constructor() {}
 
-    static setDebugMode(isActive) {
+    /**
+     * Debug mode enables verbose console output.
+     * @param {boolean} active 
+     */
+    static setDebugMode(active) {
 
-        if (typeof isActive !== "boolean") {
+        if (typeof active !== "boolean") {
             throw 'Error in meshtasticjs.SettingsManager.setDebugMode: param must be boolean';
         }
 
-        SettingsManager.debugMode = isActive;
+        SettingsManager.debugMode = active;
 
     }
 
