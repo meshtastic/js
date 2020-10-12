@@ -13,7 +13,7 @@ Supported features:
 - Set device preferences
 - Set owner data
 
-[Documentation/API Reference](https://thepoweroftwo.github.io/meshtastic.js) (work in progress)
+[Documentation/API Reference](https://meshtastic.github.io/meshtastic.js) (work in progress)
 
 ## Installation
 
@@ -90,7 +90,7 @@ Send a text message via the device over the meshtastic radio. If no recipient no
 
 For more examples see /examples.
 
-[Documentation/API Reference](https://thepoweroftwo.github.io/meshtastic.js) (work in progress)
+[Documentation/API Reference](https://meshtastic.github.io/meshtastic.js) (work in progress)
 
 
 ## Compatibility
