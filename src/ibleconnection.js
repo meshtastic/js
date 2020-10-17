@@ -48,14 +48,14 @@ export class IBLEConnection extends IMeshDevice {
 
     /**
      * Initiates the connect process to a meshtastic device via bluetooth
-     * @param {boolean} requestDeviceFilterParams optional filter options for the web bluetooth api requestDevice() method
-     * @param {boolean} noAutoConfig connect to the device without configuring it. Requires to call configure() manually
+     * @param {boolean} [requestDeviceFilterParams=false] optional filter options for the web bluetooth api requestDevice() method
+     * @param {boolean} [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
      * @returns {number} 0 on success
      */
     async connect(requestDeviceFilterParams=false, noAutoConfig=false) {
 
         if (this.isConnected === true) {
-            if (SettingsManager.debugMode) { console.log('meshtasticjs.IBLEConnection.connect: device already connected'); }
+            if (SettingsManager.debugMode) { console.log('meshtasticjs.IBLEConnection.connect: device already connected/connecting'); }
             //throw new Error('Error in meshtasticjs.IBLEConnection.connect: Device is already connected');
             return;
 
@@ -279,7 +279,12 @@ export class IBLEConnection extends IMeshDevice {
 
     _handleBLENotification(event) {
         if (SettingsManager.debugMode) { console.log('BLE notification received'); console.log(event); }
-        this._readFromRadio();
+        try {
+            this._readFromRadio();
+        } catch (e) {
+            if (SettingsManager.debugMode) { console.log(e); }
+        }
+        
     }
 
 

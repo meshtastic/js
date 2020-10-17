@@ -5,6 +5,7 @@
   "module": "src/index.js",
   "main": "dist/meshtastic.js",
   "dependencies": {
+    "@ungap/event-target": "^0.2.2",
     "protobufjs": "^6.10.1"
   },
   "devDependencies": {

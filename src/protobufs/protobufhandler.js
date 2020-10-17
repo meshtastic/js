@@ -4,17 +4,8 @@ import { default as protobufjs } from "./meshproto.js"
 
 export class ProtobufHandler {
 
-    /******************
-    static var instance    # singleton obj reference   
-    var protobufjs         # protobufjs reference
-    *******************/
 
     constructor() {
-
-        if (ProtobufHandler.instance !== undefined) {
-            return ProtobufHandler.instance;
-        } 
-        ProtobufHandler.instance = this;
 
         if (SettingsManager.debugMode) { console.log('protobufjs loaded and initialized'); console.log(protobufjs); }
 
@@ -22,7 +13,7 @@ export class ProtobufHandler {
 
 
     // converts from a protobuf uint8array to protobufjs obj
-    fromProtobuf(objectName, protobufUInt8Array) {
+    static fromProtobuf(objectName, protobufUInt8Array) {
 
         var protobufObj;
 
@@ -39,7 +30,7 @@ export class ProtobufHandler {
 
 
     // converts from generic obj to protobuf obj & uint8array
-    toProtobuf(protobufTypeName, object) {
+    static toProtobuf(protobufTypeName, object) {
 
         var protobuf = {
             obj: undefined,
@@ -65,7 +56,7 @@ export class ProtobufHandler {
     }
 
 
-    getType(typeString) {
+    static getType(typeString) {
 
         return protobufjs.lookupTypeOrEnum(typeString);
 
