@@ -15,7 +15,7 @@
     "webpack-cli": "^3.3.12"
   },
   "scripts": {
-    "build": "npx webpack --config webpack.config.js",
+    "build": "./build.sh",
     "generate-docs": "./node_modules/.bin/jsdoc -c jsdoc.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
