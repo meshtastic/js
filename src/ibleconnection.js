@@ -55,9 +55,7 @@ export class IBLEConnection extends IMeshDevice {
     async connect(requestDeviceFilterParams=false, noAutoConfig=false) {
 
         if (this.isConnected === true) {
-            if (SettingsManager.debugMode) { console.log('meshtasticjs.IBLEConnection.connect: device already connected/connecting'); }
-            //throw new Error('Error in meshtasticjs.IBLEConnection.connect: Device is already connected');
-            return;
+            throw new Error('Error in meshtasticjs.IBLEConnection.connect: Device is already connected');
 
         } else if (navigator.bluetooth === undefined) {
             throw new Error('Error in meshtasticjs.IBLEConnection.connect: this browser doesn\'t support the bluetooth web api, see https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API');

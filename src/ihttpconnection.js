@@ -41,9 +41,7 @@ export class IHTTPConnection extends IMeshDevice {
     async connect(address, tls=undefined, fetchMode=undefined, fetchInterval=undefined, noAutoConfig=false) {
 
         if (this.isConnected === true) {
-            if (SettingsManager.debugMode) { console.log('meshtasticjs.IHTTPConnection.connect: device already connected/connecting'); }
-            //throw new Error('Error in meshtasticjs.IBLEConnection.connect: Device is already connected');
-            return;
+            throw new Error('Error in meshtasticjs.IHTTPConnection.connect: Device is already connected');
         }
 
         this.consecutiveFailedRequests = 0;
