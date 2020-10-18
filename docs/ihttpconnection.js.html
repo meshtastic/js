@@ -59,21 +59,30 @@ export class IHTTPConnection extends IMeshDevice {
 
         /** @type {string} */
         this.url = undefined;
+        /** @type {boolean} */
+        this.tls = undefined;
+
+        /** @type {string} */
+        this.fetchMode = undefined;
+        /** @type {number} */
+        this.fetchInterval = undefined;
+
+        /** @type {number} */
+        this.lastInteractionTime = undefined;
         /** @type {number} */
         this.consecutiveFailedRequests = 0;
-        /** @type {number} */
-        this.fetchTimerIntervalId = undefined;
     }
 
     /**
      * Initiates the connect process to a meshtastic device via HTTP(S)
-     * @param {string} address The IP Address/Domain to connect to, without protocol
-     * @param {boolean} [tls=false] Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
-     * @param {number}[fetchInterval=10000] Sets the interval in milliseconds how often new messages are fetched from device
+     * @param {string} [address=undefined] The IP Address/Domain to connect to, without protocol
+     * @param {boolean} [tls=undefined] Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
+     * @param {string} [fetchMode=undefined] Defines how new messages are fetched, takes 'slow', 'balanced', 'fast', 'stream'
+     * @param {string} [fetchInterval=undefined] Sets a fixed interval in that the device is fetched for new messages
      * @param {boolean} [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
      * @returns {number} 0 on success
      */
-    async connect(address, tls=false, fetchInterval=10000, noAutoConfig=false) {
+    async connect(address, tls=undefined, fetchMode=undefined, fetchInterval=undefined, noAutoConfig=false) {
 
         if (this.isConnected === true) {
             if (SettingsManager.debugMode) { console.log('meshtasticjs.IHTTPConnection.connect: device already connected/connecting'); }
@@ -83,24 +92,52 @@ export class IHTTPConnection extends IMeshDevice {
 
         this.consecutiveFailedRequests = 0;
 
-        if (this.url === undefined) {
-            var url = undefined;
+        // Generate URL
 
-            if (tls === true) {
-                url = 'https://';
+        var proto;
+        
+        if (this.url !== undefined &amp;&amp; address === undefined &amp;&amp; tls === undefined) {
+            // Do nothing as url has already been set in previous connect
+            // and no new params have been given
+        
+        } else {
+
+            // Set the address
+            if (address === undefined) {
+                throw new Error('Error in meshtasticjs.IBLEConnection.connect: Please specify connect address');
+            }
+    
+            // set the protocol
+            if (tls === undefined) {
+                this.tls = false;
             } else {
-                url = 'http://';
+                this.tls = tls;
             }
 
-            this.url = url + address;
+            if (this.tls === true) {
+                proto = 'https://';
+            } else {
+                proto = 'http://';
+            }
+            
+            // assemble url
+            this.url = proto + address;
+            
         }
-        
+
+
         // At this point device is (presumably) connected, maybe check with ping-like request first
         this.isConnected = true;
 
         await this._onConnected(noAutoConfig);
 
-        this.fetchTimerIntervalId = setInterval(this._fetchTimer.bind(this), fetchInterval);
+        // Implement reading from device config here: fetchMode and Interval
+
+        this.fetchMode = fetchMode;
+        this.fetchInterval = fetchInterval;
+
+        this.lastInteractionTime = Date.now();
+        setTimeout(this._fetchTimer.bind(this), 5000);
 
         return 0;
 
@@ -117,7 +154,6 @@ export class IHTTPConnection extends IMeshDevice {
             return 1;
         } 
 
-        clearInterval(this.fetchTimerIntervalId);
         this._onDisconnected();
 
     }
@@ -136,6 +172,7 @@ export class IHTTPConnection extends IMeshDevice {
                 console.log(readBuffer);
                 
                 if (readBuffer.byteLength > 0) {
+                    this.lastInteractionTime = Date.now();
                     await this._handleFromRadio(new Uint8Array(readBuffer, 0));
                 }
                 
@@ -150,7 +187,16 @@ export class IHTTPConnection extends IMeshDevice {
 
     async _writeToRadio(ToRadioUInt8Array) {
 
-        await this._httpRequest(this.url + '/api/v1/fromradio', 'PUT', typedArrayToBuffer(ToRadioUInt8Array));
+        this.timeSinceLastInteraction = Date.now();
+
+        try {
+            await this._httpRequest(this.url + '/api/v1/fromradio', 'PUT', typedArrayToBuffer(ToRadioUInt8Array));
+        } catch (e) {
+            this.consecutiveFailedRequests++;
+            throw new Error("Error in meshtasticjs.IHTTPConnection.writeToRadio: " + e.message);
+        }
+
+        
 
     }
 
@@ -189,7 +235,7 @@ export class IHTTPConnection extends IMeshDevice {
         
     }
 
-    // TODO: don't overlap http requests, start the next one only after the previous has timed out
+
     async _fetchTimer() {
 
         if (this.consecutiveFailedRequests > 3) {
@@ -201,9 +247,34 @@ export class IHTTPConnection extends IMeshDevice {
 
         try {
            let r = await this._readFromRadio();
+
         } catch (e) {
-            console.log(e);
+            if (SettingsManager.debugMode) { console.log(e); }
         }
+
+        // Calculate new interval and set timeout again
+
+        // Interval fetch profile 1
+        let newInterval = 5000;
+        if (this.tls === true) {
+            newInterval = 10000;
+        }
+        let timeSinceLastInteraction = Date.now() - this.lastInteractionTime;
+        if (timeSinceLastInteraction > 1200000) { // If no action in 20 mins
+            newInterval = 120000;
+        }
+        else if (timeSinceLastInteraction > 600000) { // If no action in 10 mins
+            newInterval = 30000;
+        }
+        else if (timeSinceLastInteraction > 180000) { // If no action in 3 mins
+            newInterval = 20000;
+        }
+        else if (timeSinceLastInteraction > 30000) { // If no action in 30 secs
+            newInterval = 15000;
+            
+        }
+
+        setTimeout(this._fetchTimer.bind(this), newInterval);
 
     }
     
@@ -221,7 +292,7 @@ export class IHTTPConnection extends IMeshDevice {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Sat Oct 17 2020 15:04:14 GMT+0200 (Central European Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a> on Sun Oct 18 2020 18:30:31 GMT+0200 (Central European Summer Time) using the <a href="https://github.com/clenemt/docdash">docdash</a> theme.
 </footer>
 
 <script>prettyPrint();</script>

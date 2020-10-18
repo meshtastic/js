@@ -9,6 +9,13 @@ export function typedArrayToBuffer(array) {
     return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
 }
 
+export function getEnvironment() {
+    if (typeof window !== 'undefined') {
+        return 'browser';
+    }
+    return 'nobrowser';
+}
+
 
 // This function keeps calling "toTry" until promise resolves or has
 // retried "max" number of times. First retry has a delay of "delay" seconds.
