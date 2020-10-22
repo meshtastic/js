@@ -258,6 +258,34 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
       }
     }
   },
+  RegionCode: {
+    values: {
+      Unset: 0,
+      US: 1,
+      EU433: 2,
+      EU865: 3,
+      CN: 4,
+      JP: 5,
+      ANZ: 6,
+      KR: 7,
+      TW: 8
+    }
+  },
+  GpsOperation: {
+    values: {
+      GpsOpUnset: 0,
+      GpsOpMobile: 2,
+      GpsOpTimeOnly: 3,
+      GpsOpDisabled: 4
+    }
+  },
+  LocationSharing: {
+    values: {
+      LocUnset: 0,
+      LocEnabled: 1,
+      LocDisabled: 2
+    }
+  },
   RadioConfig: {
     fields: {
       preferences: {
@@ -329,12 +357,36 @@ const $root = ($protobuf.roots["default"] || ($protobuf.roots["default"] = new $
             id: 14
           },
           region: {
-            type: "string",
+            type: "RegionCode",
             id: 15
+          },
+          isRouter: {
+            type: "bool",
+            id: 37
+          },
+          isLowPower: {
+            type: "bool",
+            id: 38
           },
           factoryReset: {
             type: "bool",
             id: 100
+          },
+          locationShare: {
+            type: "LocationSharing",
+            id: 32
+          },
+          gpsOperation: {
+            type: "GpsOperation",
+            id: 33
+          },
+          gpsUpdateInterval: {
+            type: "uint32",
+            id: 34
+          },
+          gpsAttemptTime: {
+            type: "uint32",
+            id: 36
           },
           ignoreIncoming: {
             rule: "repeated",

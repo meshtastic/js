@@ -8,6 +8,6 @@ import { NodeDB } from "./nodedb.js"
  * @global
  * @type {string}
  */
-var version = "0.2.0"
+var version = "0.3.0"
 
 export { SettingsManager, Client, IBLEConnection, IHTTPConnection, NodeDB, version }

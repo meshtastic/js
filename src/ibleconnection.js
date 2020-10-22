@@ -48,16 +48,14 @@ export class IBLEConnection extends IMeshDevice {
 
     /**
      * Initiates the connect process to a meshtastic device via bluetooth
-     * @param {boolean} requestDeviceFilterParams optional filter options for the web bluetooth api requestDevice() method
-     * @param {boolean} noAutoConfig connect to the device without configuring it. Requires to call configure() manually
+     * @param {boolean} [requestDeviceFilterParams=false] optional filter options for the web bluetooth api requestDevice() method
+     * @param {boolean} [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
      * @returns {number} 0 on success
      */
     async connect(requestDeviceFilterParams=false, noAutoConfig=false) {
 
         if (this.isConnected === true) {
-            if (SettingsManager.debugMode) { console.log('meshtasticjs.IBLEConnection.connect: device already connected'); }
-            //throw new Error('Error in meshtasticjs.IBLEConnection.connect: Device is already connected');
-            return;
+            throw new Error('Error in meshtasticjs.IBLEConnection.connect: Device is already connected');
 
         } else if (navigator.bluetooth === undefined) {
             throw new Error('Error in meshtasticjs.IBLEConnection.connect: this browser doesn\'t support the bluetooth web api, see https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API');
@@ -277,9 +275,14 @@ export class IBLEConnection extends IMeshDevice {
     }
 
 
-    _handleBLENotification(event) {
+    async _handleBLENotification(event) {
         if (SettingsManager.debugMode) { console.log('BLE notification received'); console.log(event); }
-        this._readFromRadio();
+        try {
+            await this._readFromRadio();
+        } catch (e) {
+            if (SettingsManager.debugMode) { console.log(e); }
+        }
+        
     }
 
 
@@ -296,10 +299,10 @@ export class IBLEConnection extends IMeshDevice {
                   await this.connect(this.device);
                 }.bind(this),
                 function success() {
-                  
-                },
+                    this.isReconnecting = false;
+                }.bind(this),
                 function fail() {
-                    throw new Error('Error in meshtasticjs.IBLEConnection.handleBLEDisconnect. Failed to reconnect');
+                    if (SettingsManager.debugMode) { console.log('Automatic reconnect promise failed, this can be ignored if deviced reconnected successfully'); }
                 });
         
         } 

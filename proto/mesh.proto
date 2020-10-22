@@ -457,6 +457,71 @@ message ChannelSettings {
   string name = 5;
 }
 
+/**
+  The frequency/regulatory region the user has selected.
+
+  Note: In 1.0 builds (which must still be supported by the android app for a
+  long time) this field will be unpopulated.
+
+  If firmware is ever upgraded from an old 1.0ish build, the old
+  MyNodeInfo.region string will be used to set UserPreferences.region and the
+  old value will be no longer set.
+*/
+enum RegionCode {
+  Unset = 0;
+  US = 1;
+  EU433 = 2;
+  EU865 = 3;
+  CN = 4;
+  JP = 5;
+  ANZ = 6;
+  KR = 7;
+  TW = 8;
+
+  // Add new regions here
+}
+
+/**
+  How the GPS hardware in this unit is operated.
+
+  Note: This is independent of how our location is shared with other devices.  For that see LocationSharing
+**/
+enum GpsOperation {
+  // This is treated as GpsOpMobile - it is the default settting
+  GpsOpUnset = 0;
+
+  // Note: This mode was removed, because it is identical go GpsOpMobile with a gps_update_rate of once per day
+  // 
+  // This node is mostly stationary, we should try to get location only once per day,
+  // Once we have that position we should turn the GPS to sleep mode
+  // This is the recommendated configuration for stationary 'router' nodes
+  // GpsOpStationary = 1;
+
+  // This node is mobile and we should get GPS position at a rate governed by gps_update_rate
+  GpsOpMobile = 2;
+
+  // We should only use the GPS to get time (no location data should be acquired/stored)
+  // Once we have the time we treat gps_update_interval as MAXINT (i.e. sleep forever)
+  GpsOpTimeOnly = 3;
+
+  // GPS is always turned off - this mode is not recommended - use GpsOpTimeOnly instead
+  GpsOpDisabled = 4;
+}
+
+/** 
+  How our location is shared with other nodes (or the local phone)
+**/
+enum LocationSharing {
+  // This is the default and treated as LocEnabled)
+  LocUnset = 0;
+
+  // We are sharing our location
+  LocEnabled = 1;
+
+  // We are not sharing our location (if the unit has a GPS it will default to only get time - i.e. GpsOpTimeOnly)
+  LocDisabled = 2;
+}
+
 // The entire set of user settable/readable settings for our radio device.
 // Includes both the current channel settings and any preferences the user has
 // set for behavior of their node
@@ -476,14 +541,14 @@ message RadioConfig {
     uint32 num_missed_to_fail = 3;
 
     /// see sw-design.md
-    uint32 wait_bluetooth_secs = 4;
-    uint32 screen_on_secs = 5;
-    uint32 phone_timeout_secs = 6;
-    uint32 phone_sds_timeout_sec = 7;
-    uint32 mesh_sds_timeout_secs = 8;
-    uint32 sds_secs = 9;
-    uint32 ls_secs = 10;
-    uint32 min_wake_secs = 11;
+    uint32 wait_bluetooth_secs = 4; // 0 for default of 2 minutes
+    uint32 screen_on_secs = 5; // 0 for default of one minute
+    uint32 phone_timeout_secs = 6; // 0 for default of 15 minutes
+    uint32 phone_sds_timeout_sec = 7; // 0 for default of two hours, MAXUINT for disabled
+    uint32 mesh_sds_timeout_secs = 8; // 0 for default of two hours, MAXUINT for disabled
+    uint32 sds_secs = 9; // 0 for default of one year
+    uint32 ls_secs = 10; // 0 for default of 3600
+    uint32 min_wake_secs = 11; // 0 for default of 10 seconds
 
     /** If set, this node will try to join the specified wifi network and
      * acquire an address via DHCP */
@@ -495,7 +560,19 @@ message RadioConfig {
     bool wifi_ap_mode = 14;
 
     /// The region code for my radio (US, CN, EU433, etc...)
-    string region = 15;
+    RegionCode region = 15;
+
+    /**
+    Are we operating as a router.  Changes behavior in the following ways:
+    FIXME
+    */
+    bool is_router = 37;
+
+    /**
+    If set, we are powered from a low-current source (i.e. solar), so even if it looks like we have power flowing in
+    we should try to minimize power consumption as much as possible.  Often combined with is_router.
+    */
+    bool is_low_power = 38;
 
     /**
     This setting is never saved to disk, but if set, all device settings will be
@@ -503,6 +580,23 @@ message RadioConfig {
     preserved)
     */
     bool factory_reset = 100;
+
+    LocationSharing location_share = 32;
+    GpsOperation gps_operation = 33;
+    
+    /** How often should we try to get GPS position (in seconds) when we are in GpsOpMobile mode?
+     or zero for the default of once every 30 seconds
+
+     or a very large value (maxint) to update only once at boot.
+    */
+    uint32 gps_update_interval = 34;
+
+    /** How long should we try to get our position during each gps_update_interval attempt?  (in seconds)
+    Or if zero, use the default of 30 seconds.
+    If we don't get a new gps fix in that time, the gps will be put into sleep until  the next gps_update_rate
+    window. 
+    */
+    uint32 gps_attempt_time = 36;
 
     // If true, radio should not try to be smart about what packets to queue to
     // the phone
@@ -598,13 +692,26 @@ message MyNodeInfo {
   /// of macaddr, but it will be fixed if that is already in use
   uint32 my_node_num = 1;
 
-  /// if false it would be great if the phone can help provide gps coordinates
+  /**
+  Note: this bool no longer means "we have our own GPS".  Because gps_operation is more advanced,
+  but we'd like old phone apps to keep working.  So for legacy reasons we set this flag as follows:
+  
+  if false it would be great if the phone can help provide gps coordinates.  If true we don't need location
+  assistance from the phone.
+  */
   bool has_gps = 2;
 
   /// # of legal channels (set at build time in the device flash image)
   int32 num_channels = 3;
 
-  /// The region code for my radio (US, CN, etc...)
+  /** The region code for my radio (US, CN, etc...)
+  Note: This string is deprecated.  The 1.0 builds populate it based on the
+  flashed firmware name.  But for newer builds this string will be unpopulated
+  (missing/null).  For those builds you should instead look at the new
+  read/write region enum in UserSettings 
+  
+  The format of this string was 1.0-US or 1.0-CN etc.. Or empty string if unset.
+  */
   string region = 4;
 
   /// TBEAM, HELTEC, etc...

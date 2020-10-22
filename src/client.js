@@ -38,7 +38,10 @@ export class Client {
 
     }
 
-
+    /**
+     * Creates a new HTTP(S) connection interface
+     * @returns {IHTTPConnection}
+     */
     createHTTPConnection() {
 
         let iHTTPConnection;

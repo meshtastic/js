@@ -1,6 +1,7 @@
 import * as constants from "./constants.js"
 import { SettingsManager } from "./settingsmanager.js"
 import { ProtobufHandler } from "./protobufs/protobufhandler.js"
+import EventTarget from '@ungap/event-target' // EventTarget polyfill for Edge and Safari
 
 /**
  * Stores and manages Node objects 
@@ -9,7 +10,6 @@ export class NodeDB extends EventTarget {
     
     /******************
     var nodes;
-    var protobufHandler;
     *******************/
 
     constructor() {
@@ -18,7 +18,6 @@ export class NodeDB extends EventTarget {
 
         /** @type {Map} */
         this.nodes = new Map();
-        this.protobufHandler = new ProtobufHandler();
 
     }
 
@@ -53,7 +52,7 @@ export class NodeDB extends EventTarget {
             }
 
             try {
-                this.nodes.set(nodeNumber, protobufHandler.toProtobuf('NodeInfo', nodeInfo).obj);
+                this.nodes.set(nodeNumber, ProtobufHandler.toProtobuf('NodeInfo', nodeInfo).obj);
             } catch (e) {
                 throw new Error('Error in meshtasticjs.nodeDB.addUserData:' + e.message);
             }
@@ -88,7 +87,7 @@ export class NodeDB extends EventTarget {
             }
 
             try {
-                this.nodes.set(nodeNumber, protobufHandler.toProtobuf('NodeInfo', nodeInfo).obj);
+                this.nodes.set(nodeNumber, ProtobufHandler.toProtobuf('NodeInfo', nodeInfo).obj);
             } catch (e) {
                 throw new Error('Error in meshtasticjs.nodeDB.addPositionData:' + e.message);
             }
