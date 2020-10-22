@@ -275,10 +275,10 @@ export class IBLEConnection extends IMeshDevice {
     }
 
 
-    _handleBLENotification(event) {
+    async _handleBLENotification(event) {
         if (SettingsManager.debugMode) { console.log('BLE notification received'); console.log(event); }
         try {
-            this._readFromRadio();
+            await this._readFromRadio();
         } catch (e) {
             if (SettingsManager.debugMode) { console.log(e); }
         }
@@ -299,10 +299,10 @@ export class IBLEConnection extends IMeshDevice {
                   await this.connect(this.device);
                 }.bind(this),
                 function success() {
-                  
-                },
+                    this.isReconnecting = false;
+                }.bind(this),
                 function fail() {
-                    throw new Error('Error in meshtasticjs.IBLEConnection.handleBLEDisconnect. Failed to reconnect');
+                    if (SettingsManager.debugMode) { console.log('Automatic reconnect promise failed, this can be ignored if deviced reconnected successfully'); }
                 });
         
         } 

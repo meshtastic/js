@@ -31,7 +31,7 @@ export class ProtobufHandler {
 
     // converts from generic obj to protobuf obj & uint8array
     static toProtobuf(protobufTypeName, object) {
-
+        
         var protobuf = {
             obj: undefined,
             uint8array: undefined

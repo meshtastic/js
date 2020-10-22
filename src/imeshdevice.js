@@ -219,10 +219,19 @@ export class IMeshDevice extends EventTarget {
 
 
         if (configOptionsObj.hasOwnProperty('channelSettings')) {
-            Object.assign(this.radioConfig.channelSettings, configOptionsObj.channelSettings);
+            if (this.radioConfig.hasOwnProperty('channelSettings')) {
+                Object.assign(this.radioConfig.channelSettings, configOptionsObj.channelSettings);
+            } else {
+                this.radioConfig.channelSettings = ProtobufHandler.toProtobuf('ChannelSettings', configOptionsObj.channelSettings).obj;
+            }
+            
         }
         if (configOptionsObj.hasOwnProperty('preferences')) {
-            Object.assign(this.radioConfig.preferences, configOptionsObj.preferences);
+            if (this.radioConfig.hasOwnProperty('preferences')) {
+                Object.assign(this.radioConfig.preferences, configOptionsObj.preferences);
+            } else {
+                this.radioConfig.preferences = ProtobufHandler.toProtobuf('UserPreferences', configOptionsObj.preferences).obj;
+            }
         }
 
         let setRadio = { setRadio: this.radioConfig };
