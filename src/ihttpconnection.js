@@ -141,7 +141,7 @@ export class IHTTPConnection extends IMeshDevice {
 
     async _writeToRadio(ToRadioUInt8Array) {
 
-        this.timeSinceLastInteraction = Date.now();
+        this.lastInteractionTime = Date.now();
 
         try {
             await this._httpRequest(this.url + '/api/v1/fromradio', 'PUT', typedArrayToBuffer(ToRadioUInt8Array));
