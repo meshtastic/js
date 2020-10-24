@@ -141,7 +141,7 @@ export class IHTTPConnection extends IMeshDevice {
 
     async _writeToRadio(ToRadioUInt8Array) {
 
-        this.timeSinceLastInteraction = Date.now();
+        this.lastInteractionTime = Date.now();
 
         try {
             await this._httpRequest(this.url + '/api/v1/fromradio', 'PUT', typedArrayToBuffer(ToRadioUInt8Array));
@@ -207,11 +207,12 @@ export class IHTTPConnection extends IMeshDevice {
         }
 
         // Calculate new interval and set timeout again
+        let newInterval = 5000;
 
         if (this.fetchInterval === undefined) {
             
             // Interval fetch profile 1
-            let newInterval = 5000;
+            
             if (this.tls === true) {
                 newInterval = 10000;
             }
@@ -233,8 +234,6 @@ export class IHTTPConnection extends IMeshDevice {
         } else {
             newInterval = this.fetchInterval;
         }
-
-       
 
         setTimeout(this._fetchTimer.bind(this), newInterval);
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Meshtastic.js is a javascript library that provides an interface to Meshtastic devices. It can be used to build applications interacting with the Meshtastic network natively in the browser. Currently only bluetooth connections are possible.
+Meshtastic.js is a javascript library that provides an interface to Meshtastic devices. It can be used to build applications interacting with the Meshtastic network natively in the browser. Currently HTTP(S) and bluetooth connections are possible.
 
 Supported features:
 - Connect to multiple meshtastic devices via bluetooth
@@ -95,11 +95,11 @@ For more examples see /examples.
 
 ## Compatibility
 
-The library is tested with meshtastic devices running firmware versions 0.9.5 and 1.0.0.
+The library is tested with meshtastic devices running firmware versions 0.9.5, 1.0.0 and 1.1.6
 
-Since meshtastic.js relies on the bluetooth web api (https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API) it currently does only work in the later versions of Google Chrome, Opera and Microsoft Edge. On windows systems, the meshtastic device has to be paired via windows settings beforehand once.
+Since meshtastic.js relies on the bluetooth web api (https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API), bluetooth connections only work in the later versions of Google Chrome, Opera and Microsoft Edge. On windows systems, the meshtastic device has to be paired via windows settings beforehand once.
 
-### Version Details
+### Bluetooth Version Details
 
 - Google Chrome 56+
 - Google Chrome for Android 85+
@@ -127,7 +127,7 @@ npm run generate-docs
 ## Development
 
 Roadmap for version 1.0:
-- Support for HTTP and serial usb connections
+- Support for serial usb connections
 - More granular error management
 - ES6 Module Support (the library is designed as an ES6 module, but protobuf.js needed for protocol buffers is not... yet?)
 
