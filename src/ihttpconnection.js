@@ -207,11 +207,12 @@ export class IHTTPConnection extends IMeshDevice {
         }
 
         // Calculate new interval and set timeout again
+        let newInterval = 5000;
 
         if (this.fetchInterval === undefined) {
             
             // Interval fetch profile 1
-            let newInterval = 5000;
+            
             if (this.tls === true) {
                 newInterval = 10000;
             }
@@ -233,8 +234,6 @@ export class IHTTPConnection extends IMeshDevice {
         } else {
             newInterval = this.fetchInterval;
         }
-
-       
 
         setTimeout(this._fetchTimer.bind(this), newInterval);
 
