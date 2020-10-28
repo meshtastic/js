@@ -123,7 +123,7 @@ export class IBLEConnection extends IMeshDevice {
    * Disconnects from the meshtastic device
    * @returns 0 on success, 1 if device is already disconnected
    */
-  async disconnect() {
+  disconnect() {
     this.userInitiatedDisconnect = true; // Don't reconnect
 
     if (this.isConnected === false && this.isReconnecting === false) {
@@ -141,7 +141,7 @@ export class IBLEConnection extends IMeshDevice {
       }
     }
 
-    await this.connection.disconnect();
+    this.connection.disconnect();
     // No need to call parent _onDisconnected here, calling disconnect() triggers gatt event
 
     return 0;

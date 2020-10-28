@@ -55,12 +55,12 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Initiates the connect process to a meshtastic device via HTTP(S)
-   * @param {string} [address=undefined] The IP Address/Domain to connect to, without protocol
-   * @param {boolean} [tls=undefined] Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
-   * @param {string} [fetchMode=undefined] Defines how new messages are fetched, takes 'slow', 'balanced', 'fast', 'stream'
-   * @param {string} [fetchInterval=undefined] Sets a fixed interval in that the device is fetched for new messages
-   * @param {boolean} [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
-   * @returns {number} 0 on success
+   * @param address The IP Address/Domain to connect to, without protocol
+   * @param tls Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
+   * @param fetchMode Defines how new messages are fetched, takes 'slow', 'balanced', 'fast', 'stream'
+   * @param fetchInterval Sets a fixed interval in that the device is fetched for new messages
+   * @param fetchInterval [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
+   * @returns 0 on success
    */
   async connect(
     address: string,

@@ -11,11 +11,9 @@ export class Client {
   /**
    * Array of all created connection interfaces
    */
-
   deviceInterfaces: (IBLEConnection | IHTTPConnection)[];
 
   constructor() {
-    /** @type {Array} */
     this.deviceInterfaces = new Array();
 
     // Preload protobufhandler singleton, optional
@@ -40,6 +38,10 @@ export class Client {
     return iHTTPConnection;
   }
 
+  /**
+   * Creates a new Serial connection interface
+   * @todo implement
+   */
   createSerialConnection() {}
 
   /**

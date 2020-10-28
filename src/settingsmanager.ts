@@ -13,7 +13,7 @@ export class SettingsManager {
    * Debug mode enables verbose console output.
    * @param active Whether the application is in debug mode or not
    */
-  setDebugMode(active: boolean) {
+  static setDebugMode(active: boolean) {
     if (typeof active !== "boolean") {
       throw "Error in meshtasticjs.SettingsManager.setDebugMode: param must be boolean";
     }
