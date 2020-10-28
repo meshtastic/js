@@ -256,9 +256,7 @@ export class IBLEConnection extends IMeshDevice {
     let service: BluetoothRemoteGATTService; /** @todo optimize */
 
     try {
-      service = await (await connection).getPrimaryService(
-        constants.SERVICE_UUID
-      );
+      service = await connection.getPrimaryService(constants.SERVICE_UUID);
     } catch (e) {
       throw new Error(
         "Error in meshtasticjs.IBLEConnection.getService: " + e.message

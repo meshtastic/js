@@ -1,5 +1,4 @@
 /*eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars*/
-import * as $protobuf from "protobufjs/light";
 import { roots, Root } from "protobufjs/light";
 
 const $root = roots["default"] || (roots["default"] = new Root());

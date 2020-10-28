@@ -18,15 +18,50 @@ import { Position } from "./sharedTypes";
  * @fires event:configDone - Gets called when device has been configured (myInfo, radio and node data received). Device interface is now ready to be used
  *
  */
-export class IMeshDevice extends EventTarget {
+export abstract class IMeshDevice extends EventTarget {
+  /**
+   * Short description
+   */
   isConnected: boolean;
+
+  /**
+   * Short description
+   */
   isReconnecting: boolean;
+
+  /**
+   * Short description
+   */
   isConfigDone: boolean;
+
+  /**
+   * Short description
+   */
   isConfigStarted: boolean;
+
+  /**
+   * Short description
+   */
   nodes: NodeDB;
+
+  /**
+   * Short description
+   */
   radioConfig: any; //protobufjs.RadioConfig
+
+  /**
+   * Short description
+   */
   currentPacketId: number;
+
+  /**
+   * Short description
+   */
   user: any; //protobufjs.User
+
+  /**
+   * Short description
+   */
   myInfo: any; //protobufjs.myInfo
 
   /******************
@@ -53,16 +88,11 @@ export class IMeshDevice extends EventTarget {
   constructor() {
     super();
 
-    /** @type {boolean} */
     this.isConnected = false;
-    /** @type {boolean} */
     this.isReconnecting = false;
-    /** @type {boolean} */
     this.isConfigDone = false;
-    /** @type {boolean} */
     this.isConfigStarted = false;
 
-    /** @type {NodeDB} */
     this.nodes = new NodeDB();
     this.nodes.addEventListener(
       "nodeListChanged",
@@ -79,16 +109,17 @@ export class IMeshDevice extends EventTarget {
     this.myInfo = undefined;
   }
 
-  public _writeToRadio(param: any) {} /** @todo fix typings */
-  public _readFromRadio() {} /** @todo fix typings */
+  abstract _writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void>;
+
+  abstract _readFromRadio(): Promise<void>;
 
   /**
    * Sends a text over the radio
-   * @param {string} text
-   * @param {number} [destinationNum=constants.BROADCAST_ADDR] Node number of the destination node
-   * @param {boolean} [wantAck=false]
-   * @param {boolean} [wantResponse=false]
-   * @returns {FromRadio} FromRadio object that was sent to device
+   * @param text
+   * @param destinationNum Node number of the destination node
+   * @param wantAck
+   * @param wantResponse
+   * @returns FromRadio object that was sent to device
    */
   async sendText(
     text: string,
@@ -116,12 +147,12 @@ export class IMeshDevice extends EventTarget {
 
   /**
    * Sends generic data over the radio
-   * @param {Uint8Array} byteData
-   * @param {number} [destinationNum=constants.BROADCAST_ADDR] Node number of the destination node
-   * @param {Data.Typ} dataType Enum of protobuf data type
-   * @param {boolean} [wantAck=false]
-   * @param {boolean} [wantResponse=false]
-   * @returns {FromRadio} FromRadio object that was sent to device
+   * @param byteData
+   * @param destinationNum Node number of the destination node
+   * @param dataType {Data.Typ} dataType Enum of protobuf data type
+   * @param wantAck
+   * @param wantResponse
+   * @returns FromRadio object that was sent to device
    */
   async sendData(
     byteData: Uint8Array,
@@ -152,14 +183,14 @@ export class IMeshDevice extends EventTarget {
 
   /**
    * Sends position over the radio
-   * @param {number} [latitude=0]
-   * @param {number} [longitude=0]
-   * @param {number} [altitude=0]
-   * @param {number} [timeSec=0]
-   * @param {number} [destinationNum=constants.BROADCAST_ADDR] Node number of the destination node
-   * @param {boolean} [wantAck=false]
-   * @param {boolean} [wantResponse=false]
-   * @returns {FromRadio} FromRadio object that was sent to device
+   * @param latitude
+   * @param longitude
+   * @param altitude
+   * @param timeSec
+   * @param destinationNum Node number of the destination node
+   * @param wantAck
+   * @param wantResponse
+   * @returns FromRadio object that was sent to device
    */
   async sendPosition(
     latitude?: number,
@@ -205,10 +236,10 @@ export class IMeshDevice extends EventTarget {
 
   /**
    * Sends packet over the radio
-   * @param {MeshPacket} meshPacket
-   * @param {number} [destinationNum=constants.BROADCAST_ADDR] Node number of the destination node
-   * @param {boolean} [wantAck=false]
-   * @returns {FromRadio} FromRadio object that was sent to device
+   * @param meshPacket
+   * @param destinationNum Node number of the destination node
+   * @param wantAck
+   * @returns FromRadio object that was sent to device
    */
   async sendPacket(
     meshPacket,
@@ -243,14 +274,14 @@ export class IMeshDevice extends EventTarget {
     let packet = { packet: meshPacket };
 
     let toRadio = ProtobufHandler.toProtobuf("ToRadio", packet);
-    await this._writeToRadio(toRadio.uint8array);
+    this._writeToRadio(toRadio.uint8array);
     return toRadio.obj;
   }
 
   /**
    * Writes radio config to device
-   * @param {object} configOptions
-   * @returns {FromRadio} FromRadio object that was sent to device
+   * @param configOptions
+   * @returns FromRadio object that was sent to device
    */
   async setRadioConfig(configOptionsObj) {
     if (this.radioConfig === undefined || this.isDeviceReady() === false) {
@@ -298,14 +329,14 @@ export class IMeshDevice extends EventTarget {
     let setRadio = { setRadio: this.radioConfig };
 
     let toRadio = ProtobufHandler.toProtobuf("ToRadio", setRadio);
-    await this._writeToRadio(toRadio.uint8array);
+    this._writeToRadio(toRadio.uint8array);
     return toRadio.obj;
   }
 
   /**
    * Sets devices owner data
-   * @param {object} ownerData
-   * @returns {FromRadio} FromRadio object that was sent to device
+   * @param ownerDataObj
+   * @returns FromRadio object that was sent to device
    */
   async setOwner(ownerDataObj) {
     if (this.user === undefined || this.isDeviceReady() === false) {
@@ -325,15 +356,15 @@ export class IMeshDevice extends EventTarget {
     let setOwner = { setOwner: this.user };
 
     let toRadio = ProtobufHandler.toProtobuf("ToRadio", setOwner);
-    await this._writeToRadio(toRadio.uint8array);
+    this._writeToRadio(toRadio.uint8array);
     return toRadio.obj;
   }
 
   /**
    * Manually triggers the device configure process
-   * @returns {number} Returns 0 if successful
+   * @returns Returns 0 if successful
    */
-  async configure() {
+  configure() {
     if (this.isConnected === false) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.configure: Interface is not connected"
@@ -346,9 +377,9 @@ export class IMeshDevice extends EventTarget {
     wantConfig.wantConfigId = constants.MY_CONFIG_ID;
     let toRadio = ProtobufHandler.toProtobuf("ToRadio", wantConfig);
 
-    await this._writeToRadio(toRadio.uint8array);
+    this._writeToRadio(toRadio.uint8array);
 
-    await this._readFromRadio();
+    this._readFromRadio();
 
     if (this.isConfigDone === false) {
       throw new Error(
@@ -361,7 +392,7 @@ export class IMeshDevice extends EventTarget {
 
   /**
    * Checks if device is ready
-   * @returns {number} true if device interface is fully configured and can be used
+   * @returns true if device interface is fully configured and can be used
    */
   isDeviceReady() {
     if (this.isConnected === true && this.isConfigDone === true) {
@@ -452,6 +483,10 @@ export class IMeshDevice extends EventTarget {
     return fromRadioObj;
   }
 
+  /**
+   * Short Description
+   * @param meshPacket
+   */
   _handleMeshPacket(meshPacket) {
     let eventName: string;
 
@@ -490,13 +525,17 @@ export class IMeshDevice extends EventTarget {
     }
   }
 
-  // Gets called when a link to the device has been disconnected
+  /**
+   * Gets called when a link to the device has been disconnected
+   */
   _onDisconnected() {
     this._dispatchInterfaceEvent("disconnected", this);
     this.isConnected = false;
   }
 
-  // Gets called when the device has been configured (myInfo, radio and node data received). device interface is now ready to be used
+  /**
+   * Gets called when the device has been configured (myInfo, radio and node data received). device interface is now ready to be used
+   */
   _onConfigured() {
     this.isConfigDone = true;
     this._dispatchInterfaceEvent("configDone", this);
@@ -507,13 +546,21 @@ export class IMeshDevice extends EventTarget {
     }
   }
 
+  /**
+   * Short description
+   */
   _onNodeListChanged() {
     if (this.isConfigDone === true) {
       this._dispatchInterfaceEvent("nodeListChanged", this);
     }
   }
 
-  /** change eventType to enum */
+  /**
+   * Short description
+   * @todo change eventType to enum
+   * @param eventType
+   * @param payload
+   */
   _dispatchInterfaceEvent(eventType: string, payload) {
     this.dispatchEvent(new CustomEvent(eventType, { detail: payload }));
   }
