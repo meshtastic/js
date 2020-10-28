@@ -6,17 +6,8 @@ import EventTarget from "@ungap/event-target"; // EventTarget polyfill for Edge 
 import { Position } from "./sharedTypes";
 
 /**
- * Parent class for all connection interfaces - do not call directly
- * @abstract
- * @fires event:fromRadio - Gets called whenever a fromRadio message is received from device, returns fromRadio data
- * @fires event:dataPacket - Gets called when a data packet is received from device
- * @fires event:userPacket - Gets called when a user packet is received from device
- * @fires event:positionPacket - Gets called when a position packet is received from device
- * @fires event:nodeListChanged - Gets called when node database has been changed, returns changed node number
- * @fires event:connected - Gets called when link to device is connected
- * @fires event:disconnected - Gets called when link to device is disconnected
- * @fires event:configDone - Gets called when device has been configured (myInfo, radio and node data received). Device interface is now ready to be used
- *
+ * @todo is the event tag required on classes that contain events?
+ * @event
  */
 export abstract class IMeshDevice extends EventTarget {
   /**
@@ -64,27 +55,6 @@ export abstract class IMeshDevice extends EventTarget {
    */
   myInfo: any; //protobufjs.myInfo
 
-  /******************
-    # Child classes must implement:
-    connect()
-    disconnect()
-    _readFromRadio()
-    _writeToRadio()
-
-    # State variables
-    bool isConnected;
-    bool isReconnecting;
-    bool isConfigDone;
-    bool isConfigStarted;
-    
-    # Data object variables
-    var nodes;
-    var radioConfig;
-    var currentPacketId;
-    var user;
-    var myInfo;
-    *******************/
-
   constructor() {
     super();
 
@@ -99,19 +69,22 @@ export abstract class IMeshDevice extends EventTarget {
       this._onNodeListChanged.bind(this)
     );
 
-    /** @type {protobufjs.RadioConfig} */
     this.radioConfig = undefined;
-    /** @type {number} */
     this.currentPacketId = undefined;
-    /** @type {protobufjs.User} */
     this.user = undefined;
-    /** @type {protobufjs.myInfo} */
     this.myInfo = undefined;
   }
 
   abstract _writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void>;
 
   abstract _readFromRadio(): Promise<void>;
+
+  /**
+   * @todo strongly type and maybe unify this function
+   */
+  abstract connect(..._: any): Promise<number>;
+
+  abstract disconnect(): number;
 
   /**
    * Sends a text over the radio
@@ -402,6 +375,9 @@ export abstract class IMeshDevice extends EventTarget {
     }
   }
 
+  /**
+   * Short description
+   */
   _generatePacketId() {
     if (this.currentPacketId === undefined) {
       throw "Error in meshtasticjs.MeshInterface.generatePacketId: Interface is not configured, can't generate packet id";
@@ -411,6 +387,11 @@ export abstract class IMeshDevice extends EventTarget {
     }
   }
 
+  /**
+   * Gets called whenever a fromRadio message is received from device, returns fromRadio data
+   * @event
+   * @param fromRadioUInt8Array
+   */
   async _handleFromRadio(fromRadioUInt8Array: Uint8Array) {
     let fromRadioObj: any; /** @todo needs definition */
 
@@ -484,7 +465,8 @@ export abstract class IMeshDevice extends EventTarget {
   }
 
   /**
-   * Short Description
+   * Gets called when a data, user or position packet is received from device
+   * @event
    * @param meshPacket
    */
   _handleMeshPacket(meshPacket) {
@@ -507,15 +489,19 @@ export abstract class IMeshDevice extends EventTarget {
     this._dispatchInterfaceEvent(eventName, meshPacket);
   }
 
-  // Gets called when a link to the device has been established
-  async _onConnected(noAutoConfig: boolean) {
+  /**
+   * Gets called when a link to the device has been established
+   * @event
+   * @param noAutoConfig Disables autoconfiguration
+   */
+  _onConnected(noAutoConfig: boolean) {
     this.isConnected = true;
     this.isReconnecting = false;
     this._dispatchInterfaceEvent("connected", this);
 
     if (noAutoConfig !== true) {
       try {
-        await this.configure();
+        this.configure();
         return;
       } catch (e) {
         throw new Error(
@@ -527,6 +513,7 @@ export abstract class IMeshDevice extends EventTarget {
 
   /**
    * Gets called when a link to the device has been disconnected
+   * @event
    */
   _onDisconnected() {
     this._dispatchInterfaceEvent("disconnected", this);
@@ -535,6 +522,7 @@ export abstract class IMeshDevice extends EventTarget {
 
   /**
    * Gets called when the device has been configured (myInfo, radio and node data received). device interface is now ready to be used
+   * @event
    */
   _onConfigured() {
     this.isConfigDone = true;
@@ -547,7 +535,8 @@ export abstract class IMeshDevice extends EventTarget {
   }
 
   /**
-   * Short description
+   * Gets called when node database has been changed, returns changed node number
+   * @event
    */
   _onNodeListChanged() {
     if (this.isConfigDone === true) {
