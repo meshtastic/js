@@ -247,7 +247,7 @@ export abstract class IMeshDevice extends EventTarget {
     let packet = { packet: meshPacket };
 
     let toRadio = ProtobufHandler.toProtobuf("ToRadio", packet);
-    this._writeToRadio(toRadio.uint8array);
+    await this._writeToRadio(toRadio.uint8array);
     return toRadio.obj;
   }
 
@@ -302,7 +302,7 @@ export abstract class IMeshDevice extends EventTarget {
     let setRadio = { setRadio: this.radioConfig };
 
     let toRadio = ProtobufHandler.toProtobuf("ToRadio", setRadio);
-    this._writeToRadio(toRadio.uint8array);
+    await this._writeToRadio(toRadio.uint8array);
     return toRadio.obj;
   }
 
@@ -329,7 +329,7 @@ export abstract class IMeshDevice extends EventTarget {
     let setOwner = { setOwner: this.user };
 
     let toRadio = ProtobufHandler.toProtobuf("ToRadio", setOwner);
-    this._writeToRadio(toRadio.uint8array);
+    await this._writeToRadio(toRadio.uint8array);
     return toRadio.obj;
   }
 
@@ -337,7 +337,7 @@ export abstract class IMeshDevice extends EventTarget {
    * Manually triggers the device configure process
    * @returns Returns 0 if successful
    */
-  configure() {
+  async configure() {
     if (this.isConnected === false) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.configure: Interface is not connected"
@@ -350,9 +350,9 @@ export abstract class IMeshDevice extends EventTarget {
     wantConfig.wantConfigId = constants.MY_CONFIG_ID;
     let toRadio = ProtobufHandler.toProtobuf("ToRadio", wantConfig);
 
-    this._writeToRadio(toRadio.uint8array);
+    await this._writeToRadio(toRadio.uint8array);
 
-    this._readFromRadio();
+    await this._readFromRadio();
 
     if (this.isConfigDone === false) {
       throw new Error(
@@ -429,7 +429,7 @@ export abstract class IMeshDevice extends EventTarget {
     } else if (fromRadioObj.hasOwnProperty("nodeInfo")) {
       this.nodes.addNode(fromRadioObj.nodeInfo);
 
-      // TOFIX do this when config done, if myInfo gets sent last, this throws error
+      /** @fix do this when config done, if myInfo gets sent last, this throws error */
       if (fromRadioObj.nodeInfo.num === this.myInfo.myNodeNum) {
         this.user = fromRadioObj.nodeInfo.user;
       }
@@ -494,14 +494,14 @@ export abstract class IMeshDevice extends EventTarget {
    * @event
    * @param noAutoConfig Disables autoconfiguration
    */
-  _onConnected(noAutoConfig: boolean) {
+  async _onConnected(noAutoConfig: boolean) {
     this.isConnected = true;
     this.isReconnecting = false;
     this._dispatchInterfaceEvent("connected", this);
 
     if (noAutoConfig !== true) {
       try {
-        this.configure();
+        await this.configure();
         return;
       } catch (e) {
         throw new Error(
