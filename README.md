@@ -5,6 +5,7 @@
 Meshtastic.js is a javascript library that provides an interface to Meshtastic devices. It can be used to build applications interacting with the Meshtastic network natively in the browser. Currently HTTP(S) and bluetooth connections are possible.
 
 Supported features:
+
 - Connect to multiple meshtastic devices via bluetooth
 - Start configuration process on connect
 - Get device info and node database
@@ -22,27 +23,27 @@ Supported features:
 ```
 <script src="path/to/meshtastic.js"></script>
 ```
+
 This includes meshtastic.js into an html file and makes it available through the global variable meshtasticjs.
 Since the file follows the Universal Module Definition, it can also be used as a commonjs or amd module (https://github.com/umdjs/umd).
-
 
 ## Usage
 
 ### Basic Init
 
 This creates a new meshtastic client instance and initializes the client:
+
 ```
 var meshtasticClient = new meshtasticjs.Client;
 
 ```
 
-
 After that, a new connection can be created. it returns an IBLEConnection interface:
+
 ```
 var connectionOne = meshtasticClient.createBLEConnection();
 
 ```
-
 
 The connection interface provides events that can be listened on:
 
@@ -54,6 +55,7 @@ The connection interface provides events that can be listened on:
 - `connected` Gets called when link to device is connected
 - `disconnected` Gets called when link to device is disconnected
 - `configDone` Gets called when device has been configured (myInfo, radio and node data received). device interface is now ready to be used
+
 ```
 // Registering event listeners
 connectionOne.addEventListener('fromRadio', function(event) { console.log(event.detail.toJSON()) });
@@ -64,11 +66,12 @@ connectionOne.addEventListener('fromRadio', function(event) { console.log(event.
 Now we can connect to the device asynchronously. It returns a promise, so it must be used either in an async/await function or with .then.
 
 **Important: the connect action must be called from a user interaction (e.g. button press), otherwise the browsers won't allow the connect.**
+
 ```
 connectionOne.connect()
-        .then(result => { 
+        .then(result => {
             // This code gets executed when the connection has been established
-            console.log("Successfully connected!"); 
+            console.log("Successfully connected!");
         })
         .catch(error => { console.log(error); });
 
@@ -77,9 +80,10 @@ connectionOne.connect()
 ### Send a text message
 
 Send a text message via the device over the meshtastic radio. If no recipient node is provided, it gets sent as a broadcast:
+
 ```
  connectionOne.sendText('meshtastic is awesome')
-        .then(result => { 
+        .then(result => {
             console.log(result);
         })
         .catch(error => { console.log(error); });
@@ -91,7 +95,6 @@ Send a text message via the device over the meshtastic radio. If no recipient no
 For more examples see /examples.
 
 [Documentation/API Reference](https://meshtastic.github.io/meshtastic.js) (work in progress)
-
 
 ## Compatibility
 
@@ -108,27 +111,27 @@ Since meshtastic.js relies on the bluetooth web api (https://developer.mozilla.o
 
 More detailed compatibility information can be found at https://caniuse.com/web-bluetooth
 
-
 ## Build
 
 Clone the library into a local directory and run:
+
 ```
 npm install
 ```
+
 to fetch the needed dependencies.
 
 To build:
+
 ```
 npm run build
 npm run generate-docs
 ```
 
-
 ## Development
 
 Roadmap for version 1.0:
+
 - Support for serial usb connections
 - More granular error management
 - ES6 Module Support (the library is designed as an ES6 module, but protobuf.js needed for protocol buffers is not... yet?)
-
-

@@ -1,30 +1,31 @@
-const path = require('path');
+const path = require("path");
 
-// Build for multiple targets
-module.exports = [
-  createConfig('commonjs2'),
-  createConfig('umd', true)
-];
+module.exports = {
+  // bundling mode
+  mode: "production",
 
-function createConfig(target, defaultTarget) {
+  // entry files
+  entry: "./src/index.ts",
 
-  // If default target, do not add target name to filename
-  var filename;
-  if (defaultTarget === true) {
-    filename = 'meshtastic.js'
-  } else {
-    filename = 'meshtastic.' + target + '.js';
-  }
+  // output bundles (location)
+  output: {
+    path: path.resolve(__dirname, "dist"),
+    filename: "meshtastic.js",
+  },
 
-  return {
-    entry: './src/index.js',
-    output: {
-      library: 'meshtasticjs',
-      libraryTarget: target,
-      filename: filename,
-      path: path.resolve(__dirname, 'dist'),
-    },
-    mode: 'production',
-  }
+  // file resolutions
+  resolve: {
+    extensions: [".ts", ".js"],
+  },
 
-}
+  // loaders
+  module: {
+    rules: [
+      {
+        test: /\.tsx?/,
+        use: "ts-loader",
+        exclude: /node_modules/,
+      },
+    ],
+  },
+};
