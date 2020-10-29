@@ -9,6 +9,7 @@ module.exports = {
 
   // output bundles (location)
   output: {
+    library: "meshtasticjs",
     path: path.resolve(__dirname, "dist"),
     filename: "meshtastic.js",
   },
