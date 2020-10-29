@@ -1,23 +1,19 @@
 import { ProtobufHandler } from "./protobufs/protobufhandler";
-import EventTarget from "@ungap/event-target"; // EventTarget polyfill for Edge and Safari
-import { NodeInfo } from "./sharedTypes";
-import { Message } from "protobufjs";
+import EventTarget from "@ungap/event-target";
+import { NodeInfo, Position, User } from "./protobufs/types";
 
 /**
  * Stores and manages Node objects
- * @extends EventTarget
  */
 export class NodeDB extends EventTarget {
   /**
    * Short description
-   * @todo fix types for protobufs
    */
-  nodes: Map<number, NodeInfo | Message<{}> | any>;
+  nodes: Map<number, NodeInfo>;
 
   constructor() {
     super();
 
-    /** @type {Map} */
     this.nodes = new Map();
   }
 
@@ -37,7 +33,7 @@ export class NodeDB extends EventTarget {
    * @param nodeInfo  Information about the node for the user data to be assigned to
    * @returns number of node modified
    */
-  addUserData(nodeNumber: number, user) {
+  addUserData(nodeNumber: number, user: User) {
     let node = this.nodes.get(nodeNumber);
 
     if (node === undefined) {
@@ -58,13 +54,13 @@ export class NodeDB extends EventTarget {
         );
       }
 
-      this._dispatchInterfaceEvent("nodeListChanged", {});
+      this._dispatchInterfaceEvent("nodeListChanged", null);
 
       return nodeNumber;
     }
 
     node.user = user;
-    this._dispatchInterfaceEvent("nodeListChanged", {});
+    this._dispatchInterfaceEvent("nodeListChanged", null);
 
     return nodeNumber;
   }
@@ -74,7 +70,7 @@ export class NodeDB extends EventTarget {
    * @param nodeInfo Information about the node for the potition data to be assigned to
    * @returns number of node modified
    */
-  addPositionData(nodeNumber: number, position) {
+  addPositionData(nodeNumber: number, position: Position) {
     let node = this.nodes.get(nodeNumber);
 
     if (node === undefined) {
@@ -175,9 +171,9 @@ export class NodeDB extends EventTarget {
   /**
    * Short description
    * @param eventType
-   * @param payload
+   * @param payload NodeInfo.num or null
    */
-  _dispatchInterfaceEvent(eventType, payload) {
+  _dispatchInterfaceEvent(eventType: string, payload: number | null) {
     this.dispatchEvent(new CustomEvent(eventType, { detail: payload }));
   }
 }

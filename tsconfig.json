@@ -4,7 +4,11 @@
     "moduleResolution": "Node",
     "target": "ES6",
     "declaration": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noImplicitUseStrict": true
   },
   "include": ["src/**/*"],
   "sourceMap": true,

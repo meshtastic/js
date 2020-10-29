@@ -66,11 +66,19 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Initiates the connect process to a meshtastic device via bluetooth
+   * @todo `change requestDeviceFilterParams` to only pass `RequestDeviceOptions`
+   * @todo don't pass this.device to requestDeviceFilterParams
    * @param requestDeviceFilterParams Optional filter options for the web bluetooth api requestDevice() method
    * @param noAutoConfig Connect to the device without configuring it. Requires to call configure() manually
    * @returns 0 on success
    */
-  async connect(requestDeviceFilterParams = false, noAutoConfig = false) {
+  async connect(
+    requestDeviceFilterParams:
+      | boolean
+      | RequestDeviceOptions
+      | BluetoothDevice = false,
+    noAutoConfig = false
+  ) {
     if (this.isConnected === true) {
       throw new Error(
         "Error in meshtasticjs.IBLEConnection.connect: Device is already connected"
@@ -88,7 +96,9 @@ export class IBLEConnection extends IMeshDevice {
     try {
       // If no device has been selected, open request device browser prompt
       if (this.device === undefined) {
-        device = await this._requestDevice(requestDeviceFilterParams);
+        device = await this._requestDevice(
+          requestDeviceFilterParams as boolean | RequestDeviceOptions
+        );
         this.device = device;
       }
 
@@ -214,10 +224,9 @@ export class IBLEConnection extends IMeshDevice {
     }
 
     try {
-      const device = await navigator.bluetooth.requestDevice(
+      return await navigator.bluetooth.requestDevice(
         requestDeviceFilterParams as RequestDeviceOptions
-      ); /** @todo fix */
-      return device;
+      );
     } catch (e) {
       throw new Error(
         "Error in meshtasticjs.IBLEConnection.requestDevice: " + e.message
@@ -327,10 +336,10 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Short description
+   * @todo verify that event is a string
    * @param event
    */
-  async _handleBLENotification(event) {
-    /** @todo get type */
+  async _handleBLENotification(event: string) {
     if (SettingsManager.debugMode) {
       console.log("BLE notification received");
       console.log(event);
@@ -353,22 +362,28 @@ export class IBLEConnection extends IMeshDevice {
     if (this.userInitiatedDisconnect === false) {
       this.isReconnecting = true;
 
+      const toTry = async () => {
+        await this.connect(this.device);
+      };
+
+      const success = () => {
+        this.isReconnecting = false;
+      };
+
+      const fail = () => {
+        if (SettingsManager.debugMode) {
+          console.log(
+            "Automatic reconnect promise failed, this can be ignored if deviced reconnected successfully"
+          );
+        }
+      };
+
       exponentialBackoff(
         3 /* max retries */,
         2 /* seconds delay */,
-        async function toTry() {
-          await this.connect(this.device);
-        }.bind(this),
-        function success() {
-          this.isReconnecting = false;
-        }.bind(this),
-        function fail() {
-          if (SettingsManager.debugMode) {
-            console.log(
-              "Automatic reconnect promise failed, this can be ignored if deviced reconnected successfully"
-            );
-          }
-        }
+        toTry.bind(this),
+        success.bind(this),
+        fail
       );
     }
   }

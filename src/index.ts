@@ -5,8 +5,7 @@ import { IHTTPConnection } from "./ihttpconnection";
 import { NodeDB } from "./nodedb";
 
 /**
- * @global
- * @type {string}
+ * Package version
  */
 const version = "0.3.0";
 

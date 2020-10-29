@@ -2,8 +2,18 @@ import * as constants from "./constants";
 import { SettingsManager } from "./settingsmanager";
 import { NodeDB } from "./nodedb";
 import { ProtobufHandler } from "./protobufs/protobufhandler";
-import EventTarget from "@ungap/event-target"; // EventTarget polyfill for Edge and Safari
-import { Position } from "./sharedTypes";
+import EventTarget from "@ungap/event-target";
+import {
+  MeshPacket,
+  Position,
+  SubPacket,
+  Type,
+  RadioConfig,
+  User,
+  MyNodeInfo,
+  FromRadio,
+  Data,
+} from "./protobufs/types";
 
 /**
  * @todo is the event tag required on classes that contain events?
@@ -38,7 +48,7 @@ export abstract class IMeshDevice extends EventTarget {
   /**
    * Short description
    */
-  radioConfig: any; //protobufjs.RadioConfig
+  radioConfig: RadioConfig; //protobufjs.RadioConfig
 
   /**
    * Short description
@@ -48,12 +58,12 @@ export abstract class IMeshDevice extends EventTarget {
   /**
    * Short description
    */
-  user: any; //protobufjs.User
+  user: User;
 
   /**
    * Short description
    */
-  myInfo: any; //protobufjs.myInfo
+  myInfo: MyNodeInfo; //protobufjs.myInfo
 
   constructor() {
     super();
@@ -102,8 +112,8 @@ export abstract class IMeshDevice extends EventTarget {
   ) {
     let dataType = ProtobufHandler.getType(
       "Data.Type"
-    ) as any; /** @todo fix typings */
-    dataType = dataType.values["CLEAR_TEXT"];
+    ); /** @todo fix typings */
+    dataType = dataType.values[Type.CLEAR_TEXT];
 
     // DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
     const enc = new TextEncoder();
@@ -122,7 +132,7 @@ export abstract class IMeshDevice extends EventTarget {
    * Sends generic data over the radio
    * @param byteData
    * @param destinationNum Node number of the destination node
-   * @param dataType {Data.Typ} dataType Enum of protobuf data type
+   * @param dataType dataType Enum of protobuf data type
    * @param wantAck
    * @param wantResponse
    * @returns FromRadio object that was sent to device
@@ -130,26 +140,48 @@ export abstract class IMeshDevice extends EventTarget {
   async sendData(
     byteData: Uint8Array,
     destinationNum = constants.BROADCAST_ADDR,
-    dataType,
+    dataType: Type,
     wantAck = false,
     wantResponse = false
   ) {
+    /**
+     * @todo Fix clash between usage of Type & protobuff.Type
+     */
     if (dataType === undefined) {
       dataType = ProtobufHandler.getType("Data.Type");
-      dataType = dataType.values["OPAQUE"];
+      const tmpDataType = dataType as any;
+      dataType = tmpDataType.values[Type.OPAQUE];
     }
 
-    let data = {} as any; /** @todo fix typings */
+    let data: Data;
 
     data.payload = byteData;
     data.typ = dataType;
 
-    let subPacket = {
+    /**
+     * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
+     */
+    let subPacket: SubPacket = {
       data: data,
       wantResponse: wantResponse,
+      dest: undefined,
+      originalId: undefined,
+      source: undefined,
     };
 
-    let meshPacket = { decoded: subPacket };
+    /**
+     * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
+     */
+    let meshPacket: MeshPacket = {
+      decoded: subPacket,
+      from: undefined,
+      hopLimit: undefined,
+      id: undefined,
+      rxSnr: undefined,
+      rxTime: undefined,
+      to: undefined,
+      wantAck: undefined,
+    };
 
     return await this.sendPacket(meshPacket, destinationNum, wantAck);
   }
@@ -197,12 +229,30 @@ export abstract class IMeshDevice extends EventTarget {
       position.time = timeSec;
     }
 
-    const subPacket = {
+    /**
+     * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
+     */
+    const subPacket: SubPacket = {
       position: position,
       wantResponse: wantResponse,
+      dest: undefined,
+      originalId: undefined,
+      source: undefined,
     };
 
-    const meshPacket = { decoded: subPacket };
+    /**
+     * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
+     */
+    const meshPacket: MeshPacket = {
+      decoded: subPacket,
+      from: undefined,
+      hopLimit: undefined,
+      id: undefined,
+      rxSnr: undefined,
+      rxTime: undefined,
+      to: undefined,
+      wantAck: undefined,
+    };
 
     return await this.sendPacket(meshPacket, destinationNum, wantAck);
   }
@@ -215,7 +265,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @returns FromRadio object that was sent to device
    */
   async sendPacket(
-    meshPacket,
+    meshPacket: MeshPacket,
     destinationNum = constants.BROADCAST_ADDR,
     wantAck = false
   ) {
@@ -256,7 +306,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param configOptions
    * @returns FromRadio object that was sent to device
    */
-  async setRadioConfig(configOptionsObj) {
+  async setRadioConfig(configOptionsObj: RadioConfig) {
     if (this.radioConfig === undefined || this.isDeviceReady() === false) {
       throw new Error(
         "Error: meshtasticjs.IMeshDevice.setRadioConfig: Radio config has not been read from device, can't set new one. Try reconnecting."
@@ -311,7 +361,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param ownerDataObj
    * @returns FromRadio object that was sent to device
    */
-  async setOwner(ownerDataObj) {
+  async setOwner(ownerDataObj: User) {
     if (this.user === undefined || this.isDeviceReady() === false) {
       throw new Error(
         "Error: meshtasticjs.IMeshDevice.setOwner: Owner config has not been read from device, can't set new one. Try reconnecting."
@@ -393,7 +443,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param fromRadioUInt8Array
    */
   async _handleFromRadio(fromRadioUInt8Array: Uint8Array) {
-    let fromRadioObj: any; /** @todo needs definition */
+    let fromRadioObj: FromRadio;
 
     if (fromRadioUInt8Array.byteLength < 1) {
       if (SettingsManager.debugMode) {
@@ -469,12 +519,12 @@ export abstract class IMeshDevice extends EventTarget {
    * @event
    * @param meshPacket
    */
-  _handleMeshPacket(meshPacket) {
+  _handleMeshPacket(meshPacket: MeshPacket) {
     let eventName: string;
 
     if (meshPacket.decoded.hasOwnProperty("data")) {
       if (!meshPacket.decoded.data.hasOwnProperty("typ")) {
-        meshPacket.decoded.data.typ = "OPAQUE";
+        meshPacket.decoded.data.typ = Type.OPAQUE;
       }
 
       eventName = "dataPacket";
@@ -547,10 +597,11 @@ export abstract class IMeshDevice extends EventTarget {
   /**
    * Short description
    * @todo change eventType to enum
+   * @todo define payload type
    * @param eventType
    * @param payload
    */
-  _dispatchInterfaceEvent(eventType: string, payload) {
+  _dispatchInterfaceEvent(eventType: string, payload: any) {
     this.dispatchEvent(new CustomEvent(eventType, { detail: payload }));
   }
 }

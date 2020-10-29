@@ -1,4 +1,3 @@
-import { Message } from "protobufjs";
 import { SettingsManager } from "../settingsmanager";
 import { default as protobufjs } from "./meshproto";
 
@@ -15,7 +14,7 @@ export class ProtobufHandler {
     objectName: string | string[],
     protobufUInt8Array: Uint8Array
   ) {
-    let protobufObj: Message<{}>;
+    let protobufObj: any;
 
     let protobufType = protobufjs.lookupType(objectName);
 
@@ -31,9 +30,9 @@ export class ProtobufHandler {
   }
 
   // converts from generic obj to protobuf obj & uint8array
-  static toProtobuf(protobufTypeName: string | string[], object) {
+  static toProtobuf(protobufTypeName: string | string[], object: any) {
     let protobuf = {
-      obj: undefined as Message<{}>,
+      obj: undefined as any,
       uint8array: undefined as Uint8Array,
     };
 
@@ -56,7 +55,11 @@ export class ProtobufHandler {
     return protobuf;
   }
 
+  /**
+   * @todo Fix clash between usage of Type & protobuff.Type
+   * @param typeString
+   */
   static getType(typeString: string | string[]) {
-    return protobufjs.lookupTypeOrEnum(typeString);
+    return protobufjs.lookupTypeOrEnum(typeString) as any;
   }
 }

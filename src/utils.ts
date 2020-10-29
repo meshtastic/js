@@ -1,10 +1,13 @@
 /**
  * Converts a `ArrayBuffer` to a hex string
+ * @todo verify `x` data type
  * @param arrayBuffer Input `ArrayBuffer` to be converted
  */
 export function bufferToHex(arrayBuffer: ArrayBuffer) {
   return Array.prototype.map
-    .call(new Uint8Array(arrayBuffer), (x) => ("00" + x.toString(16)).slice(-2))
+    .call(new Uint8Array(arrayBuffer), (x: number) =>
+      ("00" + x.toString(16)).slice(-2)
+    )
     .join("") as string;
 }
 
@@ -29,7 +32,6 @@ export function getEnvironment() {
 /**
  * This function keeps calling `toTry` until promise resolves or fails
  *  https://googlechrome.github.io/samples/web-bluetooth/automatic-reconnect-async-await.html
- * @todo use effect param here
  *
  * @param max Maximum number of times `toTry` can be called
  * @param delay Delay (seconds) of the first retry

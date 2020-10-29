@@ -4,7 +4,6 @@ import { typedArrayToBuffer } from "./utils";
 
 /**
  * Allows to connect to a meshtastic device over HTTP(S)
- * @extends IMeshDevice
  */
 export class IHTTPConnection extends IMeshDevice {
   /**
@@ -64,9 +63,9 @@ export class IHTTPConnection extends IMeshDevice {
    */
   async connect(
     address: string,
-    tls = undefined,
-    fetchMode = undefined,
-    fetchInterval = undefined,
+    tls: boolean = undefined,
+    fetchMode: string = undefined,
+    fetchInterval: number = undefined,
     noAutoConfig = false
   ) {
     if (this.isConnected === true) {
@@ -127,7 +126,8 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Disconnects from the meshtastic device
-   * @returns {number} 0 on success, 1 if device is already disconnected
+   * @todo return state on `isConnected` === `true`?
+   * @returns 0 on success, 1 if device is already disconnected
    */
   disconnect() {
     if (this.isConnected === false) {
@@ -140,6 +140,7 @@ export class IHTTPConnection extends IMeshDevice {
     }
 
     this._onDisconnected();
+    return 0;
   }
 
   async _readFromRadio() {
@@ -185,7 +186,11 @@ export class IHTTPConnection extends IMeshDevice {
     }
   }
 
-  async _httpRequest(url: string, type = "GET", toRadioBuffer = undefined) {
+  async _httpRequest(
+    url: string,
+    type = "GET",
+    toRadioBuffer: ArrayBuffer = undefined
+  ) {
     let response: Response;
 
     switch (type) {
@@ -229,7 +234,7 @@ export class IHTTPConnection extends IMeshDevice {
     }
 
     try {
-      let r = await this._readFromRadio(); /** @todo not used? */
+      await this._readFromRadio();
     } catch (e) {
       if (SettingsManager.debugMode) {
         console.log(e);
