@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "ES6",
     "moduleResolution": "Node",
-    "target": "ES6",
+    "target": "ESNext",
     "declaration": true,
     "outDir": "./dist",
     "noImplicitAny": true,
@@ -11,8 +11,6 @@
     "noImplicitUseStrict": true
   },
   "include": ["src/**/*"],
-  "sourceMap": true,
-  "declaration": true,
   "typedocOptions": {
     "mode": "modules",
     "out": "docs"

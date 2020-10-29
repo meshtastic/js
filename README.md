@@ -16,33 +16,34 @@ Supported features:
 
 [Documentation/API Reference](https://meshtastic.github.io/meshtastic.js) (work in progress)
 
-## Installation
-
-### Including the script
-
-```
-<script src="path/to/meshtastic.js"></script>
-```
-
-This includes meshtastic.js into an html file and makes it available through the global variable meshtasticjs.
-Since the file follows the Universal Module Definition, it can also be used as a commonjs or amd module (https://github.com/umdjs/umd).
-
-## Usage
+## Installation & Usage
 
 ### Basic Init
 
-This creates a new meshtastic client instance and initializes the client:
+This includes meshtastic.js into an html file and makes it available through the global variable meshtasticjs and creates a new meshtastic client instance and initializes the client:
 
+#### Generic usage
+
+```html
+<script src="path/to/meshtastic.js"></script>
 ```
-var meshtasticClient = new meshtasticjs.Client;
 
+```javascript
+var client = new meshtasticjs.Client();
+```
+
+#### ES6
+
+```typescript
+import { Client } from "meshtasticjs";
+
+const client = new Client();
 ```
 
 After that, a new connection can be created. it returns an IBLEConnection interface:
 
-```
-var connectionOne = meshtasticClient.createBLEConnection();
-
+```javascript
+const connectionOne = client.createBLEConnection();
 ```
 
 The connection interface provides events that can be listened on:
@@ -56,9 +57,11 @@ The connection interface provides events that can be listened on:
 - `disconnected` Gets called when link to device is disconnected
 - `configDone` Gets called when device has been configured (myInfo, radio and node data received). device interface is now ready to be used
 
-```
+```typescript
 // Registering event listeners
-connectionOne.addEventListener('fromRadio', function(event) { console.log(event.detail.toJSON()) });
+connectionOne.addEventListener("fromRadio", (event) => {
+  console.log(event.detail.toJSON());
+});
 ```
 
 ### Connect to a device
@@ -67,34 +70,38 @@ Now we can connect to the device asynchronously. It returns a promise, so it mus
 
 **Important: the connect action must be called from a user interaction (e.g. button press), otherwise the browsers won't allow the connect.**
 
-```
-connectionOne.connect()
-        .then(result => {
-            // This code gets executed when the connection has been established
-            console.log("Successfully connected!");
-        })
-        .catch(error => { console.log(error); });
-
+```typescript
+connectionOne
+  .connect()
+  .then((result) => {
+    // This code gets executed when the connection has been established
+    console.log("Successfully connected!");
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 ```
 
 ### Send a text message
 
 Send a text message via the device over the meshtastic radio. If no recipient node is provided, it gets sent as a broadcast:
 
-```
- connectionOne.sendText('meshtastic is awesome')
-        .then(result => {
-            console.log(result);
-        })
-        .catch(error => { console.log(error); });
-
+```typescript
+connectionOne
+  .sendText("meshtastic is awesome")
+  .then((result) => {
+    console.log(result);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 ```
 
 **All calls (if not using then/catch promise syntax) should be wrapped in a try/catch to handle errors.**
 
 For more examples see /examples.
 
-[Documentation/API Reference](https://meshtastic.github.io/meshtastic.js) (work in progress)
+[Documentation/API Reference](https://meshtastic.github.io/meshtastic.js)
 
 ## Compatibility
 
@@ -115,7 +122,7 @@ More detailed compatibility information can be found at https://caniuse.com/web-
 
 Clone the library into a local directory and run:
 
-```
+```bash
 npm install
 ```
 
@@ -123,7 +130,7 @@ to fetch the needed dependencies.
 
 To build:
 
-```
+```bash
 npm run build
 npm run generate-docs
 ```
@@ -134,4 +141,3 @@ Roadmap for version 1.0:
 
 - Support for serial usb connections
 - More granular error management
-- ES6 Module Support (the library is designed as an ES6 module, but protobuf.js needed for protocol buffers is not... yet?)
