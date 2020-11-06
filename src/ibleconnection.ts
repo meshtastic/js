@@ -70,13 +70,9 @@ export class IBLEConnection extends IMeshDevice {
    * @todo don't pass this.device to requestDeviceFilterParams
    * @param requestDeviceFilterParams Optional filter options for the web bluetooth api requestDevice() method
    * @param noAutoConfig Connect to the device without configuring it. Requires to call configure() manually
-   * @returns 0 on success
    */
   async connect(
-    requestDeviceFilterParams:
-      | boolean
-      | RequestDeviceOptions
-      | BluetoothDevice = false,
+    requestDeviceFilterParams?: RequestDeviceOptions,
     noAutoConfig = false
   ) {
     if (this.isConnected === true) {
@@ -95,10 +91,8 @@ export class IBLEConnection extends IMeshDevice {
 
     try {
       // If no device has been selected, open request device browser prompt
-      if (this.device === undefined) {
-        device = await this._requestDevice(
-          requestDeviceFilterParams as boolean | RequestDeviceOptions
-        );
+      if (this.device === undefined && requestDeviceFilterParams) {
+        device = await this._requestDevice(requestDeviceFilterParams);
         this.device = device;
       }
 
@@ -120,8 +114,6 @@ export class IBLEConnection extends IMeshDevice {
       this.isConnected = true;
 
       await this._onConnected(noAutoConfig);
-
-      return 0;
     } catch (e) {
       throw new Error(
         "Error in meshtasticjs.IBLEConnection.connect: " + e.message
@@ -131,7 +123,6 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Disconnects from the meshtastic device
-   * @returns 0 on success, 1 if device is already disconnected
    */
   disconnect() {
     this.userInitiatedDisconnect = true; // Don't reconnect
@@ -142,7 +133,6 @@ export class IBLEConnection extends IMeshDevice {
           "meshtasticjs.IBLEConnection.disconnect: device already disconnected"
         );
       }
-      return 1;
     } else if (this.isConnected === false && this.isReconnecting === true) {
       if (SettingsManager.debugMode) {
         console.log(
@@ -153,8 +143,6 @@ export class IBLEConnection extends IMeshDevice {
 
     this.connection.disconnect();
     // No need to call parent _onDisconnected here, calling disconnect() triggers gatt event
-
-    return 0;
   }
 
   /**
@@ -212,15 +200,11 @@ export class IBLEConnection extends IMeshDevice {
    * an own UI, bypassing the browsers select/pairing dialog
    * @param requestDeviceFilterParams Bluetooth device request filters
    */
-  async _requestDevice(
-    requestDeviceFilterParams: RequestDeviceOptions | boolean
-  ) {
-    if (requestDeviceFilterParams === false) {
-      if (!requestDeviceFilterParams.hasOwnProperty("filters")) {
-        requestDeviceFilterParams = {
-          filters: [{ services: [constants.SERVICE_UUID] }],
-        };
-      }
+  async _requestDevice(requestDeviceFilterParams: RequestDeviceOptions) {
+    if (!requestDeviceFilterParams.hasOwnProperty("filters")) {
+      requestDeviceFilterParams = {
+        filters: [{ services: [constants.SERVICE_UUID] }],
+      };
     }
 
     try {
@@ -307,8 +291,6 @@ export class IBLEConnection extends IMeshDevice {
         "Error in meshtasticjs.IBLEConnection.getCharacteristics: " + e.message
       );
     }
-
-    return 0;
   }
 
   /**
@@ -363,7 +345,7 @@ export class IBLEConnection extends IMeshDevice {
       this.isReconnecting = true;
 
       const toTry = async () => {
-        await this.connect(this.device);
+        await this.connect();
       };
 
       const success = () => {

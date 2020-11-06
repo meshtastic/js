@@ -19,18 +19,15 @@ export class NodeDB extends EventTarget {
   /**
    * Adds a node object to the database.
    * @param nodeInfo Information about the new node
-   * @returns number of node added
    */
   addNode(nodeInfo: NodeInfo) {
     this.nodes.set(nodeInfo.num, nodeInfo);
     this._dispatchInterfaceEvent("nodeListChanged", nodeInfo.num);
-    return nodeInfo.num;
   }
 
   /**
    * Adds user data to an existing node. Creates the node if it doesn't exist.
    * @param nodeInfo  Information about the node for the user data to be assigned to
-   * @returns number of node modified
    */
   addUserData(nodeNumber: number, user: User) {
     let node = this.nodes.get(nodeNumber);
@@ -38,13 +35,7 @@ export class NodeDB extends EventTarget {
     if (node === undefined) {
       let nodeInfo = new NodeInfo({
         num: nodeNumber,
-        position: new Position({
-          altitude: undefined,
-          latitudeI: undefined,
-          longitudeI: undefined,
-          time: undefined,
-          batteryLevel: undefined,
-        }),
+        position: new Position(),
         user: user,
       });
 
@@ -57,20 +48,15 @@ export class NodeDB extends EventTarget {
       }
 
       this._dispatchInterfaceEvent("nodeListChanged", null);
-
-      return nodeNumber;
     }
 
     node.user = user;
     this._dispatchInterfaceEvent("nodeListChanged", null);
-
-    return nodeNumber;
   }
 
   /**
    * Adds position data to an existing node. Creates the node if it doesn't exist.
    * @param nodeInfo Information about the node for the potition data to be assigned to
-   * @returns number of node modified
    */
   addPositionData(nodeNumber: number, position: Position) {
     let node = this.nodes.get(nodeNumber);
@@ -91,25 +77,19 @@ export class NodeDB extends EventTarget {
       }
 
       this._dispatchInterfaceEvent("nodeListChanged", nodeNumber);
-
-      return nodeNumber;
     }
 
     node.position = position;
     this._dispatchInterfaceEvent("nodeListChanged", nodeNumber);
-
-    return nodeNumber;
   }
 
   /**
    * Removes node from the database.
    * @param nodeNumber Number of the node to be removed
-   * @returns number of node removed
    */
   removeNode(nodeNumber: number) {
     this.nodes.delete(nodeNumber);
     this._dispatchInterfaceEvent("nodeListChanged", nodeNumber);
-    return nodeNumber;
   }
 
   /**
@@ -117,17 +97,14 @@ export class NodeDB extends EventTarget {
    * @param nodeNumber Number of the node to be fetched
    */
   getNodeByNum(nodeNumber: number) {
-    if (this.nodes.get(nodeNumber) === undefined) {
-      return undefined;
-    }
-
-    return this.nodes.get(nodeNumber);
+    return this.nodes.get(nodeNumber) === undefined
+      ? undefined
+      : this.nodes.get(nodeNumber);
   }
 
   /**
    * Gets a list of all nodes in the database.
    * @todo Add sort by field option
-   * @returns Map with node numbers as keys and NodeInfo objects as value
    */
   getNodeList() {
     return this.nodes;
@@ -136,22 +113,18 @@ export class NodeDB extends EventTarget {
   /**
    * Gets the associated user id to a node number, if known
    * @param nodeNumber desired nodes number
-   * @returns users id
    */
   nodeNumToUserId(nodeNumber: number) {
     let node = this.nodes.get(nodeNumber);
 
-    if (node === undefined || node.user.id === undefined) {
-      return undefined;
-    }
-
-    return node.user.id;
+    return node === undefined || node.user.id === undefined
+      ? undefined
+      : node.user.id;
   }
 
   /**
    * Gets the node number to a user id, if known
    * @param userId Desired users id
-   * @returns nodes number
    */
   userIdToNodeNum(userId: string) {
     let nodeNumber: number = undefined;

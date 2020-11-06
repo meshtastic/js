@@ -94,9 +94,9 @@ export abstract class IMeshDevice extends EventTarget {
   /**
    * @todo strongly type and maybe unify this function
    */
-  abstract connect(..._: any): Promise<number>;
+  abstract connect(..._: any): Promise<void>;
 
-  abstract disconnect(): number;
+  abstract disconnect(): void;
 
   /**
    * Sends a text over the radio
@@ -104,7 +104,6 @@ export abstract class IMeshDevice extends EventTarget {
    * @param destinationNum Node number of the destination node
    * @param wantAck
    * @param wantResponse
-   * @returns FromRadio object that was sent to device
    */
   async sendText(
     text: string,
@@ -132,7 +131,6 @@ export abstract class IMeshDevice extends EventTarget {
    * @param dataType dataType Enum of protobuf data type
    * @param wantAck
    * @param wantResponse
-   * @returns FromRadio object that was sent to device
    */
   async sendData(
     byteData: Uint8Array,
@@ -173,7 +171,6 @@ export abstract class IMeshDevice extends EventTarget {
    * @param destinationNum Node number of the destination node
    * @param wantAck
    * @param wantResponse
-   * @returns FromRadio object that was sent to device
    */
   async sendPosition(
     latitude?: number,
@@ -220,13 +217,6 @@ export abstract class IMeshDevice extends EventTarget {
      */
     const meshPacket = new MeshPacket({
       decoded: subPacket,
-      from: undefined,
-      hopLimit: undefined,
-      id: undefined,
-      rxSnr: undefined,
-      rxTime: undefined,
-      to: undefined,
-      wantAck: undefined,
     });
 
     return await this.sendPacket(meshPacket, destinationNum, wantAck);
@@ -237,7 +227,6 @@ export abstract class IMeshDevice extends EventTarget {
    * @param meshPacket
    * @param destinationNum Node number of the destination node
    * @param wantAck
-   * @returns FromRadio object that was sent to device
    */
   async sendPacket(
     meshPacket: MeshPacket,
@@ -276,14 +265,11 @@ export abstract class IMeshDevice extends EventTarget {
     let encodedData = ToRadio.encode(toRadioData).finish();
 
     await this._writeToRadio(encodedData);
-
-    // return toRadio.obj;
   }
 
   /**
    * Writes radio config to device
    * @param configOptions
-   * @returns FromRadio object that was sent to device
    */
   async setRadioConfig(configOptionsObj: RadioConfig) {
     if (this.radioConfig === undefined || this.isDeviceReady() === false) {
@@ -355,7 +341,6 @@ export abstract class IMeshDevice extends EventTarget {
       setOwner: this.user,
     });
     await this._writeToRadio(ToRadio.encode(toRadio).finish());
-    return toRadio;
   }
 
   /**
@@ -387,14 +372,9 @@ export abstract class IMeshDevice extends EventTarget {
 
   /**
    * Checks if device is ready
-   * @returns true if device interface is fully configured and can be used
    */
   isDeviceReady() {
-    if (this.isConnected === true && this.isConfigDone === true) {
-      return true;
-    } else {
-      return false;
-    }
+    return this.isConnected === true && this.isConfigDone === true;
   }
 
   /**
@@ -404,8 +384,7 @@ export abstract class IMeshDevice extends EventTarget {
     if (this.currentPacketId === undefined) {
       throw "Error in meshtasticjs.MeshInterface.generatePacketId: Interface is not configured, can't generate packet id";
     } else {
-      this.currentPacketId = this.currentPacketId + 1;
-      return this.currentPacketId;
+      return this.currentPacketId++;
     }
   }
 

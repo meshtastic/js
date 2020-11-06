@@ -59,7 +59,6 @@ export class IHTTPConnection extends IMeshDevice {
    * @param fetchMode Defines how new messages are fetched, takes 'slow', 'balanced', 'fast', 'stream'
    * @param fetchInterval Sets a fixed interval in that the device is fetched for new messages
    * @param fetchInterval [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
-   * @returns 0 on success
    */
   async connect(
     address: string,
@@ -120,14 +119,10 @@ export class IHTTPConnection extends IMeshDevice {
 
     this.lastInteractionTime = Date.now();
     setTimeout(this._fetchTimer.bind(this), 5000);
-
-    return 0;
   }
 
   /**
    * Disconnects from the meshtastic device
-   * @todo return state on `isConnected` === `true`?
-   * @returns 0 on success, 1 if device is already disconnected
    */
   disconnect() {
     if (this.isConnected === false) {
@@ -136,11 +131,9 @@ export class IHTTPConnection extends IMeshDevice {
           "meshtasticjs.IHTTPConnection.disconnect: device already disconnected"
         );
       }
-      return 1;
     }
 
     this._onDisconnected();
-    return 0;
   }
 
   async _readFromRadio() {
