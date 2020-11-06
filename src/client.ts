@@ -1,6 +1,5 @@
 import { IBLEConnection } from "./ibleconnection";
 import { IHTTPConnection } from "./ihttpconnection";
-import { ProtobufHandler } from "./protobufs/protobufhandler";
 
 /**
  * Allows to create new connections to devices and manages them.
@@ -15,9 +14,6 @@ export class Client {
 
   constructor() {
     this.deviceInterfaces = new Array();
-
-    // Preload protobufhandler singleton, optional
-    new ProtobufHandler();
   }
 
   /**

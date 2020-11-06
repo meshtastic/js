@@ -1,19 +1,21 @@
 import * as constants from "./constants";
 import { SettingsManager } from "./settingsmanager";
 import { NodeDB } from "./nodedb";
-import { ProtobufHandler } from "./protobufs/protobufhandler";
 import EventTarget from "@ungap/event-target";
 import {
-  MeshPacket,
-  Position,
-  SubPacket,
-  Type,
-  RadioConfig,
-  User,
-  MyNodeInfo,
-  FromRadio,
+  ChannelSettings,
   Data,
-} from "./protobufs/types";
+  FromRadio,
+  MeshPacket,
+  MyNodeInfo,
+  Position,
+  RadioConfig,
+  SubPacket,
+  ToRadio,
+  TypeEnum,
+  User,
+  UserPreferences,
+} from "./protobuf";
 
 /**
  * @todo is the event tag required on classes that contain events?
@@ -48,7 +50,7 @@ export abstract class IMeshDevice extends EventTarget {
   /**
    * Short description
    */
-  radioConfig: RadioConfig; //protobufjs.RadioConfig
+  radioConfig: RadioConfig;
 
   /**
    * Short description
@@ -63,7 +65,7 @@ export abstract class IMeshDevice extends EventTarget {
   /**
    * Short description
    */
-  myInfo: MyNodeInfo; //protobufjs.myInfo
+  myInfo: MyNodeInfo;
 
   constructor() {
     super();
@@ -110,11 +112,6 @@ export abstract class IMeshDevice extends EventTarget {
     wantAck = false,
     wantResponse = false
   ) {
-    let dataType = ProtobufHandler.getType(
-      "Data.Type"
-    ); /** @todo fix typings */
-    dataType = dataType.values[Type.CLEAR_TEXT];
-
     // DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
     const enc = new TextEncoder();
     const encodedText = enc.encode(text);
@@ -122,7 +119,7 @@ export abstract class IMeshDevice extends EventTarget {
     return await this.sendData(
       encodedText,
       destinationNum,
-      dataType,
+      TypeEnum.CLEAR_TEXT,
       wantAck,
       wantResponse
     );
@@ -140,48 +137,29 @@ export abstract class IMeshDevice extends EventTarget {
   async sendData(
     byteData: Uint8Array,
     destinationNum = constants.BROADCAST_ADDR,
-    dataType: Type,
+    dataType: TypeEnum,
     wantAck = false,
     wantResponse = false
   ) {
-    /**
-     * @todo Fix clash between usage of Type & protobuff.Type
-     */
-    if (dataType === undefined) {
-      dataType = ProtobufHandler.getType("Data.Type");
-      const tmpDataType = dataType as any;
-      dataType = tmpDataType.values[Type.OPAQUE];
-    }
-
-    let data: Data;
-
-    data.payload = byteData;
-    data.typ = dataType;
+    let data = new Data({
+      payload: byteData,
+      typ: dataType,
+    });
 
     /**
      * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
      */
-    let subPacket: SubPacket = {
+    let subPacket = new SubPacket({
       data: data,
       wantResponse: wantResponse,
-      dest: undefined,
-      originalId: undefined,
-      source: undefined,
-    };
+    });
 
     /**
      * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
      */
-    let meshPacket: MeshPacket = {
+    let meshPacket = new MeshPacket({
       decoded: subPacket,
-      from: undefined,
-      hopLimit: undefined,
-      id: undefined,
-      rxSnr: undefined,
-      rxTime: undefined,
-      to: undefined,
-      wantAck: undefined,
-    };
+    });
 
     return await this.sendPacket(meshPacket, destinationNum, wantAck);
   }
@@ -206,12 +184,12 @@ export abstract class IMeshDevice extends EventTarget {
     wantAck = false,
     wantResponse = false
   ) {
-    let position: Position = {
+    let position = new Position({
       latitudeI: 0.0,
       longitudeI: 0.0,
       altitude: 0,
       time: Math.floor(Date.now() / 1000),
-    };
+    });
 
     if (latitude != 0.0) {
       position.latitudeI = Math.floor(latitude / 1e-7);
@@ -232,18 +210,15 @@ export abstract class IMeshDevice extends EventTarget {
     /**
      * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
      */
-    const subPacket: SubPacket = {
+    const subPacket = new SubPacket({
       position: position,
       wantResponse: wantResponse,
-      dest: undefined,
-      originalId: undefined,
-      source: undefined,
-    };
+    });
 
     /**
      * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
      */
-    const meshPacket: MeshPacket = {
+    const meshPacket = new MeshPacket({
       decoded: subPacket,
       from: undefined,
       hopLimit: undefined,
@@ -252,7 +227,7 @@ export abstract class IMeshDevice extends EventTarget {
       rxTime: undefined,
       to: undefined,
       wantAck: undefined,
-    };
+    });
 
     return await this.sendPacket(meshPacket, destinationNum, wantAck);
   }
@@ -294,11 +269,15 @@ export abstract class IMeshDevice extends EventTarget {
       meshPacket.id = this._generatePacketId();
     }
 
-    let packet = { packet: meshPacket };
+    let toRadioData = new ToRadio({
+      packet: meshPacket,
+    });
 
-    let toRadio = ProtobufHandler.toProtobuf("ToRadio", packet);
-    await this._writeToRadio(toRadio.uint8array);
-    return toRadio.obj;
+    let encodedData = ToRadio.encode(toRadioData).finish();
+
+    await this._writeToRadio(encodedData);
+
+    // return toRadio.obj;
   }
 
   /**
@@ -329,10 +308,9 @@ export abstract class IMeshDevice extends EventTarget {
           configOptionsObj.channelSettings
         );
       } else {
-        this.radioConfig.channelSettings = ProtobufHandler.toProtobuf(
-          "ChannelSettings",
+        this.radioConfig.channelSettings = new ChannelSettings(
           configOptionsObj.channelSettings
-        ).obj;
+        );
       }
     }
     if (configOptionsObj.hasOwnProperty("preferences")) {
@@ -342,24 +320,21 @@ export abstract class IMeshDevice extends EventTarget {
           configOptionsObj.preferences
         );
       } else {
-        this.radioConfig.preferences = ProtobufHandler.toProtobuf(
-          "UserPreferences",
+        this.radioConfig.preferences = new UserPreferences(
           configOptionsObj.preferences
-        ).obj;
+        );
       }
     }
 
-    let setRadio = { setRadio: this.radioConfig };
-
-    let toRadio = ProtobufHandler.toProtobuf("ToRadio", setRadio);
-    await this._writeToRadio(toRadio.uint8array);
-    return toRadio.obj;
+    let toRadio = new ToRadio({
+      setRadio: this.radioConfig,
+    });
+    await this._writeToRadio(ToRadio.encode(toRadio).finish());
   }
 
   /**
    * Sets devices owner data
    * @param ownerDataObj
-   * @returns FromRadio object that was sent to device
    */
   async setOwner(ownerDataObj: User) {
     if (this.user === undefined || this.isDeviceReady() === false) {
@@ -376,16 +351,15 @@ export abstract class IMeshDevice extends EventTarget {
 
     Object.assign(this.user, ownerDataObj);
 
-    let setOwner = { setOwner: this.user };
-
-    let toRadio = ProtobufHandler.toProtobuf("ToRadio", setOwner);
-    await this._writeToRadio(toRadio.uint8array);
-    return toRadio.obj;
+    let toRadio = new ToRadio({
+      setOwner: this.user,
+    });
+    await this._writeToRadio(ToRadio.encode(toRadio).finish());
+    return toRadio;
   }
 
   /**
    * Manually triggers the device configure process
-   * @returns Returns 0 if successful
    */
   async configure() {
     if (this.isConnected === false) {
@@ -396,11 +370,11 @@ export abstract class IMeshDevice extends EventTarget {
 
     this.isConfigStarted = true;
 
-    let wantConfig = {} as any; /** @todo fix typings */
-    wantConfig.wantConfigId = constants.MY_CONFIG_ID;
-    let toRadio = ProtobufHandler.toProtobuf("ToRadio", wantConfig);
+    let toRadio = new ToRadio({
+      wantConfigId: constants.MY_CONFIG_ID,
+    });
 
-    await this._writeToRadio(toRadio.uint8array);
+    await this._writeToRadio(ToRadio.encode(toRadio).finish());
 
     await this._readFromRadio();
 
@@ -409,8 +383,6 @@ export abstract class IMeshDevice extends EventTarget {
         "Error in meshtasticjs.MeshInterface.configure: configuring device was not successful"
       );
     }
-
-    return 0;
   }
 
   /**
@@ -445,18 +417,17 @@ export abstract class IMeshDevice extends EventTarget {
   async _handleFromRadio(fromRadioUInt8Array: Uint8Array) {
     let fromRadioObj: FromRadio;
 
+    /**
+     * @todo maybe throw error? / ignore
+     */
     if (fromRadioUInt8Array.byteLength < 1) {
       if (SettingsManager.debugMode) {
         console.log("Empty buffer received");
       }
-      return 0;
     }
 
     try {
-      fromRadioObj = ProtobufHandler.fromProtobuf(
-        "FromRadio",
-        fromRadioUInt8Array
-      );
+      fromRadioObj = FromRadio.decode(fromRadioUInt8Array);
     } catch (e) {
       throw new Error(
         "Error in meshtasticjs.IMeshDevice.handleFromRadio: " + e.message
@@ -510,8 +481,6 @@ export abstract class IMeshDevice extends EventTarget {
         );
       }
     }
-
-    return fromRadioObj;
   }
 
   /**
@@ -524,7 +493,7 @@ export abstract class IMeshDevice extends EventTarget {
 
     if (meshPacket.decoded.hasOwnProperty("data")) {
       if (!meshPacket.decoded.data.hasOwnProperty("typ")) {
-        meshPacket.decoded.data.typ = Type.OPAQUE;
+        meshPacket.decoded.data.typ = TypeEnum.OPAQUE;
       }
 
       eventName = "dataPacket";

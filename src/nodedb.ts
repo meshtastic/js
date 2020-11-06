@@ -1,6 +1,5 @@
-import { ProtobufHandler } from "./protobufs/protobufhandler";
 import EventTarget from "@ungap/event-target";
-import { NodeInfo, Position, User } from "./protobufs/types";
+import { NodeInfo, Position, User } from "./protobuf";
 
 /**
  * Stores and manages Node objects
@@ -37,17 +36,20 @@ export class NodeDB extends EventTarget {
     let node = this.nodes.get(nodeNumber);
 
     if (node === undefined) {
-      let nodeInfo = {
+      let nodeInfo = new NodeInfo({
         num: nodeNumber,
-        position: {},
+        position: new Position({
+          altitude: undefined,
+          latitudeI: undefined,
+          longitudeI: undefined,
+          time: undefined,
+          batteryLevel: undefined,
+        }),
         user: user,
-      } as NodeInfo;
+      });
 
       try {
-        this.nodes.set(
-          nodeNumber,
-          ProtobufHandler.toProtobuf("NodeInfo", nodeInfo).obj
-        );
+        this.nodes.set(nodeNumber, nodeInfo);
       } catch (e) {
         throw new Error(
           "Error in meshtasticjs.nodeDB.addUserData:" + e.message
@@ -74,17 +76,14 @@ export class NodeDB extends EventTarget {
     let node = this.nodes.get(nodeNumber);
 
     if (node === undefined) {
-      let nodeInfo = {
+      let nodeInfo = new NodeInfo({
         num: nodeNumber,
         position: position,
-        user: {},
-      } as NodeInfo;
+        user: new User(),
+      });
 
       try {
-        this.nodes.set(
-          nodeNumber,
-          ProtobufHandler.toProtobuf("NodeInfo", nodeInfo).obj
-        );
+        this.nodes.set(nodeNumber, nodeInfo);
       } catch (e) {
         throw new Error(
           "Error in meshtasticjs.nodeDB.addPositionData:" + e.message
