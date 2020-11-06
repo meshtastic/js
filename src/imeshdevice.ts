@@ -78,7 +78,7 @@ export abstract class IMeshDevice extends EventTarget {
     this.nodes = new NodeDB();
     this.nodes.addEventListener(
       "nodeListChanged",
-      this._onNodeListChanged.bind(this)
+      this.onNodeListChanged.bind(this)
     );
 
     this.radioConfig = undefined;
@@ -87,9 +87,9 @@ export abstract class IMeshDevice extends EventTarget {
     this.myInfo = undefined;
   }
 
-  abstract _writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void>;
+  abstract writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void>;
 
-  abstract _readFromRadio(): Promise<void>;
+  abstract readFromRadio(): Promise<void>;
 
   /**
    * @todo strongly type and maybe unify this function
@@ -255,7 +255,7 @@ export abstract class IMeshDevice extends EventTarget {
     meshPacket.wantAck = wantAck;
 
     if (meshPacket.id === undefined || !meshPacket.hasOwnProperty("id")) {
-      meshPacket.id = this._generatePacketId();
+      meshPacket.id = this.generatePacketId();
     }
 
     let toRadioData = new ToRadio({
@@ -264,7 +264,7 @@ export abstract class IMeshDevice extends EventTarget {
 
     let encodedData = ToRadio.encode(toRadioData).finish();
 
-    await this._writeToRadio(encodedData);
+    await this.writeToRadio(encodedData);
   }
 
   /**
@@ -315,7 +315,7 @@ export abstract class IMeshDevice extends EventTarget {
     let toRadio = new ToRadio({
       setRadio: this.radioConfig,
     });
-    await this._writeToRadio(ToRadio.encode(toRadio).finish());
+    await this.writeToRadio(ToRadio.encode(toRadio).finish());
   }
 
   /**
@@ -340,7 +340,7 @@ export abstract class IMeshDevice extends EventTarget {
     let toRadio = new ToRadio({
       setOwner: this.user,
     });
-    await this._writeToRadio(ToRadio.encode(toRadio).finish());
+    await this.writeToRadio(ToRadio.encode(toRadio).finish());
   }
 
   /**
@@ -359,9 +359,9 @@ export abstract class IMeshDevice extends EventTarget {
       wantConfigId: constants.MY_CONFIG_ID,
     });
 
-    await this._writeToRadio(ToRadio.encode(toRadio).finish());
+    await this.writeToRadio(ToRadio.encode(toRadio).finish());
 
-    await this._readFromRadio();
+    await this.readFromRadio();
 
     if (this.isConfigDone === false) {
       throw new Error(
@@ -380,7 +380,7 @@ export abstract class IMeshDevice extends EventTarget {
   /**
    * Short description
    */
-  _generatePacketId() {
+  private generatePacketId() {
     if (this.currentPacketId === undefined) {
       throw "Error in meshtasticjs.MeshInterface.generatePacketId: Interface is not configured, can't generate packet id";
     } else {
@@ -393,7 +393,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @event
    * @param fromRadioUInt8Array
    */
-  async _handleFromRadio(fromRadioUInt8Array: Uint8Array) {
+  protected async handleFromRadio(fromRadioUInt8Array: Uint8Array) {
     let fromRadioObj: FromRadio;
 
     /**
@@ -418,7 +418,7 @@ export abstract class IMeshDevice extends EventTarget {
     }
 
     if (this.isConfigDone === true) {
-      this._dispatchInterfaceEvent("fromRadio", fromRadioObj);
+      this.dispatchInterfaceEvent("fromRadio", fromRadioObj);
     }
 
     if (fromRadioObj.hasOwnProperty("myInfo")) {
@@ -441,7 +441,7 @@ export abstract class IMeshDevice extends EventTarget {
           this.user !== undefined &&
           this.currentPacketId !== undefined
         ) {
-          this._onConfigured();
+          this.onConfigured();
         } else {
           throw new Error(
             "Error in meshtasticjs.MeshInterface.handleFromRadio: Config received from device incomplete"
@@ -449,7 +449,7 @@ export abstract class IMeshDevice extends EventTarget {
         }
       }
     } else if (fromRadioObj.hasOwnProperty("packet")) {
-      this._handleMeshPacket(fromRadioObj.packet);
+      this.handleMeshPacket(fromRadioObj.packet);
     } else if (fromRadioObj.hasOwnProperty("rebooted")) {
       await this.configure();
     } else {
@@ -467,7 +467,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @event
    * @param meshPacket
    */
-  _handleMeshPacket(meshPacket: MeshPacket) {
+  private handleMeshPacket(meshPacket: MeshPacket) {
     let eventName: string;
 
     if (meshPacket.decoded.hasOwnProperty("data")) {
@@ -484,7 +484,7 @@ export abstract class IMeshDevice extends EventTarget {
       eventName = "positionPacket";
     }
 
-    this._dispatchInterfaceEvent(eventName, meshPacket);
+    this.dispatchInterfaceEvent(eventName, meshPacket);
   }
 
   /**
@@ -492,10 +492,10 @@ export abstract class IMeshDevice extends EventTarget {
    * @event
    * @param noAutoConfig Disables autoconfiguration
    */
-  async _onConnected(noAutoConfig: boolean) {
+  protected async onConnected(noAutoConfig: boolean) {
     this.isConnected = true;
     this.isReconnecting = false;
-    this._dispatchInterfaceEvent("connected", this);
+    this.dispatchInterfaceEvent("connected", this);
 
     if (noAutoConfig !== true) {
       try {
@@ -513,8 +513,8 @@ export abstract class IMeshDevice extends EventTarget {
    * Gets called when a link to the device has been disconnected
    * @event
    */
-  _onDisconnected() {
-    this._dispatchInterfaceEvent("disconnected", this);
+  protected onDisconnected() {
+    this.dispatchInterfaceEvent("disconnected", this);
     this.isConnected = false;
   }
 
@@ -522,9 +522,9 @@ export abstract class IMeshDevice extends EventTarget {
    * Gets called when the device has been configured (myInfo, radio and node data received). device interface is now ready to be used
    * @event
    */
-  _onConfigured() {
+  private onConfigured() {
     this.isConfigDone = true;
-    this._dispatchInterfaceEvent("configDone", this);
+    this.dispatchInterfaceEvent("configDone", this);
     if (SettingsManager.debugMode) {
       console.log(
         "Configured device with node number " + this.myInfo.myNodeNum
@@ -536,9 +536,9 @@ export abstract class IMeshDevice extends EventTarget {
    * Gets called when node database has been changed, returns changed node number
    * @event
    */
-  _onNodeListChanged() {
+  private onNodeListChanged() {
     if (this.isConfigDone === true) {
-      this._dispatchInterfaceEvent("nodeListChanged", this);
+      this.dispatchInterfaceEvent("nodeListChanged", this);
     }
   }
 
@@ -549,7 +549,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param eventType
    * @param payload
    */
-  _dispatchInterfaceEvent(eventType: string, payload: any) {
+  private dispatchInterfaceEvent(eventType: string, payload: any) {
     this.dispatchEvent(new CustomEvent(eventType, { detail: payload }));
   }
 }

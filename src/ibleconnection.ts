@@ -92,28 +92,28 @@ export class IBLEConnection extends IMeshDevice {
     try {
       // If no device has been selected, open request device browser prompt
       if (this.device === undefined && requestDeviceFilterParams) {
-        device = await this._requestDevice(requestDeviceFilterParams);
+        device = await this.requestDevice(requestDeviceFilterParams);
         this.device = device;
       }
 
       if (this.isReconnecting === false) {
-        this._subscribeToBLEConnectionEvents();
+        this.subscribeToBLEConnectionEvents();
       }
 
-      connection = await this._connectToDevice(this.device);
+      connection = await this.connectToDevice(this.device);
       this.connection = connection;
 
-      service = await this._getService(this.connection);
+      service = await this.getService(this.connection);
       this.service = service;
 
-      await this._getCharacteristics(this.service);
+      await this.getCharacteristics(this.service);
 
-      await this._subscribeToBLENotification();
+      await this.subscribeToBLENotification();
 
       // At this point device is connected
       this.isConnected = true;
 
-      await this._onConnected(noAutoConfig);
+      await this.onConnected(noAutoConfig);
     } catch (e) {
       throw new Error(
         "Error in meshtasticjs.IBLEConnection.connect: " + e.message
@@ -148,18 +148,18 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Short description
    */
-  async _readFromRadio() {
+  async readFromRadio() {
     let readBuffer = new ArrayBuffer(1);
 
     // read as long as the previous read buffer is bigger 0
     while (readBuffer.byteLength > 0) {
       try {
-        readBuffer = await this._readFromCharacteristic(
+        readBuffer = await this.readFromCharacteristic(
           this.fromRadioCharacteristic
         );
 
         if (readBuffer.byteLength > 0) {
-          await this._handleFromRadio(new Uint8Array(readBuffer, 0));
+          await this.handleFromRadio(new Uint8Array(readBuffer, 0));
         }
       } catch (e) {
         throw new Error(
@@ -172,7 +172,7 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Short description
    */
-  async _writeToRadio(ToRadioUInt8Array: Uint8Array) {
+  async writeToRadio(ToRadioUInt8Array: Uint8Array) {
     let ToRadioBuffer = typedArrayToBuffer(ToRadioUInt8Array);
 
     await this.toRadioCharacteristic.writeValue(ToRadioBuffer);
@@ -181,7 +181,7 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Short description
    */
-  async _readFromCharacteristic(
+  private async readFromCharacteristic(
     characteristic: BluetoothRemoteGATTCharacteristic
   ) {
     try {
@@ -200,7 +200,7 @@ export class IBLEConnection extends IMeshDevice {
    * an own UI, bypassing the browsers select/pairing dialog
    * @param requestDeviceFilterParams Bluetooth device request filters
    */
-  async _requestDevice(requestDeviceFilterParams: RequestDeviceOptions) {
+  private async requestDevice(requestDeviceFilterParams: RequestDeviceOptions) {
     if (!requestDeviceFilterParams.hasOwnProperty("filters")) {
       requestDeviceFilterParams = {
         filters: [{ services: [constants.SERVICE_UUID] }],
@@ -222,7 +222,7 @@ export class IBLEConnection extends IMeshDevice {
    * Connect to the specified bluetooth device
    * @param device Desired Bluetooth device
    */
-  async _connectToDevice(device: BluetoothDevice) {
+  private async connectToDevice(device: BluetoothDevice) {
     // Human-readable name of the device.
     if (SettingsManager.debugMode) {
       console.log("selected " + device.name + ", trying to connect now");
@@ -245,7 +245,7 @@ export class IBLEConnection extends IMeshDevice {
    * Short description
    * @param connection
    */
-  async _getService(connection: BluetoothRemoteGATTServer) {
+  private async getService(connection: BluetoothRemoteGATTServer) {
     let service: BluetoothRemoteGATTService; /** @todo optimize */
 
     try {
@@ -263,7 +263,7 @@ export class IBLEConnection extends IMeshDevice {
    * Short description
    * @param service
    */
-  async _getCharacteristics(service: BluetoothRemoteGATTService) {
+  private async getCharacteristics(service: BluetoothRemoteGATTService) {
     try {
       this.toRadioCharacteristic = await service.getCharacteristic(
         constants.TORADIO_UUID
@@ -296,11 +296,11 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * BLE notify characteristic published by device, gets called when new fromRadio is available for read
    */
-  async _subscribeToBLENotification() {
+  private async subscribeToBLENotification() {
     await this.fromNumCharacteristic.startNotifications();
     this.fromNumCharacteristic.addEventListener(
       "characteristicvaluechanged",
-      this._handleBLENotification.bind(this)
+      this.handleBLENotification.bind(this)
     ); // bind.this makes the object reference to IBLEConnection accessible within the callback
 
     if (SettingsManager.debugMode) {
@@ -309,10 +309,10 @@ export class IBLEConnection extends IMeshDevice {
   }
 
   // GATT connection state events (connect, disconnect)
-  _subscribeToBLEConnectionEvents() {
+  private subscribeToBLEConnectionEvents() {
     this.device.addEventListener(
       "gattserverdisconnected",
-      this._handleBLEDisconnect.bind(this)
+      this.handleBLEDisconnect.bind(this)
     );
   }
 
@@ -321,13 +321,13 @@ export class IBLEConnection extends IMeshDevice {
    * @todo verify that event is a string
    * @param event
    */
-  async _handleBLENotification(event: string) {
+  private async handleBLENotification(event: string) {
     if (SettingsManager.debugMode) {
       console.log("BLE notification received");
       console.log(event);
     }
     try {
-      await this._readFromRadio();
+      await this.readFromRadio();
     } catch (e) {
       if (SettingsManager.debugMode) {
         console.log(e);
@@ -338,8 +338,8 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Short description
    */
-  _handleBLEDisconnect() {
-    this._onDisconnected();
+  private handleBLEDisconnect() {
+    this.onDisconnected();
 
     if (this.userInitiatedDisconnect === false) {
       this.isReconnecting = true;

@@ -110,7 +110,7 @@ export class IHTTPConnection extends IMeshDevice {
     // At this point device is (presumably) connected, maybe check with ping-like request first
     this.isConnected = true;
 
-    await this._onConnected(noAutoConfig);
+    await this.onConnected(noAutoConfig);
 
     // Implement reading from device config here: fetchMode and Interval
 
@@ -118,7 +118,7 @@ export class IHTTPConnection extends IMeshDevice {
     this.fetchInterval = fetchInterval;
 
     this.lastInteractionTime = Date.now();
-    setTimeout(this._fetchTimer.bind(this), 5000);
+    setTimeout(this.fetchTimer.bind(this), 5000);
   }
 
   /**
@@ -133,16 +133,16 @@ export class IHTTPConnection extends IMeshDevice {
       }
     }
 
-    this._onDisconnected();
+    this.onDisconnected();
   }
 
-  async _readFromRadio() {
+  async readFromRadio() {
     let readBuffer = new ArrayBuffer(1);
 
     // read as long as the previous read buffer is bigger 0
     while (readBuffer.byteLength > 0) {
       try {
-        readBuffer = await this._httpRequest(
+        readBuffer = await this.httpRequest(
           this.url + "/api/v1/fromradio",
           "GET"
         );
@@ -151,7 +151,7 @@ export class IHTTPConnection extends IMeshDevice {
 
         if (readBuffer.byteLength > 0) {
           this.lastInteractionTime = Date.now();
-          await this._handleFromRadio(new Uint8Array(readBuffer, 0));
+          await this.handleFromRadio(new Uint8Array(readBuffer, 0));
         }
       } catch (e) {
         this.consecutiveFailedRequests++;
@@ -162,11 +162,11 @@ export class IHTTPConnection extends IMeshDevice {
     }
   }
 
-  async _writeToRadio(ToRadioUInt8Array: Uint8Array) {
+  async writeToRadio(ToRadioUInt8Array: Uint8Array) {
     this.lastInteractionTime = Date.now();
 
     try {
-      await this._httpRequest(
+      await this.httpRequest(
         this.url + "/api/v1/fromradio",
         "PUT",
         typedArrayToBuffer(ToRadioUInt8Array)
@@ -179,7 +179,7 @@ export class IHTTPConnection extends IMeshDevice {
     }
   }
 
-  async _httpRequest(
+  private async httpRequest(
     url: string,
     type = "GET",
     toRadioBuffer: ArrayBuffer = undefined
@@ -218,7 +218,7 @@ export class IHTTPConnection extends IMeshDevice {
     }
   }
 
-  async _fetchTimer() {
+  private async fetchTimer() {
     if (this.consecutiveFailedRequests > 3) {
       if (this.isConnected === true) {
         this.disconnect();
@@ -227,7 +227,7 @@ export class IHTTPConnection extends IMeshDevice {
     }
 
     try {
-      await this._readFromRadio();
+      await this.readFromRadio();
     } catch (e) {
       if (SettingsManager.debugMode) {
         console.log(e);
@@ -261,6 +261,6 @@ export class IHTTPConnection extends IMeshDevice {
       newInterval = this.fetchInterval;
     }
 
-    setTimeout(this._fetchTimer.bind(this), newInterval);
+    setTimeout(this.fetchTimer.bind(this), newInterval);
   }
 }

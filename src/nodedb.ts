@@ -22,7 +22,7 @@ export class NodeDB extends EventTarget {
    */
   addNode(nodeInfo: NodeInfo) {
     this.nodes.set(nodeInfo.num, nodeInfo);
-    this._dispatchInterfaceEvent("nodeListChanged", nodeInfo.num);
+    this.dispatchInterfaceEvent("nodeListChanged", nodeInfo.num);
   }
 
   /**
@@ -47,11 +47,11 @@ export class NodeDB extends EventTarget {
         );
       }
 
-      this._dispatchInterfaceEvent("nodeListChanged", null);
+      this.dispatchInterfaceEvent("nodeListChanged", null);
     }
 
     node.user = user;
-    this._dispatchInterfaceEvent("nodeListChanged", null);
+    this.dispatchInterfaceEvent("nodeListChanged", null);
   }
 
   /**
@@ -76,11 +76,11 @@ export class NodeDB extends EventTarget {
         );
       }
 
-      this._dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+      this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
     }
 
     node.position = position;
-    this._dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+    this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
   }
 
   /**
@@ -89,7 +89,7 @@ export class NodeDB extends EventTarget {
    */
   removeNode(nodeNumber: number) {
     this.nodes.delete(nodeNumber);
-    this._dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+    this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
   }
 
   /**
@@ -145,7 +145,7 @@ export class NodeDB extends EventTarget {
    * @param eventType
    * @param payload NodeInfo.num or null
    */
-  _dispatchInterfaceEvent(eventType: string, payload: number | null) {
+  private dispatchInterfaceEvent(eventType: string, payload: number | null) {
     this.dispatchEvent(new CustomEvent(eventType, { detail: payload }));
   }
 }
