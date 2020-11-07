@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "ES6",
+    "moduleResolution": "Node",
+    "target": "ESNext",
+    "declaration": true,
+    "outDir": "./dist",
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noImplicitUseStrict": true,
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*"],
+  "typedocOptions": {
+    "mode": "modules",
+    "out": "docs"
+  }
+}
