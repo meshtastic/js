@@ -12,37 +12,37 @@ export class IHTTPConnection extends IMeshDevice {
   url: string;
 
   /**
-   * Short Description
+   * Whether or not tls (https) should be used for communtication to device
    */
   tls: boolean;
 
   /**
    * Short Description
    */
-  fetchMode: string;
+  fetchMode: "slow" | "balanced" | "fast" | "stream";
 
   /**
-   * Short Description
+   * How often the device should be queried (ms)
    */
   fetchInterval: number;
 
   /**
-   * Short Description
+   * Timestamp of last time device was interacted with
    */
   lastInteractionTime: number;
 
   /**
-   * Short Description
+   * Current number of consecutive failed requests
    */
   consecutiveFailedRequests: number;
 
   /**
-   * Short Description
+   * States if the current device is currently connected or not
    */
   isConnected: boolean;
 
   /**
-   * Short Description
+   * Enables receiving messages all at once, versus one per request
    */
   receiveBatchRequests: boolean;
 
@@ -64,14 +64,15 @@ export class IHTTPConnection extends IMeshDevice {
    * @param fetchMode Defines how new messages are fetched, takes 'slow', 'balanced', 'fast', 'stream'
    * @param fetchInterval Sets a fixed interval in that the device is fetched for new messages
    * @param fetchInterval [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
+   * @param receiveBatchRequests Enables receiving messages all at once, versus one per request
    */
   async connect(
     address: string,
-    tls: boolean = undefined,
-    fetchMode: string = undefined,
-    fetchInterval: number = undefined,
+    tls?: boolean,
     noAutoConfig = false,
-    receiveBatchRequests = false
+    receiveBatchRequests = false,
+    fetchMode?: "slow" | "balanced" | "fast" | "stream",
+    fetchInterval?: number
   ) {
     this.receiveBatchRequests = receiveBatchRequests;
 
@@ -183,7 +184,7 @@ export class IHTTPConnection extends IMeshDevice {
   private async httpRequest(
     url: string,
     type = "GET",
-    toRadioBuffer: ArrayBuffer = undefined
+    toRadioBuffer?: ArrayBuffer
   ) {
     let response: Response;
 
@@ -242,25 +243,20 @@ export class IHTTPConnection extends IMeshDevice {
     let newInterval = 5000;
 
     if (this.fetchInterval === undefined) {
-      // Interval fetch profile 1
-
       if (this.tls === true) {
         newInterval = 10000;
       }
       let timeSinceLastInteraction = Date.now() - this.lastInteractionTime;
-      if (timeSinceLastInteraction > 1200000) {
-        // If no action in 20 mins
-        newInterval = 120000;
-      } else if (timeSinceLastInteraction > 600000) {
-        // If no action in 10 mins
-        newInterval = 30000;
-      } else if (timeSinceLastInteraction > 180000) {
-        // If no action in 3 mins
-        newInterval = 20000;
-      } else if (timeSinceLastInteraction > 30000) {
-        // If no action in 30 secs
-        newInterval = 15000;
-      }
+      newInterval =
+        timeSinceLastInteraction > 1200000
+          ? 120000
+          : timeSinceLastInteraction > 600000
+          ? 30000
+          : timeSinceLastInteraction > 180000
+          ? 20000
+          : timeSinceLastInteraction > 30000
+          ? 15000
+          : 10000;
     } else {
       newInterval = this.fetchInterval;
     }

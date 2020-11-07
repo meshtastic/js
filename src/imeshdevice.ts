@@ -23,12 +23,12 @@ import {
  */
 export abstract class IMeshDevice extends EventTarget {
   /**
-   * Short description
+   * States if the current device is currently connected or not
    */
   isConnected: boolean;
 
   /**
-   * Short description
+   * States if the current device is in a reconnecting state
    */
   isReconnecting: boolean;
 
@@ -115,7 +115,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param wantAck
    * @param wantResponse
    */
-  async sendText(
+  sendText(
     text: string,
     destinationNum = constants.BROADCAST_ADDR,
     wantAck = false,
@@ -124,7 +124,7 @@ export abstract class IMeshDevice extends EventTarget {
     // DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
     const enc = new TextEncoder();
 
-    return await this.sendData(
+    return this.sendData(
       enc.encode(text),
       destinationNum,
       TypeEnum.CLEAR_TEXT,
@@ -141,7 +141,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param wantAck
    * @param wantResponse
    */
-  async sendData(
+  sendData(
     byteData: Uint8Array,
     destinationNum = constants.BROADCAST_ADDR,
     dataType: TypeEnum,
@@ -158,7 +158,7 @@ export abstract class IMeshDevice extends EventTarget {
       }),
     });
 
-    return await this.sendPacket(meshPacket, destinationNum, wantAck);
+    return this.sendPacket(meshPacket, destinationNum, wantAck);
   }
 
   /**
@@ -171,7 +171,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param wantAck
    * @param wantResponse
    */
-  async sendPosition(
+  sendPosition(
     latitude?: number,
     longitude?: number,
     altitude?: number,
@@ -192,7 +192,7 @@ export abstract class IMeshDevice extends EventTarget {
       }),
     });
 
-    return await this.sendPacket(meshPacket, destinationNum, wantAck);
+    return this.sendPacket(meshPacket, destinationNum, wantAck);
   }
 
   /**
@@ -355,7 +355,9 @@ export abstract class IMeshDevice extends EventTarget {
    */
   private generatePacketId() {
     if (this.currentPacketId === undefined) {
-      throw "Error in meshtasticjs.MeshInterface.generatePacketId: Interface is not configured, can't generate packet id";
+      throw new Error(
+        "Error in meshtasticjs.MeshInterface.generatePacketId: Interface is not configured, can't generate packet id"
+      );
     } else {
       return this.currentPacketId++;
     }

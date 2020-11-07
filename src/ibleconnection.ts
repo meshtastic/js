@@ -8,12 +8,12 @@ import { exponentialBackoff, typedArrayToBuffer } from "./utils";
  */
 export class IBLEConnection extends IMeshDevice {
   /**
-   * Short Description
+   * Currently connected BLE device
    */
   device: BluetoothDevice;
 
   /**
-   * Short Description
+   * Connection interface to currently connected BLE device
    */
   connection: BluetoothRemoteGATTServer;
 

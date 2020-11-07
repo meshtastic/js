@@ -15,7 +15,9 @@ export class SettingsManager {
    */
   static setDebugMode(active: boolean) {
     if (typeof active !== "boolean") {
-      throw "Error in meshtasticjs.SettingsManager.setDebugMode: param must be boolean";
+      throw new Error(
+        "Error in meshtasticjs.SettingsManager.setDebugMode: param must be boolean"
+      );
     }
 
     SettingsManager.debugMode = active;

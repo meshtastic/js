@@ -3,12 +3,12 @@ import { IHTTPConnection } from "./ihttpconnection";
 
 /**
  * Allows to create new connections to devices and manages them.
- * The usage is optional - new connections can be created directly by instantiating
- * the interface classes.
+ * Alternatively, new connections can be created directly by instantiating
+ * their respective the interface classes.
  */
 export class Client {
   /**
-   * Array of all created connection interfaces
+   * Array containing all created connection interfaces
    */
   deviceInterfaces: (IBLEConnection | IHTTPConnection)[];
 
