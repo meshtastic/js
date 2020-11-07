@@ -41,6 +41,11 @@ export class IHTTPConnection extends IMeshDevice {
    */
   isConnected: boolean;
 
+  /**
+   * Short Description
+   */
+  receiveBatchRequests: boolean;
+
   constructor() {
     super();
 
@@ -65,8 +70,11 @@ export class IHTTPConnection extends IMeshDevice {
     tls: boolean = undefined,
     fetchMode: string = undefined,
     fetchInterval: number = undefined,
-    noAutoConfig = false
+    noAutoConfig = false,
+    receiveBatchRequests = false
   ) {
+    this.receiveBatchRequests = receiveBatchRequests;
+
     if (this.isConnected === true) {
       throw new Error(
         "Error in meshtasticjs.IHTTPConnection.connect: Device is already connected"
@@ -74,10 +82,6 @@ export class IHTTPConnection extends IMeshDevice {
     }
 
     this.consecutiveFailedRequests = 0;
-
-    // Generate URL
-
-    let proto: string;
 
     if (this.url !== undefined && address === undefined && tls === undefined) {
       // Do nothing as url has already been set in previous connect
@@ -91,20 +95,10 @@ export class IHTTPConnection extends IMeshDevice {
       }
 
       // set the protocol
-      if (tls === undefined) {
-        this.tls = false;
-      } else {
-        this.tls = tls;
-      }
-
-      if (this.tls === true) {
-        proto = "https://";
-      } else {
-        proto = "http://";
-      }
+      this.tls = !!tls;
 
       // assemble url
-      this.url = proto + address;
+      this.url = !!this.tls ? "https://" : "http://" + address;
     }
 
     // At this point device is (presumably) connected, maybe check with ping-like request first
@@ -136,6 +130,9 @@ export class IHTTPConnection extends IMeshDevice {
     this.onDisconnected();
   }
 
+  /**
+   * Short description
+   */
   async readFromRadio() {
     let readBuffer = new ArrayBuffer(1);
 
@@ -143,11 +140,9 @@ export class IHTTPConnection extends IMeshDevice {
     while (readBuffer.byteLength > 0) {
       try {
         readBuffer = await this.httpRequest(
-          this.url + "/api/v1/fromradio",
+          this.url + "/api/v1/fromradio?all=" + this.receiveBatchRequests,
           "GET"
         );
-
-        console.log(readBuffer);
 
         if (readBuffer.byteLength > 0) {
           this.lastInteractionTime = Date.now();
@@ -162,6 +157,9 @@ export class IHTTPConnection extends IMeshDevice {
     }
   }
 
+  /**
+   * Short description
+   */
   async writeToRadio(ToRadioUInt8Array: Uint8Array) {
     this.lastInteractionTime = Date.now();
 
@@ -179,6 +177,9 @@ export class IHTTPConnection extends IMeshDevice {
     }
   }
 
+  /**
+   * Short description
+   */
   private async httpRequest(
     url: string,
     type = "GET",
@@ -218,6 +219,9 @@ export class IHTTPConnection extends IMeshDevice {
     }
   }
 
+  /**
+   * Short description
+   */
   private async fetchTimer() {
     if (this.consecutiveFailedRequests > 3) {
       if (this.isConnected === true) {

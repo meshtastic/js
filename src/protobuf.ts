@@ -49,6 +49,9 @@ export enum LocationSharing {
   LocDisabled = 2,
 }
 
+/**
+ * Short description
+ */
 @Type.d("Position")
 export class Position extends Message<Position> {
   @Field.d(7, "sint32")
@@ -67,6 +70,9 @@ export class Position extends Message<Position> {
   public time: number;
 }
 
+/**
+ * Short description
+ */
 @Type.d("Data")
 export class Data extends Message<Data> {
   @Field.d(1, TypeEnum)
@@ -76,6 +82,9 @@ export class Data extends Message<Data> {
   public payload: Uint8Array;
 }
 
+/**
+ * Short description
+ */
 @Type.d("User")
 export class User extends Message<User> {
   @Field.d(1, "string")
@@ -91,12 +100,18 @@ export class User extends Message<User> {
   public macaddr: Uint8Array;
 }
 
+/**
+ * Short description
+ */
 @Type.d("RouteDiscovery")
 export class RouteDiscovery extends Message<RouteDiscovery> {
   @Field.d(2, "int32", "repeated")
   public route: number;
 }
 
+/**
+ * Short description
+ */
 @Type.d("SubPacket")
 export class SubPacket extends Message<SubPacket> {
   @OneOf.d(
@@ -149,6 +164,9 @@ export class SubPacket extends Message<SubPacket> {
   public originalId: number;
 }
 
+/**
+ * Short description
+ */
 @Type.d("MeshPacket")
 export class MeshPacket extends Message<MeshPacket> {
   @OneOf.d("decoded", "encrypted")
@@ -185,6 +203,9 @@ export class MeshPacket extends Message<MeshPacket> {
   public wantAck: boolean;
 }
 
+/**
+ * Short description
+ */
 @Type.d("ChannelSettings")
 export class ChannelSettings extends Message<ChannelSettings> {
   @Field.d(1, "int32")
@@ -212,6 +233,9 @@ export class ChannelSettings extends Message<ChannelSettings> {
   public name: string;
 }
 
+/**
+ * Short description
+ */
 @Type.d("UserPreferences")
 export class UserPreferences extends Message<UserPreferences> {
   @Field.d(1, "uint32")
@@ -284,6 +308,9 @@ export class UserPreferences extends Message<UserPreferences> {
   public ignoreIncoming: number;
 }
 
+/**
+ * Short description
+ */
 @Type.d("RadioConfig")
 export class RadioConfig extends Message<RadioConfig> {
   @Field.d(1, UserPreferences)
@@ -293,6 +320,9 @@ export class RadioConfig extends Message<RadioConfig> {
   public channelSettings: ChannelSettings;
 }
 
+/**
+ * Short description
+ */
 @Type.d("NodeInfo")
 export class NodeInfo extends Message<NodeInfo> {
   @Field.d(1, "uint32")
@@ -311,6 +341,9 @@ export class NodeInfo extends Message<NodeInfo> {
   public nextHop: number;
 }
 
+/**
+ * Short description
+ */
 @Type.d("MyNodeInfo")
 export class MyNodeInfo extends Message<MyNodeInfo> {
   @Field.d(1, "uint32")
@@ -356,6 +389,9 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
   public minAppVersion: number;
 }
 
+/**
+ * Short description
+ */
 @Type.d("DeviceState")
 export class DeviceState extends Message<DeviceState> {
   @Field.d(1, RadioConfig)
@@ -386,12 +422,18 @@ export class DeviceState extends Message<DeviceState> {
   public didGpsReset: boolean;
 }
 
+/**
+ * Short description
+ */
 @Type.d("DebugString")
 export class DebugString extends Message<DebugString> {
   @Field.d(1, "string")
   public message: "string";
 }
 
+/**
+ * Short description
+ */
 @Type.d("FromRadio")
 export class FromRadio extends Message<FromRadio> {
   @OneOf.d(
@@ -430,6 +472,9 @@ export class FromRadio extends Message<FromRadio> {
   public rebooted: boolean;
 }
 
+/**
+ * Short description
+ */
 @Type.d("ToRadio")
 export class ToRadio extends Message<ToRadio> {
   @OneOf.d("packet", "wantConfigId", "setRadio", "setOwner")
@@ -448,6 +493,9 @@ export class ToRadio extends Message<ToRadio> {
   public setOwner: User;
 }
 
+/**
+ * Short description
+ */
 @Type.d("ManufacturingData")
 export class ManufacturingData extends Message<ManufacturingData> {
   @Field.d(1, "uint32")

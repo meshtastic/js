@@ -22,6 +22,9 @@ export function typedArrayToBuffer(array: Uint8Array) {
   );
 }
 
+/**
+ * Short description
+ */
 export function getEnvironment() {
   if (typeof window !== "undefined") {
     return "browser";

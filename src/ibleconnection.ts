@@ -66,8 +66,6 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Initiates the connect process to a meshtastic device via bluetooth
-   * @todo `change requestDeviceFilterParams` to only pass `RequestDeviceOptions`
-   * @todo don't pass this.device to requestDeviceFilterParams
    * @param requestDeviceFilterParams Optional filter options for the web bluetooth api requestDevice() method
    * @param noAutoConfig Connect to the device without configuring it. Requires to call configure() manually
    */
@@ -223,7 +221,6 @@ export class IBLEConnection extends IMeshDevice {
    * @param device Desired Bluetooth device
    */
   private async connectToDevice(device: BluetoothDevice) {
-    // Human-readable name of the device.
     if (SettingsManager.debugMode) {
       console.log("selected " + device.name + ", trying to connect now");
     }
@@ -308,7 +305,9 @@ export class IBLEConnection extends IMeshDevice {
     }
   }
 
-  // GATT connection state events (connect, disconnect)
+  /**
+   * GATT connection state events (connect, disconnect)
+   */
   private subscribeToBLEConnectionEvents() {
     this.device.addEventListener(
       "gattserverdisconnected",

@@ -87,15 +87,25 @@ export abstract class IMeshDevice extends EventTarget {
     this.myInfo = undefined;
   }
 
+  /**
+   * Short description
+   */
   abstract writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void>;
 
+  /**
+   * Short description
+   */
   abstract readFromRadio(): Promise<void>;
 
   /**
+   * Short description
    * @todo strongly type and maybe unify this function
    */
   abstract connect(..._: any): Promise<void>;
 
+  /**
+   * Short description
+   */
   abstract disconnect(): void;
 
   /**
@@ -113,10 +123,9 @@ export abstract class IMeshDevice extends EventTarget {
   ) {
     // DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
     const enc = new TextEncoder();
-    const encodedText = enc.encode(text);
 
     return await this.sendData(
-      encodedText,
+      enc.encode(text),
       destinationNum,
       TypeEnum.CLEAR_TEXT,
       wantAck,
@@ -139,24 +148,14 @@ export abstract class IMeshDevice extends EventTarget {
     wantAck = false,
     wantResponse = false
   ) {
-    let data = new Data({
-      payload: byteData,
-      typ: dataType,
-    });
-
-    /**
-     * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
-     */
-    let subPacket = new SubPacket({
-      data: data,
-      wantResponse: wantResponse,
-    });
-
-    /**
-     * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
-     */
     let meshPacket = new MeshPacket({
-      decoded: subPacket,
+      decoded: new SubPacket({
+        data: new Data({
+          payload: byteData,
+          typ: dataType,
+        }),
+        wantResponse: wantResponse,
+      }),
     });
 
     return await this.sendPacket(meshPacket, destinationNum, wantAck);
@@ -181,42 +180,16 @@ export abstract class IMeshDevice extends EventTarget {
     wantAck = false,
     wantResponse = false
   ) {
-    let position = new Position({
-      latitudeI: 0.0,
-      longitudeI: 0.0,
-      altitude: 0,
-      time: Math.floor(Date.now() / 1000),
-    });
-
-    if (latitude != 0.0) {
-      position.latitudeI = Math.floor(latitude / 1e-7);
-    }
-
-    if (longitude != 0.0) {
-      position.longitudeI = Math.floor(longitude / 1e-7);
-    }
-
-    if (altitude != 0) {
-      position.altitude = Math.floor(altitude);
-    }
-
-    if (timeSec != 0) {
-      position.time = timeSec;
-    }
-
-    /**
-     * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
-     */
-    const subPacket = new SubPacket({
-      position: position,
-      wantResponse: wantResponse,
-    });
-
-    /**
-     * @todo work out what properties are required, and maybe set them here instead of in `sendPacket`
-     */
     const meshPacket = new MeshPacket({
-      decoded: subPacket,
+      decoded: new SubPacket({
+        position: new Position({
+          latitudeI: latitude !== 0.0 ? Math.floor(latitude / 1e-7) : 0.0,
+          longitudeI: longitude !== 0.0 ? Math.floor(longitude / 1e-7) : 0.0,
+          altitude: altitude !== 0 ? Math.floor(altitude) : 0,
+          time: timeSec !== 0 ? timeSec : Math.floor(Date.now() / 1000),
+        }),
+        wantResponse: wantResponse,
+      }),
     });
 
     return await this.sendPacket(meshPacket, destinationNum, wantAck);
@@ -258,11 +231,11 @@ export abstract class IMeshDevice extends EventTarget {
       meshPacket.id = this.generatePacketId();
     }
 
-    let toRadioData = new ToRadio({
-      packet: meshPacket,
-    });
-
-    let encodedData = ToRadio.encode(toRadioData).finish();
+    let encodedData = ToRadio.encode(
+      new ToRadio({
+        packet: meshPacket,
+      })
+    ).finish();
 
     await this.writeToRadio(encodedData);
   }
@@ -390,6 +363,7 @@ export abstract class IMeshDevice extends EventTarget {
 
   /**
    * Gets called whenever a fromRadio message is received from device, returns fromRadio data
+   * @todo change to support `all=true` (batch requests)
    * @event
    * @param fromRadioUInt8Array
    */
