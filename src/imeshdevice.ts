@@ -407,10 +407,10 @@ export abstract class IMeshDevice extends EventTarget {
     } else if (fromRadioObj.hasOwnProperty("configCompleteId")) {
       if (fromRadioObj.configCompleteId === constants.MY_CONFIG_ID) {
         if (
-          !this.myInfo &&
-          !this.radioConfig &&
-          !this.user &&
-          !this.currentPacketId
+          this.myInfo &&
+          this.radioConfig &&
+          this.user &&
+          this.currentPacketId
         ) {
           this.onConfigured();
         } else {

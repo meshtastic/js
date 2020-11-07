@@ -89,7 +89,7 @@ export class IBLEConnection extends IMeshDevice {
 
     try {
       // If no device has been selected, open request device browser prompt
-      if (this.device === undefined && requestDeviceFilterParams) {
+      if (this.device === undefined) {
         device = await this.requestDevice(requestDeviceFilterParams);
         this.device = device;
       }
@@ -198,8 +198,8 @@ export class IBLEConnection extends IMeshDevice {
    * an own UI, bypassing the browsers select/pairing dialog
    * @param requestDeviceFilterParams Bluetooth device request filters
    */
-  private async requestDevice(requestDeviceFilterParams: RequestDeviceOptions) {
-    if (!requestDeviceFilterParams.hasOwnProperty("filters")) {
+  private async requestDevice(requestDeviceFilterParams?: RequestDeviceOptions) {
+    if (requestDeviceFilterParams === undefined || !requestDeviceFilterParams.hasOwnProperty("filters")) {
       requestDeviceFilterParams = {
         filters: [{ services: [constants.SERVICE_UUID] }],
       };
