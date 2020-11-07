@@ -372,13 +372,8 @@ export abstract class IMeshDevice extends EventTarget {
   protected async handleFromRadio(fromRadioUInt8Array: Uint8Array) {
     let fromRadioObj: FromRadio;
 
-    /**
-     * @todo maybe throw error? / ignore
-     */
-    if (fromRadioUInt8Array.byteLength < 1) {
-      if (SettingsManager.debugMode) {
-        console.log("Empty buffer received");
-      }
+    if (fromRadioUInt8Array.byteLength < 1 && SettingsManager.debugMode) {
+      console.log("Empty buffer received");
     }
 
     try {
@@ -412,10 +407,10 @@ export abstract class IMeshDevice extends EventTarget {
     } else if (fromRadioObj.hasOwnProperty("configCompleteId")) {
       if (fromRadioObj.configCompleteId === constants.MY_CONFIG_ID) {
         if (
-          this.myInfo !== undefined &&
-          this.radioConfig !== undefined &&
-          this.user !== undefined &&
-          this.currentPacketId !== undefined
+          !this.myInfo &&
+          !this.radioConfig &&
+          !this.user &&
+          !this.currentPacketId
         ) {
           this.onConfigured();
         } else {

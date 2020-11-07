@@ -127,7 +127,7 @@ export class NodeDB extends EventTarget {
    * @param userId Desired users id
    */
   userIdToNodeNum(userId: string) {
-    let nodeNumber: number = undefined;
+    let nodeNumber: number;
 
     this.nodes.forEach((node, _num, __map) => {
       if (node.hasOwnProperty("user") === true) {
