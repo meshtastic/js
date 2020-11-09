@@ -206,7 +206,7 @@ export abstract class IMeshDevice extends EventTarget {
     destinationNum = constants.BROADCAST_ADDR,
     wantAck = false
   ) {
-    if (this.isDeviceReady() === false) {
+    if (!this.isDeviceReady()) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.sendPacket: Device is not ready"
       );
@@ -227,7 +227,7 @@ export abstract class IMeshDevice extends EventTarget {
     meshPacket.to = rcptNodeNum;
     meshPacket.wantAck = wantAck;
 
-    if (meshPacket.id === undefined || !meshPacket.hasOwnProperty("id")) {
+    if (!meshPacket?.hasOwnProperty("id")) {
       meshPacket.id = this.generatePacketId();
     }
 
@@ -245,7 +245,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param configOptions
    */
   async setRadioConfig(configOptionsObj: RadioConfig) {
-    if (this.radioConfig === undefined || this.isDeviceReady() === false) {
+    if (!this.radioConfig || !this.isDeviceReady()) {
       throw new Error(
         "Error: meshtasticjs.IMeshDevice.setRadioConfig: Radio config has not been read from device, can't set new one. Try reconnecting."
       );
@@ -296,7 +296,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param ownerDataObj
    */
   async setOwner(ownerDataObj: User) {
-    if (this.user === undefined || this.isDeviceReady() === false) {
+    if (!this.user || !this.isDeviceReady()) {
       throw new Error(
         "Error: meshtasticjs.IMeshDevice.setOwner: Owner config has not been read from device, can't set new one. Try reconnecting."
       );
@@ -320,7 +320,7 @@ export abstract class IMeshDevice extends EventTarget {
    * Manually triggers the device configure process
    */
   async configure() {
-    if (this.isConnected === false) {
+    if (!this.isConnected) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.configure: Interface is not connected"
       );
@@ -336,7 +336,7 @@ export abstract class IMeshDevice extends EventTarget {
 
     await this.readFromRadio();
 
-    if (this.isConfigDone === false) {
+    if (!this.isConfigDone) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.configure: configuring device was not successful"
       );
@@ -347,14 +347,14 @@ export abstract class IMeshDevice extends EventTarget {
    * Checks if device is ready
    */
   isDeviceReady() {
-    return this.isConnected === true && this.isConfigDone === true;
+    return this.isConnected && this.isConfigDone;
   }
 
   /**
    * Short description
    */
   private generatePacketId() {
-    if (this.currentPacketId === undefined) {
+    if (!this.currentPacketId) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.generatePacketId: Interface is not configured, can't generate packet id"
       );
@@ -367,20 +367,20 @@ export abstract class IMeshDevice extends EventTarget {
    * Gets called whenever a fromRadio message is received from device, returns fromRadio data
    * @todo change to support `all=true` (batch requests)
    * @event
-   * @param fromRadioUInt8Array
+   * @param fromRadio Uint8Array containing raw radio data
    */
-  protected async handleFromRadio(fromRadioUInt8Array: Uint8Array) {
+  protected async handleFromRadio(fromRadio: Uint8Array) {
     let fromRadioObj: FromRadio;
 
-    if (fromRadioUInt8Array.byteLength < 1 && SettingsManager.debugMode) {
+    if (fromRadio.byteLength < 1 && SettingsManager.debugMode) {
       console.log("Empty buffer received");
     }
 
     try {
-      fromRadioObj = FromRadio.decode(fromRadioUInt8Array);
+      fromRadioObj = FromRadio.decode(fromRadio);
     } catch (e) {
       throw new Error(
-        "Error in meshtasticjs.IMeshDevice.handleFromRadio: " + e.message
+        `Error in meshtasticjs.IMeshDevice.handleFromRadio: ${e.message}`
       );
     }
 
@@ -388,7 +388,7 @@ export abstract class IMeshDevice extends EventTarget {
       console.log(fromRadioObj);
     }
 
-    if (this.isConfigDone === true) {
+    if (this.isConfigDone) {
       this.dispatchInterfaceEvent("fromRadio", fromRadioObj);
     }
 
@@ -468,13 +468,13 @@ export abstract class IMeshDevice extends EventTarget {
     this.isReconnecting = false;
     this.dispatchInterfaceEvent("connected", this);
 
-    if (noAutoConfig !== true) {
+    if (!noAutoConfig) {
       try {
         await this.configure();
         return;
       } catch (e) {
         throw new Error(
-          "Error in meshtasticjs.IMeshDevice.onConnected: " + e.message
+          `Error in meshtasticjs.IMeshDevice.onConnected: ${e.message}`
         );
       }
     }
@@ -498,7 +498,7 @@ export abstract class IMeshDevice extends EventTarget {
     this.dispatchInterfaceEvent("configDone", this);
     if (SettingsManager.debugMode) {
       console.log(
-        "Configured device with node number " + this.myInfo.myNodeNum
+        `Configured device with node number ${this.myInfo.myNodeNum}`
       );
     }
   }
@@ -508,7 +508,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @event
    */
   private onNodeListChanged() {
-    if (this.isConfigDone === true) {
+    if (this.isConfigDone) {
       this.dispatchInterfaceEvent("nodeListChanged", this);
     }
   }

@@ -32,7 +32,7 @@ export class NodeDB extends EventTarget {
   addUserData(nodeNumber: number, user: User) {
     let node = this.nodes.get(nodeNumber);
 
-    if (node === undefined) {
+    if (!node) {
       let nodeInfo = new NodeInfo({
         num: nodeNumber,
         position: new Position(),
@@ -43,7 +43,7 @@ export class NodeDB extends EventTarget {
         this.nodes.set(nodeNumber, nodeInfo);
       } catch (e) {
         throw new Error(
-          "Error in meshtasticjs.nodeDB.addUserData:" + e.message
+          `Error in meshtasticjs.nodeDB.addUserData: ${e.message}`
         );
       }
 
@@ -61,7 +61,7 @@ export class NodeDB extends EventTarget {
   addPositionData(nodeNumber: number, position: Position) {
     let node = this.nodes.get(nodeNumber);
 
-    if (node === undefined) {
+    if (!node) {
       let nodeInfo = new NodeInfo({
         num: nodeNumber,
         position: position,
@@ -72,7 +72,7 @@ export class NodeDB extends EventTarget {
         this.nodes.set(nodeNumber, nodeInfo);
       } catch (e) {
         throw new Error(
-          "Error in meshtasticjs.nodeDB.addPositionData:" + e.message
+          `Error in meshtasticjs.nodeDB.addPositionData: ${e.message}`
         );
       }
 
@@ -97,9 +97,7 @@ export class NodeDB extends EventTarget {
    * @param nodeNumber Number of the node to be fetched
    */
   getNodeByNum(nodeNumber: number) {
-    return this.nodes.get(nodeNumber) === undefined
-      ? undefined
-      : this.nodes.get(nodeNumber);
+    return !this.nodes.get(nodeNumber) ? undefined : this.nodes.get(nodeNumber);
   }
 
   /**
@@ -117,9 +115,7 @@ export class NodeDB extends EventTarget {
   nodeNumToUserId(nodeNumber: number) {
     let node = this.nodes.get(nodeNumber);
 
-    return node === undefined || node.user.id === undefined
-      ? undefined
-      : node.user.id;
+    return !node?.user.id ? undefined : node.user.id;
   }
 
   /**
@@ -130,7 +126,7 @@ export class NodeDB extends EventTarget {
     let nodeNumber: number;
 
     this.nodes.forEach((node, _num, __map) => {
-      if (node.hasOwnProperty("user") === true) {
+      if (node.hasOwnProperty("user")) {
         if (node.user.id === userId) {
           nodeNumber = node.num;
         }

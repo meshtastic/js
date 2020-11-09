@@ -73,11 +73,11 @@ export class IBLEConnection extends IMeshDevice {
     requestDeviceFilterParams?: RequestDeviceOptions,
     noAutoConfig = false
   ) {
-    if (this.isConnected === true) {
+    if (this.isConnected) {
       throw new Error(
         "Error in meshtasticjs.IBLEConnection.connect: Device is already connected"
       );
-    } else if (navigator.bluetooth === undefined) {
+    } else if (!navigator.bluetooth) {
       throw new Error(
         "Error in meshtasticjs.IBLEConnection.connect: this browser doesn't support the bluetooth web api, see https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API"
       );
@@ -89,12 +89,12 @@ export class IBLEConnection extends IMeshDevice {
 
     try {
       // If no device has been selected, open request device browser prompt
-      if (this.device === undefined) {
+      if (!this.device) {
         device = await this.requestDevice(requestDeviceFilterParams);
         this.device = device;
       }
 
-      if (this.isReconnecting === false) {
+      if (!this.isReconnecting) {
         this.subscribeToBLEConnectionEvents();
       }
 
@@ -114,7 +114,7 @@ export class IBLEConnection extends IMeshDevice {
       await this.onConnected(noAutoConfig);
     } catch (e) {
       throw new Error(
-        "Error in meshtasticjs.IBLEConnection.connect: " + e.message
+        `Error in meshtasticjs.IBLEConnection.connect: ${e.message}`
       );
     }
   }
@@ -125,13 +125,13 @@ export class IBLEConnection extends IMeshDevice {
   disconnect() {
     this.userInitiatedDisconnect = true; // Don't reconnect
 
-    if (this.isConnected === false && this.isReconnecting === false) {
+    if (!this.isConnected && !this.isReconnecting) {
       if (SettingsManager.debugMode) {
         console.log(
           "meshtasticjs.IBLEConnection.disconnect: device already disconnected"
         );
       }
-    } else if (this.isConnected === false && this.isReconnecting === true) {
+    } else if (!this.isConnected && this.isReconnecting) {
       if (SettingsManager.debugMode) {
         console.log(
           "meshtasticjs.IBLEConnection.disconnect: reconnect cancelled"
@@ -161,7 +161,7 @@ export class IBLEConnection extends IMeshDevice {
         }
       } catch (e) {
         throw new Error(
-          "Error in meshtasticjs.IBLEConnection.readFromRadio: " + e.message
+          `Error in meshtasticjs.IBLEConnection.readFromRadio: ${e.message}`
         );
       }
     }
@@ -186,8 +186,7 @@ export class IBLEConnection extends IMeshDevice {
       return (await characteristic.readValue()).buffer;
     } catch (e) {
       throw new Error(
-        "Error in meshtasticjs.IBLEConnection.readFromCharacteristic: " +
-          e.message
+        `Error in meshtasticjs.IBLEConnection.readFromCharacteristic: ${e.message}`
       );
     }
   }
@@ -198,8 +197,10 @@ export class IBLEConnection extends IMeshDevice {
    * an own UI, bypassing the browsers select/pairing dialog
    * @param requestDeviceFilterParams Bluetooth device request filters
    */
-  private async requestDevice(requestDeviceFilterParams?: RequestDeviceOptions) {
-    if (requestDeviceFilterParams === undefined || !requestDeviceFilterParams.hasOwnProperty("filters")) {
+  private async requestDevice(
+    requestDeviceFilterParams?: RequestDeviceOptions
+  ) {
+    if (!requestDeviceFilterParams?.hasOwnProperty("filters")) {
       requestDeviceFilterParams = {
         filters: [{ services: [constants.SERVICE_UUID] }],
       };
@@ -211,7 +212,7 @@ export class IBLEConnection extends IMeshDevice {
       );
     } catch (e) {
       throw new Error(
-        "Error in meshtasticjs.IBLEConnection.requestDevice: " + e.message
+        `Error in meshtasticjs.IBLEConnection.requestDevice: ${e.message}`
       );
     }
   }
@@ -222,7 +223,7 @@ export class IBLEConnection extends IMeshDevice {
    */
   private async connectToDevice(device: BluetoothDevice) {
     if (SettingsManager.debugMode) {
-      console.log("selected " + device.name + ", trying to connect now");
+      console.log(`selected ${device.name}, trying to connect now`);
     }
 
     let connection: BluetoothRemoteGATTServer; /** @todo optimize */
@@ -231,7 +232,7 @@ export class IBLEConnection extends IMeshDevice {
       connection = await device.gatt.connect();
     } catch (e) {
       throw new Error(
-        "Error in meshtasticjs.IBLEConnection.connectToDevice: " + e.message
+        `Error in meshtasticjs.IBLEConnection.connectToDevice: ${e.message}`
       );
     }
 
@@ -249,7 +250,7 @@ export class IBLEConnection extends IMeshDevice {
       service = await connection.getPrimaryService(constants.SERVICE_UUID);
     } catch (e) {
       throw new Error(
-        "Error in meshtasticjs.IBLEConnection.getService: " + e.message
+        `Error in meshtasticjs.IBLEConnection.getService: ${e.message}`
       );
     }
 
@@ -285,7 +286,7 @@ export class IBLEConnection extends IMeshDevice {
       }
     } catch (e) {
       throw new Error(
-        "Error in meshtasticjs.IBLEConnection.getCharacteristics: " + e.message
+        `Error in meshtasticjs.IBLEConnection.getCharacteristics: ${e.message}`
       );
     }
   }
@@ -340,7 +341,7 @@ export class IBLEConnection extends IMeshDevice {
   private handleBLEDisconnect() {
     this.onDisconnected();
 
-    if (this.userInitiatedDisconnect === false) {
+    if (!this.userInitiatedDisconnect) {
       this.isReconnecting = true;
 
       const toTry = async () => {

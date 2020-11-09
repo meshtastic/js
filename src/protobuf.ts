@@ -122,10 +122,10 @@ export class SubPacket extends Message<SubPacket> {
     "routeReply",
     "routeError"
   )
-  public payload: string;
+  public payload: Position | Data | User | RouteDiscovery | RouteErrorEnum;
 
   @OneOf.d("successId", "failId")
-  public ack: string;
+  public ack: number;
 
   @Field.d(1, Position)
   public position: Position;
@@ -170,7 +170,7 @@ export class SubPacket extends Message<SubPacket> {
 @Type.d("MeshPacket")
 export class MeshPacket extends Message<MeshPacket> {
   @OneOf.d("decoded", "encrypted")
-  public payload: string;
+  public payload: SubPacket | Uint8Array;
 
   @OneOf.d("successId", "failId")
   public ack: string;
@@ -185,7 +185,7 @@ export class MeshPacket extends Message<MeshPacket> {
   public decoded: SubPacket;
 
   @Field.d(8, "bytes")
-  public encrypted: number;
+  public encrypted: Uint8Array;
 
   @Field.d(6, "uint32")
   public id: number;
@@ -445,7 +445,14 @@ export class FromRadio extends Message<FromRadio> {
     "configCompleteId",
     "rebooted"
   )
-  public variant: string;
+  public variant:
+    | MeshPacket
+    | MyNodeInfo
+    | NodeInfo
+    | RadioConfig
+    | DebugString
+    | number
+    | boolean;
 
   @Field.d(1, "uint32")
   public num: number;
@@ -478,7 +485,7 @@ export class FromRadio extends Message<FromRadio> {
 @Type.d("ToRadio")
 export class ToRadio extends Message<ToRadio> {
   @OneOf.d("packet", "wantConfigId", "setRadio", "setOwner")
-  public variant: string;
+  public variant: MeshPacket | number | RadioConfig | User;
 
   @Field.d(1, MeshPacket)
   public packet: MeshPacket;
