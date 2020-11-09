@@ -33,7 +33,7 @@ export class NodeDB extends EventTarget {
     const node = this.nodes.get(nodeNumber);
 
     if (!node) {
-      let nodeInfo = new NodeInfo({
+      const nodeInfo = new NodeInfo({
         num: nodeNumber,
         position: new Position(),
         user,
@@ -59,12 +59,12 @@ export class NodeDB extends EventTarget {
    * @param nodeInfo Information about the node for the potition data to be assigned to
    */
   addPositionData(nodeNumber: number, position: Position) {
-    let node = this.nodes.get(nodeNumber);
+    const node = this.nodes.get(nodeNumber);
 
     if (!node) {
-      let nodeInfo = new NodeInfo({
+      const nodeInfo = new NodeInfo({
         num: nodeNumber,
-        position: position,
+        position,
         user: new User(),
       });
 
@@ -113,7 +113,7 @@ export class NodeDB extends EventTarget {
    * @param nodeNumber desired nodes number
    */
   nodeNumToUserId(nodeNumber: number) {
-    let node = this.nodes.get(nodeNumber);
+    const node = this.nodes.get(nodeNumber);
 
     return node?.user.id ?? node.user.id;
   }
