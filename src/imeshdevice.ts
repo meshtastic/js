@@ -1,5 +1,4 @@
 import * as constants from "./constants";
-import { SettingsManager } from "./settingsmanager";
 import { NodeDB } from "./nodedb";
 import EventTarget from "@ungap/event-target";
 import {
@@ -16,6 +15,7 @@ import {
   User,
   UserPreferences,
 } from "./protobuf";
+import { debugLog } from "./utils";
 
 /**
  * @todo is the event tag required on classes that contain events?
@@ -148,17 +148,19 @@ export abstract class IMeshDevice extends EventTarget {
     wantAck = false,
     wantResponse = false
   ) {
-    let meshPacket = new MeshPacket({
-      decoded: new SubPacket({
-        data: new Data({
-          payload: byteData,
-          typ: dataType,
+    return this.sendPacket(
+      new MeshPacket({
+        decoded: new SubPacket({
+          data: new Data({
+            payload: byteData,
+            typ: dataType,
+          }),
+          wantResponse,
         }),
-        wantResponse: wantResponse,
       }),
-    });
-
-    return this.sendPacket(meshPacket, destinationNum, wantAck);
+      destinationNum,
+      wantAck
+    );
   }
 
   /**
@@ -180,19 +182,21 @@ export abstract class IMeshDevice extends EventTarget {
     wantAck = false,
     wantResponse = false
   ) {
-    const meshPacket = new MeshPacket({
-      decoded: new SubPacket({
-        position: new Position({
-          latitudeI: latitude !== 0.0 ? Math.floor(latitude / 1e-7) : 0.0,
-          longitudeI: longitude !== 0.0 ? Math.floor(longitude / 1e-7) : 0.0,
-          altitude: altitude !== 0 ? Math.floor(altitude) : 0,
-          time: timeSec !== 0 ? timeSec : Math.floor(Date.now() / 1000),
+    return this.sendPacket(
+      new MeshPacket({
+        decoded: new SubPacket({
+          position: new Position({
+            latitudeI: latitude !== 0.0 ? ~~(latitude / 1e-7) : 0.0,
+            longitudeI: longitude !== 0.0 ? ~~(longitude / 1e-7) : 0.0,
+            altitude: altitude !== 0 ? ~~altitude : 0,
+            time: timeSec !== 0 ? timeSec : ~~(Date.now() / 1000),
+          }),
+          wantResponse,
         }),
-        wantResponse: wantResponse,
       }),
-    });
-
-    return this.sendPacket(meshPacket, destinationNum, wantAck);
+      destinationNum,
+      wantAck
+    );
   }
 
   /**
@@ -206,7 +210,7 @@ export abstract class IMeshDevice extends EventTarget {
     destinationNum = constants.BROADCAST_ADDR,
     wantAck = false
   ) {
-    if (this.isDeviceReady() === false) {
+    if (!this.isDeviceReady()) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.sendPacket: Device is not ready"
       );
@@ -214,9 +218,9 @@ export abstract class IMeshDevice extends EventTarget {
 
     let rcptNodeNum: number;
 
-    if (typeof destinationNum == "number") {
+    if (typeof destinationNum === "number") {
       rcptNodeNum = destinationNum;
-    } else if (destinationNum == constants.BROADCAST_ADDR) {
+    } else if (destinationNum === constants.BROADCAST_ADDR) {
       rcptNodeNum = constants.BROADCAST_NUM;
     } else {
       throw new Error(
@@ -227,17 +231,17 @@ export abstract class IMeshDevice extends EventTarget {
     meshPacket.to = rcptNodeNum;
     meshPacket.wantAck = wantAck;
 
-    if (meshPacket.id === undefined || !meshPacket.hasOwnProperty("id")) {
+    if (!meshPacket?.hasOwnProperty("id")) {
       meshPacket.id = this.generatePacketId();
     }
 
-    let encodedData = ToRadio.encode(
-      new ToRadio({
-        packet: meshPacket,
-      })
-    ).finish();
-
-    await this.writeToRadio(encodedData);
+    await this.writeToRadio(
+      ToRadio.encode(
+        new ToRadio({
+          packet: meshPacket,
+        })
+      ).finish()
+    );
   }
 
   /**
@@ -245,7 +249,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param configOptions
    */
   async setRadioConfig(configOptionsObj: RadioConfig) {
-    if (this.radioConfig === undefined || this.isDeviceReady() === false) {
+    if (!this.radioConfig || !this.isDeviceReady()) {
       throw new Error(
         "Error: meshtasticjs.IMeshDevice.setRadioConfig: Radio config has not been read from device, can't set new one. Try reconnecting."
       );
@@ -285,10 +289,13 @@ export abstract class IMeshDevice extends EventTarget {
       }
     }
 
-    let toRadio = new ToRadio({
-      setRadio: this.radioConfig,
-    });
-    await this.writeToRadio(ToRadio.encode(toRadio).finish());
+    await this.writeToRadio(
+      ToRadio.encode(
+        new ToRadio({
+          setRadio: this.radioConfig,
+        })
+      ).finish()
+    );
   }
 
   /**
@@ -296,7 +303,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @param ownerDataObj
    */
   async setOwner(ownerDataObj: User) {
-    if (this.user === undefined || this.isDeviceReady() === false) {
+    if (!this.user || !this.isDeviceReady()) {
       throw new Error(
         "Error: meshtasticjs.IMeshDevice.setOwner: Owner config has not been read from device, can't set new one. Try reconnecting."
       );
@@ -310,17 +317,20 @@ export abstract class IMeshDevice extends EventTarget {
 
     Object.assign(this.user, ownerDataObj);
 
-    let toRadio = new ToRadio({
-      setOwner: this.user,
-    });
-    await this.writeToRadio(ToRadio.encode(toRadio).finish());
+    await this.writeToRadio(
+      ToRadio.encode(
+        new ToRadio({
+          setOwner: this.user,
+        })
+      ).finish()
+    );
   }
 
   /**
    * Manually triggers the device configure process
    */
   async configure() {
-    if (this.isConnected === false) {
+    if (!this.isConnected) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.configure: Interface is not connected"
       );
@@ -328,15 +338,17 @@ export abstract class IMeshDevice extends EventTarget {
 
     this.isConfigStarted = true;
 
-    let toRadio = new ToRadio({
-      wantConfigId: constants.MY_CONFIG_ID,
-    });
-
-    await this.writeToRadio(ToRadio.encode(toRadio).finish());
+    await this.writeToRadio(
+      ToRadio.encode(
+        new ToRadio({
+          wantConfigId: constants.MY_CONFIG_ID,
+        })
+      ).finish()
+    );
 
     await this.readFromRadio();
 
-    if (this.isConfigDone === false) {
+    if (!this.isConfigDone) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.configure: configuring device was not successful"
       );
@@ -347,14 +359,14 @@ export abstract class IMeshDevice extends EventTarget {
    * Checks if device is ready
    */
   isDeviceReady() {
-    return this.isConnected === true && this.isConfigDone === true;
+    return this.isConnected && this.isConfigDone;
   }
 
   /**
    * Short description
    */
   private generatePacketId() {
-    if (this.currentPacketId === undefined) {
+    if (!this.currentPacketId) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.generatePacketId: Interface is not configured, can't generate packet id"
       );
@@ -367,28 +379,26 @@ export abstract class IMeshDevice extends EventTarget {
    * Gets called whenever a fromRadio message is received from device, returns fromRadio data
    * @todo change to support `all=true` (batch requests)
    * @event
-   * @param fromRadioUInt8Array
+   * @param fromRadio Uint8Array containing raw radio data
    */
-  protected async handleFromRadio(fromRadioUInt8Array: Uint8Array) {
+  protected async handleFromRadio(fromRadio: Uint8Array) {
     let fromRadioObj: FromRadio;
 
-    if (fromRadioUInt8Array.byteLength < 1 && SettingsManager.debugMode) {
-      console.log("Empty buffer received");
+    if (fromRadio.byteLength < 1) {
+      debugLog("Empty buffer received");
     }
 
     try {
-      fromRadioObj = FromRadio.decode(fromRadioUInt8Array);
+      fromRadioObj = FromRadio.decode(fromRadio);
     } catch (e) {
       throw new Error(
-        "Error in meshtasticjs.IMeshDevice.handleFromRadio: " + e.message
+        `Error in meshtasticjs.IMeshDevice.handleFromRadio: ${e.message}`
       );
     }
 
-    if (SettingsManager.debugMode) {
-      console.log(fromRadioObj);
-    }
+    debugLog(fromRadioObj);
 
-    if (this.isConfigDone === true) {
+    if (this.isConfigDone) {
       this.dispatchInterfaceEvent("fromRadio", fromRadioObj);
     }
 
@@ -424,12 +434,9 @@ export abstract class IMeshDevice extends EventTarget {
     } else if (fromRadioObj.hasOwnProperty("rebooted")) {
       await this.configure();
     } else {
-      // Don't throw error here, continue and just log to console
-      if (SettingsManager.debugMode) {
-        console.log(
-          "Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received"
-        );
-      }
+      debugLog(
+        "Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received"
+      );
     }
   }
 
@@ -468,15 +475,12 @@ export abstract class IMeshDevice extends EventTarget {
     this.isReconnecting = false;
     this.dispatchInterfaceEvent("connected", this);
 
-    if (noAutoConfig !== true) {
-      try {
-        await this.configure();
-        return;
-      } catch (e) {
+    if (!noAutoConfig) {
+      await this.configure().catch((e) => {
         throw new Error(
-          "Error in meshtasticjs.IMeshDevice.onConnected: " + e.message
+          `Error in meshtasticjs.IMeshDevice.onConnected: ${e.message}`
         );
-      }
+      });
     }
   }
 
@@ -496,11 +500,7 @@ export abstract class IMeshDevice extends EventTarget {
   private onConfigured() {
     this.isConfigDone = true;
     this.dispatchInterfaceEvent("configDone", this);
-    if (SettingsManager.debugMode) {
-      console.log(
-        "Configured device with node number " + this.myInfo.myNodeNum
-      );
-    }
+    debugLog(`Configured device with node number ${this.myInfo.myNodeNum}`);
   }
 
   /**
@@ -508,7 +508,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @event
    */
   private onNodeListChanged() {
-    if (this.isConfigDone === true) {
+    if (this.isConfigDone) {
       this.dispatchInterfaceEvent("nodeListChanged", this);
     }
   }

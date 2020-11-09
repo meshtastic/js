@@ -30,20 +30,20 @@ export class NodeDB extends EventTarget {
    * @param nodeInfo  Information about the node for the user data to be assigned to
    */
   addUserData(nodeNumber: number, user: User) {
-    let node = this.nodes.get(nodeNumber);
+    const node = this.nodes.get(nodeNumber);
 
-    if (node === undefined) {
-      let nodeInfo = new NodeInfo({
+    if (!node) {
+      const nodeInfo = new NodeInfo({
         num: nodeNumber,
         position: new Position(),
-        user: user,
+        user,
       });
 
       try {
         this.nodes.set(nodeNumber, nodeInfo);
       } catch (e) {
         throw new Error(
-          "Error in meshtasticjs.nodeDB.addUserData:" + e.message
+          `Error in meshtasticjs.nodeDB.addUserData: ${e.message}`
         );
       }
 
@@ -59,12 +59,12 @@ export class NodeDB extends EventTarget {
    * @param nodeInfo Information about the node for the potition data to be assigned to
    */
   addPositionData(nodeNumber: number, position: Position) {
-    let node = this.nodes.get(nodeNumber);
+    const node = this.nodes.get(nodeNumber);
 
-    if (node === undefined) {
-      let nodeInfo = new NodeInfo({
+    if (!node) {
+      const nodeInfo = new NodeInfo({
         num: nodeNumber,
-        position: position,
+        position,
         user: new User(),
       });
 
@@ -72,7 +72,7 @@ export class NodeDB extends EventTarget {
         this.nodes.set(nodeNumber, nodeInfo);
       } catch (e) {
         throw new Error(
-          "Error in meshtasticjs.nodeDB.addPositionData:" + e.message
+          `Error in meshtasticjs.nodeDB.addPositionData: ${e.message}`
         );
       }
 
@@ -97,9 +97,7 @@ export class NodeDB extends EventTarget {
    * @param nodeNumber Number of the node to be fetched
    */
   getNodeByNum(nodeNumber: number) {
-    return this.nodes.get(nodeNumber) === undefined
-      ? undefined
-      : this.nodes.get(nodeNumber);
+    return !this.nodes.get(nodeNumber) ? undefined : this.nodes.get(nodeNumber);
   }
 
   /**
@@ -115,11 +113,9 @@ export class NodeDB extends EventTarget {
    * @param nodeNumber desired nodes number
    */
   nodeNumToUserId(nodeNumber: number) {
-    let node = this.nodes.get(nodeNumber);
+    const node = this.nodes.get(nodeNumber);
 
-    return node === undefined || node.user.id === undefined
-      ? undefined
-      : node.user.id;
+    return node?.user.id ?? node.user.id;
   }
 
   /**
@@ -130,7 +126,7 @@ export class NodeDB extends EventTarget {
     let nodeNumber: number;
 
     this.nodes.forEach((node, _num, __map) => {
-      if (node.hasOwnProperty("user") === true) {
+      if (node.hasOwnProperty("user")) {
         if (node.user.id === userId) {
           nodeNumber = node.num;
         }

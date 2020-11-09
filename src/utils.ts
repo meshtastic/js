@@ -1,36 +1,28 @@
+import { SettingsManager } from "./settingsmanager";
+
 /**
  * Converts a `ArrayBuffer` to a hex string
  * @todo verify `x` data type
  * @param arrayBuffer Input `ArrayBuffer` to be converted
  */
-export function bufferToHex(arrayBuffer: ArrayBuffer) {
+const bufferToHex = (arrayBuffer: ArrayBuffer) => {
   return Array.prototype.map
     .call(new Uint8Array(arrayBuffer), (x: number) =>
-      ("00" + x.toString(16)).slice(-2)
+      `00${x.toString(16)}`.slice(-2)
     )
     .join("") as string;
-}
+};
 
 /**
  * Converts a `Uint8Array` to an `ArrayBuffer`
  * @param array Input `Uint8Array` to be converted
  */
-export function typedArrayToBuffer(array: Uint8Array) {
+const typedArrayToBuffer = (array: Uint8Array) => {
   return array.buffer.slice(
     array.byteOffset,
     array.byteLength + array.byteOffset
   );
-}
-
-/**
- * Short description
- */
-export function getEnvironment() {
-  if (typeof window !== "undefined") {
-    return "browser";
-  }
-  return "nobrowser";
-}
+};
 
 /**
  * This function keeps calling `toTry` until promise resolves or fails
@@ -42,22 +34,29 @@ export function getEnvironment() {
  * @param success Function called upon success if `toTry`
  * @param fail Function called upon timeout
  */
-export async function exponentialBackoff(
+const exponentialBackoff = async (
   max: number,
   delay: number,
   toTry: Function,
   success: Function,
   fail: Function
-) {
+) => {
   try {
-    const result = await toTry();
-    success(result);
+    success(await toTry());
   } catch (error) {
     if (max === 0) {
       return fail();
     }
-    setTimeout(function () {
+    setTimeout(() => {
       exponentialBackoff(--max, delay * 2, toTry, success, fail);
     }, delay * 1000);
   }
-}
+};
+
+const debugLog = (data: any) => {
+  if (SettingsManager.debugMode) {
+    console.log(data);
+  }
+};
+
+export { bufferToHex, typedArrayToBuffer, exponentialBackoff, debugLog };

@@ -1,6 +1,5 @@
-import { SettingsManager } from "./settingsmanager";
 import { IMeshDevice } from "./imeshdevice";
-import { typedArrayToBuffer } from "./utils";
+import { debugLog, typedArrayToBuffer } from "./utils";
 
 /**
  * Allows to connect to a meshtastic device over HTTP(S)
@@ -76,7 +75,7 @@ export class IHTTPConnection extends IMeshDevice {
   ) {
     this.receiveBatchRequests = receiveBatchRequests;
 
-    if (this.isConnected === true) {
+    if (this.isConnected) {
       throw new Error(
         "Error in meshtasticjs.IHTTPConnection.connect: Device is already connected"
       );
@@ -84,12 +83,12 @@ export class IHTTPConnection extends IMeshDevice {
 
     this.consecutiveFailedRequests = 0;
 
-    if (this.url !== undefined && address === undefined && tls === undefined) {
+    if (!this.url && !address && !tls) {
       // Do nothing as url has already been set in previous connect
       // and no new params have been given
     } else {
       // Set the address
-      if (address === undefined) {
+      if (!address) {
         throw new Error(
           "Error in meshtasticjs.IBLEConnection.connect: Please specify connect address"
         );
@@ -120,12 +119,10 @@ export class IHTTPConnection extends IMeshDevice {
    * Disconnects from the meshtastic device
    */
   disconnect() {
-    if (this.isConnected === false) {
-      if (SettingsManager.debugMode) {
-        console.log(
-          "meshtasticjs.IHTTPConnection.disconnect: device already disconnected"
-        );
-      }
+    if (!this.isConnected) {
+      debugLog(
+        "meshtasticjs.IHTTPConnection.disconnect: device already disconnected"
+      );
     }
 
     this.onDisconnected();
@@ -141,7 +138,7 @@ export class IHTTPConnection extends IMeshDevice {
     while (readBuffer.byteLength > 0) {
       try {
         readBuffer = await this.httpRequest(
-          this.url + "/api/v1/fromradio?all=" + this.receiveBatchRequests,
+          this.url + `/api/v1/fromradio?all=${this.receiveBatchRequests}`,
           "GET"
         );
 
@@ -152,7 +149,7 @@ export class IHTTPConnection extends IMeshDevice {
       } catch (e) {
         this.consecutiveFailedRequests++;
         throw new Error(
-          "Error in meshtasticjs.IHTTPConnection.readFromRadio: " + e.message
+          `Error in meshtasticjs.IHTTPConnection.readFromRadio: ${e.message}`
         );
       }
     }
@@ -164,18 +161,16 @@ export class IHTTPConnection extends IMeshDevice {
   async writeToRadio(ToRadioUInt8Array: Uint8Array) {
     this.lastInteractionTime = Date.now();
 
-    try {
-      await this.httpRequest(
-        this.url + "/api/v1/fromradio",
-        "PUT",
-        typedArrayToBuffer(ToRadioUInt8Array)
-      );
-    } catch (e) {
+    await this.httpRequest(
+      `${this.url}/api/v1/fromradio`,
+      "PUT",
+      typedArrayToBuffer(ToRadioUInt8Array)
+    ).catch((e) => {
       this.consecutiveFailedRequests++;
       throw new Error(
-        "Error in meshtasticjs.IHTTPConnection.writeToRadio: " + e.message
+        `Error in meshtasticjs.IHTTPConnection.writeToRadio: ${e.message}`
       );
-    }
+    });
   }
 
   /**
@@ -197,7 +192,7 @@ export class IHTTPConnection extends IMeshDevice {
 
         break;
       case "PUT":
-        response = await fetch(this.url + "/api/v1/toradio", {
+        response = await fetch(`${this.url}/api/v1/toradio`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/x-protobuf",
@@ -215,7 +210,7 @@ export class IHTTPConnection extends IMeshDevice {
       return response.arrayBuffer();
     } else {
       throw new Error(
-        "HTTP request failed with status code " + response.status
+        `HTTP request failed with status code ${response.status}`
       );
     }
   }
@@ -225,38 +220,34 @@ export class IHTTPConnection extends IMeshDevice {
    */
   private async fetchTimer() {
     if (this.consecutiveFailedRequests > 3) {
-      if (this.isConnected === true) {
+      if (this.isConnected) {
         this.disconnect();
       }
       return;
     }
 
-    try {
-      await this.readFromRadio();
-    } catch (e) {
-      if (SettingsManager.debugMode) {
-        console.log(e);
-      }
-    }
+    await this.readFromRadio().catch((e) => {
+      debugLog(e);
+    });
 
     // Calculate new interval and set timeout again
-    let newInterval = 5000;
+    let newInterval = 5e3;
 
-    if (this.fetchInterval === undefined) {
-      if (this.tls === true) {
-        newInterval = 10000;
+    if (!this.fetchInterval) {
+      if (this.tls) {
+        newInterval = 1e4;
       }
-      let timeSinceLastInteraction = Date.now() - this.lastInteractionTime;
+      const timeSinceLastInteraction = Date.now() - this.lastInteractionTime;
       newInterval =
-        timeSinceLastInteraction > 1200000
-          ? 120000
-          : timeSinceLastInteraction > 600000
-          ? 30000
-          : timeSinceLastInteraction > 180000
-          ? 20000
-          : timeSinceLastInteraction > 30000
-          ? 15000
-          : 10000;
+        timeSinceLastInteraction > 12e5
+          ? 12e4
+          : timeSinceLastInteraction > 6e5
+          ? 3e4
+          : timeSinceLastInteraction > 18e4
+          ? 2e4
+          : timeSinceLastInteraction > 3e4
+          ? 15e3
+          : 1e4;
     } else {
       newInterval = this.fetchInterval;
     }

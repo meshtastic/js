@@ -55,19 +55,19 @@ export enum LocationSharing {
 @Type.d("Position")
 export class Position extends Message<Position> {
   @Field.d(7, "sint32")
-  public latitudeI: number;
+  latitudeI: number;
 
   @Field.d(8, "sint32")
-  public longitudeI: number;
+  longitudeI: number;
 
   @Field.d(3, "int32")
-  public altitude: number;
+  altitude: number;
 
   @Field.d(4, "int32")
-  public batteryLevel: number;
+  batteryLevel: number;
 
   @Field.d(9, "fixed32")
-  public time: number;
+  time: number;
 }
 
 /**
@@ -76,10 +76,10 @@ export class Position extends Message<Position> {
 @Type.d("Data")
 export class Data extends Message<Data> {
   @Field.d(1, TypeEnum)
-  public typ: TypeEnum;
+  typ: TypeEnum;
 
   @Field.d(2, "bytes")
-  public payload: Uint8Array;
+  payload: Uint8Array;
 }
 
 /**
@@ -88,16 +88,16 @@ export class Data extends Message<Data> {
 @Type.d("User")
 export class User extends Message<User> {
   @Field.d(1, "string")
-  public id: string;
+  id: string;
 
   @Field.d(2, "string")
-  public longName: string;
+  longName: string;
 
   @Field.d(3, "string")
-  public shortName: string;
+  shortName: string;
 
   @Field.d(4, "bytes")
-  public macaddr: Uint8Array;
+  macaddr: Uint8Array;
 }
 
 /**
@@ -106,7 +106,7 @@ export class User extends Message<User> {
 @Type.d("RouteDiscovery")
 export class RouteDiscovery extends Message<RouteDiscovery> {
   @Field.d(2, "int32", "repeated")
-  public route: number;
+  route: number;
 }
 
 /**
@@ -122,46 +122,46 @@ export class SubPacket extends Message<SubPacket> {
     "routeReply",
     "routeError"
   )
-  public payload: string;
+  payload: Position | Data | User | RouteDiscovery | RouteErrorEnum;
 
   @OneOf.d("successId", "failId")
-  public ack: string;
+  ack: number;
 
   @Field.d(1, Position)
-  public position: Position;
+  position: Position;
 
   @Field.d(3, Data)
-  public data: Data;
+  data: Data;
 
   @Field.d(4, User)
-  public user: User;
+  user: User;
 
   @Field.d(6, RouteDiscovery)
-  public routeRequest: RouteDiscovery;
+  routeRequest: RouteDiscovery;
 
   @Field.d(7, RouteDiscovery)
-  public routeReply: RouteDiscovery;
+  routeReply: RouteDiscovery;
 
   @Field.d(13, RouteErrorEnum)
-  public routeError: RouteErrorEnum;
+  routeError: RouteErrorEnum;
 
   @Field.d(5, "bool")
-  public wantResponse: boolean;
+  wantResponse: boolean;
 
   @Field.d(10, "uint32")
-  public successId: number;
+  successId: number;
 
   @Field.d(11, "uint32")
-  public failId: number;
+  failId: number;
 
   @Field.d(9, "uint32")
-  public dest: number;
+  dest: number;
 
   @Field.d(12, "uint32")
-  public source: number;
+  source: number;
 
   @Field.d(2, "uint32")
-  public originalId: number;
+  originalId: number;
 }
 
 /**
@@ -170,37 +170,37 @@ export class SubPacket extends Message<SubPacket> {
 @Type.d("MeshPacket")
 export class MeshPacket extends Message<MeshPacket> {
   @OneOf.d("decoded", "encrypted")
-  public payload: string;
+  payload: SubPacket | Uint8Array;
 
   @OneOf.d("successId", "failId")
-  public ack: string;
+  ack: string;
 
   @Field.d(1, "uint32")
-  public from: number;
+  from: number;
 
   @Field.d(2, "uint32")
-  public to: number;
+  to: number;
 
   @Field.d(3, SubPacket)
-  public decoded: SubPacket;
+  decoded: SubPacket;
 
   @Field.d(8, "bytes")
-  public encrypted: number;
+  encrypted: Uint8Array;
 
   @Field.d(6, "uint32")
-  public id: number;
+  id: number;
 
   @Field.d(9, "fixed32")
-  public rxTime: number;
+  rxTime: number;
 
   @Field.d(7, "float")
-  public rxSnr: number;
+  rxSnr: number;
 
   @Field.d(10, "uint32")
-  public hopLimit: number;
+  hopLimit: number;
 
   @Field.d(11, "bool")
-  public wantAck: boolean;
+  wantAck: boolean;
 }
 
 /**
@@ -209,28 +209,28 @@ export class MeshPacket extends Message<MeshPacket> {
 @Type.d("ChannelSettings")
 export class ChannelSettings extends Message<ChannelSettings> {
   @Field.d(1, "int32")
-  public txPower: number;
+  txPower: number;
 
   @Field.d(3, ModemConfig)
-  public modemConfig: ModemConfig;
+  modemConfig: ModemConfig;
 
   @Field.d(6, "uint32")
-  public bandwidth: number;
+  bandwidth: number;
 
   @Field.d(7, "uint32")
-  public spreadFactor: number;
+  spreadFactor: number;
 
   @Field.d(8, "uint32")
-  public codingRate: number;
+  codingRate: number;
 
   @Field.d(9, "uint32")
-  public channelNum: number;
+  channelNum: number;
 
   @Field.d(4, "bytes")
-  public psk: Uint8Array;
+  psk: Uint8Array;
 
   @Field.d(5, "string")
-  public name: string;
+  name: string;
 }
 
 /**
@@ -239,73 +239,73 @@ export class ChannelSettings extends Message<ChannelSettings> {
 @Type.d("UserPreferences")
 export class UserPreferences extends Message<UserPreferences> {
   @Field.d(1, "uint32")
-  public positionBroadcastSecs: number;
+  positionBroadcastSecs: number;
 
   @Field.d(2, "uint32")
-  public sendOwnerInterval: number;
+  sendOwnerInterval: number;
 
   @Field.d(3, "uint32")
-  public numMissedToFail: number;
+  numMissedToFail: number;
 
   @Field.d(4, "uint32")
-  public waitBluetoothSecs: number;
+  waitBluetoothSecs: number;
 
   @Field.d(5, "uint32")
-  public screenOnSecs: number;
+  screenOnSecs: number;
 
   @Field.d(6, "uint32")
-  public phoneTimeoutSecs: number;
+  phoneTimeoutSecs: number;
 
   @Field.d(7, "uint32")
-  public phoneSdsTimeoutSec: number;
+  phoneSdsTimeoutSec: number;
 
   @Field.d(8, "uint32")
-  public meshSdsTimeoutSecs: number;
+  meshSdsTimeoutSecs: number;
 
   @Field.d(9, "uint32")
-  public sdsSecs: number;
+  sdsSecs: number;
 
   @Field.d(10, "uint32")
-  public lsSecs: number;
+  lsSecs: number;
 
   @Field.d(11, "uint32")
-  public minWakeSecs: number;
+  minWakeSecs: number;
 
   @Field.d(12, "string")
-  public wifiSsid: string;
+  wifiSsid: string;
 
   @Field.d(13, "string")
-  public wifiPassword: string;
+  wifiPassword: string;
 
   @Field.d(14, "bool")
-  public wifiApMode: boolean;
+  wifiApMode: boolean;
 
   @Field.d(15, RegionCode)
-  public region: RegionCode;
+  region: RegionCode;
 
   @Field.d(37, "bool")
-  public isRouter: boolean;
+  isRouter: boolean;
 
   @Field.d(38, "bool")
-  public isLowPower: boolean;
+  isLowPower: boolean;
 
   @Field.d(100, "bool")
-  public factoryReset: boolean;
+  factoryReset: boolean;
 
   @Field.d(32, LocationSharing)
-  public locationShare: LocationSharing;
+  locationShare: LocationSharing;
 
   @Field.d(33, GpsOperation)
-  public gpsOperation: GpsOperation;
+  gpsOperation: GpsOperation;
 
   @Field.d(34, "uint32")
-  public gpsUpdateInterval: number;
+  gpsUpdateInterval: number;
 
   @Field.d(36, "uint32")
-  public gpsAttemptTime: number;
+  gpsAttemptTime: number;
 
   @Field.d(103, "uint32", "repeated")
-  public ignoreIncoming: number;
+  ignoreIncoming: number;
 }
 
 /**
@@ -314,10 +314,10 @@ export class UserPreferences extends Message<UserPreferences> {
 @Type.d("RadioConfig")
 export class RadioConfig extends Message<RadioConfig> {
   @Field.d(1, UserPreferences)
-  public preferences: UserPreferences;
+  preferences: UserPreferences;
 
   @Field.d(2, ChannelSettings)
-  public channelSettings: ChannelSettings;
+  channelSettings: ChannelSettings;
 }
 
 /**
@@ -326,19 +326,19 @@ export class RadioConfig extends Message<RadioConfig> {
 @Type.d("NodeInfo")
 export class NodeInfo extends Message<NodeInfo> {
   @Field.d(1, "uint32")
-  public num: number;
+  num: number;
 
   @Field.d(2, User)
-  public user: User;
+  user: User;
 
   @Field.d(3, Position)
-  public position: Position;
+  position: Position;
 
   @Field.d(7, "float")
-  public snr: number;
+  snr: number;
 
   @Field.d(5, "uint32")
-  public nextHop: number;
+  nextHop: number;
 }
 
 /**
@@ -347,46 +347,46 @@ export class NodeInfo extends Message<NodeInfo> {
 @Type.d("MyNodeInfo")
 export class MyNodeInfo extends Message<MyNodeInfo> {
   @Field.d(1, "uint32")
-  public myNodeNum: number;
+  myNodeNum: number;
 
   @Field.d(2, "bool")
-  public hasGps: boolean;
+  hasGps: boolean;
 
   @Field.d(3, "int32")
-  public numChannels: number;
+  numChannels: number;
 
   @Field.d(4, "string")
-  public region: string;
+  region: string;
 
   @Field.d(5, "string")
-  public hwModel: string;
+  hwModel: string;
 
   @Field.d(6, "string")
-  public firmwareVersion: string;
+  firmwareVersion: string;
 
   @Field.d(7, "uint32")
-  public errorCode: number;
+  errorCode: number;
 
   @Field.d(8, "uint32")
-  public errorAddress: number;
+  errorAddress: number;
 
   @Field.d(9, "uint32")
-  public errorCount: number;
+  errorCount: number;
 
   @Field.d(10, "uint32")
-  public packetIdBits: number;
+  packetIdBits: number;
 
   @Field.d(11, "uint32")
-  public currentPacketId: number;
+  currentPacketId: number;
 
   @Field.d(12, "uint32")
-  public nodeNumBits: number;
+  nodeNumBits: number;
 
   @Field.d(13, "uint32")
-  public messageTimeoutMsec: number;
+  messageTimeoutMsec: number;
 
   @Field.d(14, "uint32")
-  public minAppVersion: number;
+  minAppVersion: number;
 }
 
 /**
@@ -395,31 +395,31 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
 @Type.d("DeviceState")
 export class DeviceState extends Message<DeviceState> {
   @Field.d(1, RadioConfig)
-  public radio: RadioConfig;
+  radio: RadioConfig;
 
   @Field.d(2, MyNodeInfo)
-  public myNode: MyNodeInfo;
+  myNode: MyNodeInfo;
 
   @Field.d(3, User)
-  public owner: User;
+  owner: User;
 
   @Field.d(4, NodeInfo, "repeated")
-  public nodeDb: NodeInfo;
+  nodeDb: NodeInfo;
 
   @Field.d(5, MeshPacket, "repeated")
-  public receiveQueue: MeshPacket;
+  receiveQueue: MeshPacket;
 
   @Field.d(8, "uint32")
-  public version: number;
+  version: number;
 
   @Field.d(7, MeshPacket)
-  public rxTextMessage: MeshPacket;
+  rxTextMessage: MeshPacket;
 
   @Field.d(9, "bool")
-  public noSave: boolean;
+  noSave: boolean;
 
   @Field.d(11, "bool")
-  public didGpsReset: boolean;
+  didGpsReset: boolean;
 }
 
 /**
@@ -428,7 +428,7 @@ export class DeviceState extends Message<DeviceState> {
 @Type.d("DebugString")
 export class DebugString extends Message<DebugString> {
   @Field.d(1, "string")
-  public message: "string";
+  message: "string";
 }
 
 /**
@@ -445,31 +445,38 @@ export class FromRadio extends Message<FromRadio> {
     "configCompleteId",
     "rebooted"
   )
-  public variant: string;
+  variant:
+    | MeshPacket
+    | MyNodeInfo
+    | NodeInfo
+    | RadioConfig
+    | DebugString
+    | number
+    | boolean;
 
   @Field.d(1, "uint32")
-  public num: number;
+  num: number;
 
   @Field.d(2, MeshPacket)
-  public packet: MeshPacket;
+  packet: MeshPacket;
 
   @Field.d(3, MyNodeInfo)
-  public myInfo: MyNodeInfo;
+  myInfo: MyNodeInfo;
 
   @Field.d(4, NodeInfo)
-  public nodeInfo: NodeInfo;
+  nodeInfo: NodeInfo;
 
   @Field.d(6, RadioConfig)
-  public radio: RadioConfig;
+  radio: RadioConfig;
 
   @Field.d(7, DebugString)
-  public debugString: DebugString;
+  debugString: DebugString;
 
   @Field.d(8, "uint32")
-  public configCompleteId: number;
+  configCompleteId: number;
 
   @Field.d(9, "bool")
-  public rebooted: boolean;
+  rebooted: boolean;
 }
 
 /**
@@ -478,19 +485,19 @@ export class FromRadio extends Message<FromRadio> {
 @Type.d("ToRadio")
 export class ToRadio extends Message<ToRadio> {
   @OneOf.d("packet", "wantConfigId", "setRadio", "setOwner")
-  public variant: string;
+  variant: MeshPacket | number | RadioConfig | User;
 
   @Field.d(1, MeshPacket)
-  public packet: MeshPacket;
+  packet: MeshPacket;
 
   @Field.d(100, "uint32")
-  public wantConfigId: number;
+  wantConfigId: number;
 
   @Field.d(101, RadioConfig)
-  public setRadio: RadioConfig;
+  setRadio: RadioConfig;
 
   @Field.d(102, User)
-  public setOwner: User;
+  setOwner: User;
 }
 
 /**
@@ -499,14 +506,14 @@ export class ToRadio extends Message<ToRadio> {
 @Type.d("ManufacturingData")
 export class ManufacturingData extends Message<ManufacturingData> {
   @Field.d(1, "uint32")
-  public fradioFreq: number;
+  fradioFreq: number;
 
   @Field.d(2, "string")
-  public hwModel: string;
+  hwModel: string;
 
   @Field.d(3, "string")
-  public hwVersion: string;
+  hwVersion: string;
 
   @Field.d(4, "sint32")
-  public selftestResult: number;
+  selftestResult: number;
 }
