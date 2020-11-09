@@ -477,7 +477,9 @@ export abstract class IMeshDevice extends EventTarget {
 
     if (!noAutoConfig) {
       await this.configure().catch((e) => {
-        `Error in meshtasticjs.IMeshDevice.onConnected: ${e.message}`;
+        throw new Error(
+          `Error in meshtasticjs.IMeshDevice.onConnected: ${e.message}`
+        );
       });
     }
   }
