@@ -10,10 +10,10 @@ export class Client {
   /**
    * Array containing all created connection interfaces
    */
-  deviceInterfaces: (IBLEConnection | IHTTPConnection)[];
+  deviceInterfaces: Array<IBLEConnection | IHTTPConnection>;
 
   constructor() {
-    this.deviceInterfaces = new Array();
+    this.deviceInterfaces = [];
   }
 
   /**

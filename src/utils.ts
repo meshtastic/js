@@ -25,16 +25,6 @@ const typedArrayToBuffer = (array: Uint8Array) => {
 };
 
 /**
- * Short description
- */
-const getEnvironment = () => {
-  if (!typeof window) {
-    return "browser";
-  }
-  return "nobrowser";
-};
-
-/**
  * This function keeps calling `toTry` until promise resolves or fails
  *  https://googlechrome.github.io/samples/web-bluetooth/automatic-reconnect-async-await.html
  *
@@ -52,8 +42,7 @@ const exponentialBackoff = async (
   fail: Function
 ) => {
   try {
-    const result = await toTry();
-    success(result);
+    success(await toTry());
   } catch (error) {
     if (max === 0) {
       return fail();
@@ -70,10 +59,4 @@ const debugLog = (data: any) => {
   }
 };
 
-export {
-  bufferToHex,
-  typedArrayToBuffer,
-  getEnvironment,
-  exponentialBackoff,
-  debugLog,
-};
+export { bufferToHex, typedArrayToBuffer, exponentialBackoff, debugLog };

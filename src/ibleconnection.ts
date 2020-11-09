@@ -82,26 +82,19 @@ export class IBLEConnection extends IMeshDevice {
       );
     }
 
-    let device: BluetoothDevice,
-      connection: BluetoothRemoteGATTServer,
-      service: BluetoothRemoteGATTService;
-
     try {
       // If no device has been selected, open request device browser prompt
       if (!this.device) {
-        device = await this.requestDevice(requestDeviceFilterParams);
-        this.device = device;
+        this.device = await this.requestDevice(requestDeviceFilterParams);
       }
 
       if (!this.isReconnecting) {
         this.subscribeToBLEConnectionEvents();
       }
 
-      connection = await this.connectToDevice(this.device);
-      this.connection = connection;
+      this.connection = await this.connectToDevice(this.device);
 
-      service = await this.getService(this.connection);
-      this.service = service;
+      this.service = await this.getService(this.connection);
 
       await this.getCharacteristics(this.service);
 
@@ -162,9 +155,9 @@ export class IBLEConnection extends IMeshDevice {
    * Short description
    */
   async writeToRadio(ToRadioUInt8Array: Uint8Array) {
-    let ToRadioBuffer = typedArrayToBuffer(ToRadioUInt8Array);
-
-    await this.toRadioCharacteristic.writeValue(ToRadioBuffer);
+    await this.toRadioCharacteristic.writeValue(
+      typedArrayToBuffer(ToRadioUInt8Array)
+    );
   }
 
   /**
@@ -196,7 +189,7 @@ export class IBLEConnection extends IMeshDevice {
         filters: [{ services: [constants.SERVICE_UUID] }],
       };
     }
-    return await navigator.bluetooth
+    return navigator.bluetooth
       .requestDevice(requestDeviceFilterParams as RequestDeviceOptions)
       .catch((e) => {
         throw new Error(
@@ -212,7 +205,7 @@ export class IBLEConnection extends IMeshDevice {
   private async connectToDevice(device: BluetoothDevice) {
     debugLog(`selected ${device.name}, trying to connect now`);
 
-    return await device.gatt.connect().catch((e) => {
+    return device.gatt.connect().catch((e) => {
       throw new Error(
         `Error in meshtasticjs.IBLEConnection.connectToDevice: ${e.message}`
       );
@@ -224,13 +217,11 @@ export class IBLEConnection extends IMeshDevice {
    * @param connection
    */
   private async getService(connection: BluetoothRemoteGATTServer) {
-    return await connection
-      .getPrimaryService(constants.SERVICE_UUID)
-      .catch((e) => {
-        throw new Error(
-          `Error in meshtasticjs.IBLEConnection.getService: ${e.message}`
-        );
-      });
+    return connection.getPrimaryService(constants.SERVICE_UUID).catch((e) => {
+      throw new Error(
+        `Error in meshtasticjs.IBLEConnection.getService: ${e.message}`
+      );
+    });
   }
 
   /**
@@ -248,12 +239,12 @@ export class IBLEConnection extends IMeshDevice {
         constants.FROMRADIO_UUID
       );
       debugLog("successfully got characteristic ");
-      debugLog(this.toRadioCharacteristic);
+      debugLog(this.fromRadioCharacteristic);
       this.fromNumCharacteristic = await service.getCharacteristic(
         constants.FROMNUM_UUID
       );
       debugLog("successfully got characteristic ");
-      debugLog(this.toRadioCharacteristic);
+      debugLog(this.fromNumCharacteristic);
     } catch (e) {
       throw new Error(
         `Error in meshtasticjs.IBLEConnection.getCharacteristics: ${e.message}`

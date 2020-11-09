@@ -237,7 +237,7 @@ export class IHTTPConnection extends IMeshDevice {
       if (this.tls) {
         newInterval = 1e4;
       }
-      let timeSinceLastInteraction = Date.now() - this.lastInteractionTime;
+      const timeSinceLastInteraction = Date.now() - this.lastInteractionTime;
       newInterval =
         timeSinceLastInteraction > 12e5
           ? 12e4

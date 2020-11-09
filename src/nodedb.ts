@@ -30,13 +30,13 @@ export class NodeDB extends EventTarget {
    * @param nodeInfo  Information about the node for the user data to be assigned to
    */
   addUserData(nodeNumber: number, user: User) {
-    let node = this.nodes.get(nodeNumber);
+    const node = this.nodes.get(nodeNumber);
 
     if (!node) {
       let nodeInfo = new NodeInfo({
         num: nodeNumber,
         position: new Position(),
-        user: user,
+        user,
       });
 
       try {
@@ -115,7 +115,7 @@ export class NodeDB extends EventTarget {
   nodeNumToUserId(nodeNumber: number) {
     let node = this.nodes.get(nodeNumber);
 
-    return !node?.user.id ? undefined : node.user.id;
+    return node?.user.id ?? node.user.id;
   }
 
   /**

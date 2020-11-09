@@ -148,17 +148,19 @@ export abstract class IMeshDevice extends EventTarget {
     wantAck = false,
     wantResponse = false
   ) {
-    let meshPacket = new MeshPacket({
-      decoded: new SubPacket({
-        data: new Data({
-          payload: byteData,
-          typ: dataType,
+    return this.sendPacket(
+      new MeshPacket({
+        decoded: new SubPacket({
+          data: new Data({
+            payload: byteData,
+            typ: dataType,
+          }),
+          wantResponse: wantResponse,
         }),
-        wantResponse: wantResponse,
       }),
-    });
-
-    return this.sendPacket(meshPacket, destinationNum, wantAck);
+      destinationNum,
+      wantAck
+    );
   }
 
   /**
@@ -180,19 +182,21 @@ export abstract class IMeshDevice extends EventTarget {
     wantAck = false,
     wantResponse = false
   ) {
-    const meshPacket = new MeshPacket({
-      decoded: new SubPacket({
-        position: new Position({
-          latitudeI: latitude !== 0.0 ? ~~(latitude / 1e-7) : 0.0,
-          longitudeI: longitude !== 0.0 ? ~~(longitude / 1e-7) : 0.0,
-          altitude: altitude !== 0 ? ~~altitude : 0,
-          time: timeSec !== 0 ? timeSec : ~~(Date.now() / 1000),
+    return this.sendPacket(
+      new MeshPacket({
+        decoded: new SubPacket({
+          position: new Position({
+            latitudeI: latitude !== 0.0 ? ~~(latitude / 1e-7) : 0.0,
+            longitudeI: longitude !== 0.0 ? ~~(longitude / 1e-7) : 0.0,
+            altitude: altitude !== 0 ? ~~altitude : 0,
+            time: timeSec !== 0 ? timeSec : ~~(Date.now() / 1000),
+          }),
+          wantResponse: wantResponse,
         }),
-        wantResponse: wantResponse,
       }),
-    });
-
-    return this.sendPacket(meshPacket, destinationNum, wantAck);
+      destinationNum,
+      wantAck
+    );
   }
 
   /**
@@ -214,9 +218,9 @@ export abstract class IMeshDevice extends EventTarget {
 
     let rcptNodeNum: number;
 
-    if (typeof destinationNum == "number") {
+    if (typeof destinationNum === "number") {
       rcptNodeNum = destinationNum;
-    } else if (destinationNum == constants.BROADCAST_ADDR) {
+    } else if (destinationNum === constants.BROADCAST_ADDR) {
       rcptNodeNum = constants.BROADCAST_NUM;
     } else {
       throw new Error(
@@ -231,13 +235,13 @@ export abstract class IMeshDevice extends EventTarget {
       meshPacket.id = this.generatePacketId();
     }
 
-    let encodedData = ToRadio.encode(
-      new ToRadio({
-        packet: meshPacket,
-      })
-    ).finish();
-
-    await this.writeToRadio(encodedData);
+    await this.writeToRadio(
+      ToRadio.encode(
+        new ToRadio({
+          packet: meshPacket,
+        })
+      ).finish()
+    );
   }
 
   /**
@@ -285,10 +289,13 @@ export abstract class IMeshDevice extends EventTarget {
       }
     }
 
-    let toRadio = new ToRadio({
-      setRadio: this.radioConfig,
-    });
-    await this.writeToRadio(ToRadio.encode(toRadio).finish());
+    await this.writeToRadio(
+      ToRadio.encode(
+        new ToRadio({
+          setRadio: this.radioConfig,
+        })
+      ).finish()
+    );
   }
 
   /**
@@ -310,10 +317,13 @@ export abstract class IMeshDevice extends EventTarget {
 
     Object.assign(this.user, ownerDataObj);
 
-    let toRadio = new ToRadio({
-      setOwner: this.user,
-    });
-    await this.writeToRadio(ToRadio.encode(toRadio).finish());
+    await this.writeToRadio(
+      ToRadio.encode(
+        new ToRadio({
+          setOwner: this.user,
+        })
+      ).finish()
+    );
   }
 
   /**
@@ -328,11 +338,13 @@ export abstract class IMeshDevice extends EventTarget {
 
     this.isConfigStarted = true;
 
-    let toRadio = new ToRadio({
-      wantConfigId: constants.MY_CONFIG_ID,
-    });
-
-    await this.writeToRadio(ToRadio.encode(toRadio).finish());
+    await this.writeToRadio(
+      ToRadio.encode(
+        new ToRadio({
+          wantConfigId: constants.MY_CONFIG_ID,
+        })
+      ).finish()
+    );
 
     await this.readFromRadio();
 
