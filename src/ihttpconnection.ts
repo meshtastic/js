@@ -1,6 +1,5 @@
-import { SettingsManager } from "./settingsmanager";
 import { IMeshDevice } from "./imeshdevice";
-import { typedArrayToBuffer } from "./utils";
+import { debugLog, typedArrayToBuffer } from "./utils";
 
 /**
  * Allows to connect to a meshtastic device over HTTP(S)
@@ -121,11 +120,9 @@ export class IHTTPConnection extends IMeshDevice {
    */
   disconnect() {
     if (!this.isConnected) {
-      if (SettingsManager.debugMode) {
-        console.log(
-          "meshtasticjs.IHTTPConnection.disconnect: device already disconnected"
-        );
-      }
+      debugLog(
+        "meshtasticjs.IHTTPConnection.disconnect: device already disconnected"
+      );
     }
 
     this.onDisconnected();
@@ -164,18 +161,16 @@ export class IHTTPConnection extends IMeshDevice {
   async writeToRadio(ToRadioUInt8Array: Uint8Array) {
     this.lastInteractionTime = Date.now();
 
-    try {
-      await this.httpRequest(
-        `${this.url}/api/v1/fromradio`,
-        "PUT",
-        typedArrayToBuffer(ToRadioUInt8Array)
-      );
-    } catch (e) {
+    await this.httpRequest(
+      `${this.url}/api/v1/fromradio`,
+      "PUT",
+      typedArrayToBuffer(ToRadioUInt8Array)
+    ).catch((e) => {
       this.consecutiveFailedRequests++;
       throw new Error(
         `Error in meshtasticjs.IHTTPConnection.writeToRadio: ${e.message}`
       );
-    }
+    });
   }
 
   /**
@@ -231,13 +226,9 @@ export class IHTTPConnection extends IMeshDevice {
       return;
     }
 
-    try {
-      await this.readFromRadio();
-    } catch (e) {
-      if (SettingsManager.debugMode) {
-        console.log(e);
-      }
-    }
+    await this.readFromRadio().catch((e) => {
+      debugLog(e);
+    });
 
     // Calculate new interval and set timeout again
     let newInterval = 5e3;

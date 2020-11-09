@@ -1,3 +1,5 @@
+import { SettingsManager } from "./settingsmanager";
+
 /**
  * Converts a `ArrayBuffer` to a hex string
  * @todo verify `x` data type
@@ -62,4 +64,16 @@ const exponentialBackoff = async (
   }
 };
 
-export { bufferToHex, typedArrayToBuffer, getEnvironment, exponentialBackoff };
+const debugLog = (data: any) => {
+  if (SettingsManager.debugMode) {
+    console.log(data);
+  }
+};
+
+export {
+  bufferToHex,
+  typedArrayToBuffer,
+  getEnvironment,
+  exponentialBackoff,
+  debugLog,
+};

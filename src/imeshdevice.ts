@@ -1,5 +1,4 @@
 import * as constants from "./constants";
-import { SettingsManager } from "./settingsmanager";
 import { NodeDB } from "./nodedb";
 import EventTarget from "@ungap/event-target";
 import {
@@ -16,6 +15,7 @@ import {
   User,
   UserPreferences,
 } from "./protobuf";
+import { debugLog } from "./utils";
 
 /**
  * @todo is the event tag required on classes that contain events?
@@ -183,10 +183,10 @@ export abstract class IMeshDevice extends EventTarget {
     const meshPacket = new MeshPacket({
       decoded: new SubPacket({
         position: new Position({
-          latitudeI: latitude !== 0.0 ? Math.floor(latitude / 1e-7) : 0.0,
-          longitudeI: longitude !== 0.0 ? Math.floor(longitude / 1e-7) : 0.0,
-          altitude: altitude !== 0 ? Math.floor(altitude) : 0,
-          time: timeSec !== 0 ? timeSec : Math.floor(Date.now() / 1000),
+          latitudeI: latitude !== 0.0 ? ~~(latitude / 1e-7) : 0.0,
+          longitudeI: longitude !== 0.0 ? ~~(longitude / 1e-7) : 0.0,
+          altitude: altitude !== 0 ? ~~altitude : 0,
+          time: timeSec !== 0 ? timeSec : ~~(Date.now() / 1000),
         }),
         wantResponse: wantResponse,
       }),
@@ -372,8 +372,8 @@ export abstract class IMeshDevice extends EventTarget {
   protected async handleFromRadio(fromRadio: Uint8Array) {
     let fromRadioObj: FromRadio;
 
-    if (fromRadio.byteLength < 1 && SettingsManager.debugMode) {
-      console.log("Empty buffer received");
+    if (fromRadio.byteLength < 1) {
+      debugLog("Empty buffer received");
     }
 
     try {
@@ -384,9 +384,7 @@ export abstract class IMeshDevice extends EventTarget {
       );
     }
 
-    if (SettingsManager.debugMode) {
-      console.log(fromRadioObj);
-    }
+    debugLog(fromRadioObj);
 
     if (this.isConfigDone) {
       this.dispatchInterfaceEvent("fromRadio", fromRadioObj);
@@ -424,12 +422,9 @@ export abstract class IMeshDevice extends EventTarget {
     } else if (fromRadioObj.hasOwnProperty("rebooted")) {
       await this.configure();
     } else {
-      // Don't throw error here, continue and just log to console
-      if (SettingsManager.debugMode) {
-        console.log(
-          "Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received"
-        );
-      }
+      debugLog(
+        "Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received"
+      );
     }
   }
 
@@ -469,14 +464,9 @@ export abstract class IMeshDevice extends EventTarget {
     this.dispatchInterfaceEvent("connected", this);
 
     if (!noAutoConfig) {
-      try {
-        await this.configure();
-        return;
-      } catch (e) {
-        throw new Error(
-          `Error in meshtasticjs.IMeshDevice.onConnected: ${e.message}`
-        );
-      }
+      await this.configure().catch((e) => {
+        `Error in meshtasticjs.IMeshDevice.onConnected: ${e.message}`;
+      });
     }
   }
 
@@ -496,11 +486,7 @@ export abstract class IMeshDevice extends EventTarget {
   private onConfigured() {
     this.isConfigDone = true;
     this.dispatchInterfaceEvent("configDone", this);
-    if (SettingsManager.debugMode) {
-      console.log(
-        `Configured device with node number ${this.myInfo.myNodeNum}`
-      );
-    }
+    debugLog(`Configured device with node number ${this.myInfo.myNodeNum}`);
   }
 
   /**

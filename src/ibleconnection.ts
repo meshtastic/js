@@ -1,7 +1,6 @@
 import * as constants from "./constants";
-import { SettingsManager } from "./settingsmanager";
 import { IMeshDevice } from "./imeshdevice";
-import { exponentialBackoff, typedArrayToBuffer } from "./utils";
+import { exponentialBackoff, typedArrayToBuffer, debugLog } from "./utils";
 
 /**
  * Allows to connect to a meshtastic device via bluetooth
@@ -126,17 +125,11 @@ export class IBLEConnection extends IMeshDevice {
     this.userInitiatedDisconnect = true; // Don't reconnect
 
     if (!this.isConnected && !this.isReconnecting) {
-      if (SettingsManager.debugMode) {
-        console.log(
-          "meshtasticjs.IBLEConnection.disconnect: device already disconnected"
-        );
-      }
+      debugLog(
+        "meshtasticjs.IBLEConnection.disconnect: device already disconnected"
+      );
     } else if (!this.isConnected && this.isReconnecting) {
-      if (SettingsManager.debugMode) {
-        console.log(
-          "meshtasticjs.IBLEConnection.disconnect: reconnect cancelled"
-        );
-      }
+      debugLog("meshtasticjs.IBLEConnection.disconnect: reconnect cancelled");
     }
 
     this.connection.disconnect();
@@ -151,18 +144,16 @@ export class IBLEConnection extends IMeshDevice {
 
     // read as long as the previous read buffer is bigger 0
     while (readBuffer.byteLength > 0) {
-      try {
-        readBuffer = await this.readFromCharacteristic(
-          this.fromRadioCharacteristic
-        );
-
-        if (readBuffer.byteLength > 0) {
-          await this.handleFromRadio(new Uint8Array(readBuffer, 0));
-        }
-      } catch (e) {
+      readBuffer = await this.readFromCharacteristic(
+        this.fromRadioCharacteristic
+      ).catch((e) => {
         throw new Error(
           `Error in meshtasticjs.IBLEConnection.readFromRadio: ${e.message}`
         );
+      });
+
+      if (readBuffer.byteLength > 0) {
+        await this.handleFromRadio(new Uint8Array(readBuffer, 0));
       }
     }
   }
@@ -182,13 +173,13 @@ export class IBLEConnection extends IMeshDevice {
   private async readFromCharacteristic(
     characteristic: BluetoothRemoteGATTCharacteristic
   ) {
-    try {
-      return (await characteristic.readValue()).buffer;
-    } catch (e) {
-      throw new Error(
-        `Error in meshtasticjs.IBLEConnection.readFromCharacteristic: ${e.message}`
-      );
-    }
+    return (
+      await characteristic.readValue().catch((e) => {
+        throw new Error(
+          `Error in meshtasticjs.IBLEConnection.readFromCharacteristic: ${e.message}`
+        );
+      })
+    ).buffer;
   }
 
   /**
@@ -205,16 +196,13 @@ export class IBLEConnection extends IMeshDevice {
         filters: [{ services: [constants.SERVICE_UUID] }],
       };
     }
-
-    try {
-      return await navigator.bluetooth.requestDevice(
-        requestDeviceFilterParams as RequestDeviceOptions
-      );
-    } catch (e) {
-      throw new Error(
-        `Error in meshtasticjs.IBLEConnection.requestDevice: ${e.message}`
-      );
-    }
+    return await navigator.bluetooth
+      .requestDevice(requestDeviceFilterParams as RequestDeviceOptions)
+      .catch((e) => {
+        throw new Error(
+          `Error in meshtasticjs.IBLEConnection.requestDevice: ${e.message}`
+        );
+      });
   }
 
   /**
@@ -222,21 +210,13 @@ export class IBLEConnection extends IMeshDevice {
    * @param device Desired Bluetooth device
    */
   private async connectToDevice(device: BluetoothDevice) {
-    if (SettingsManager.debugMode) {
-      console.log(`selected ${device.name}, trying to connect now`);
-    }
+    debugLog(`selected ${device.name}, trying to connect now`);
 
-    let connection: BluetoothRemoteGATTServer; /** @todo optimize */
-
-    try {
-      connection = await device.gatt.connect();
-    } catch (e) {
+    return await device.gatt.connect().catch((e) => {
       throw new Error(
         `Error in meshtasticjs.IBLEConnection.connectToDevice: ${e.message}`
       );
-    }
-
-    return connection;
+    });
   }
 
   /**
@@ -244,17 +224,13 @@ export class IBLEConnection extends IMeshDevice {
    * @param connection
    */
   private async getService(connection: BluetoothRemoteGATTServer) {
-    let service: BluetoothRemoteGATTService; /** @todo optimize */
-
-    try {
-      service = await connection.getPrimaryService(constants.SERVICE_UUID);
-    } catch (e) {
-      throw new Error(
-        `Error in meshtasticjs.IBLEConnection.getService: ${e.message}`
-      );
-    }
-
-    return service;
+    return await connection
+      .getPrimaryService(constants.SERVICE_UUID)
+      .catch((e) => {
+        throw new Error(
+          `Error in meshtasticjs.IBLEConnection.getService: ${e.message}`
+        );
+      });
   }
 
   /**
@@ -266,24 +242,18 @@ export class IBLEConnection extends IMeshDevice {
       this.toRadioCharacteristic = await service.getCharacteristic(
         constants.TORADIO_UUID
       );
-      if (SettingsManager.debugMode) {
-        console.log("successfully got characteristic ");
-        console.log(this.toRadioCharacteristic);
-      }
+      debugLog("successfully got characteristic ");
+      debugLog(this.toRadioCharacteristic);
       this.fromRadioCharacteristic = await service.getCharacteristic(
         constants.FROMRADIO_UUID
       );
-      if (SettingsManager.debugMode) {
-        console.log("successfully got characteristic ");
-        console.log(this.toRadioCharacteristic);
-      }
+      debugLog("successfully got characteristic ");
+      debugLog(this.toRadioCharacteristic);
       this.fromNumCharacteristic = await service.getCharacteristic(
         constants.FROMNUM_UUID
       );
-      if (SettingsManager.debugMode) {
-        console.log("successfully got characteristic ");
-        console.log(this.toRadioCharacteristic);
-      }
+      debugLog("successfully got characteristic ");
+      debugLog(this.toRadioCharacteristic);
     } catch (e) {
       throw new Error(
         `Error in meshtasticjs.IBLEConnection.getCharacteristics: ${e.message}`
@@ -301,9 +271,7 @@ export class IBLEConnection extends IMeshDevice {
       this.handleBLENotification.bind(this)
     ); // bind.this makes the object reference to IBLEConnection accessible within the callback
 
-    if (SettingsManager.debugMode) {
-      console.log("BLE notifications activated");
-    }
+    debugLog("BLE notifications activated");
   }
 
   /**
@@ -322,17 +290,12 @@ export class IBLEConnection extends IMeshDevice {
    * @param event
    */
   private async handleBLENotification(event: string) {
-    if (SettingsManager.debugMode) {
-      console.log("BLE notification received");
-      console.log(event);
-    }
-    try {
-      await this.readFromRadio();
-    } catch (e) {
-      if (SettingsManager.debugMode) {
-        console.log(e);
-      }
-    }
+    debugLog("BLE notification received");
+    debugLog(event);
+
+    await this.readFromRadio().catch((e) => {
+      debugLog(e);
+    });
   }
 
   /**
@@ -353,11 +316,9 @@ export class IBLEConnection extends IMeshDevice {
       };
 
       const fail = () => {
-        if (SettingsManager.debugMode) {
-          console.log(
-            "Automatic reconnect promise failed, this can be ignored if deviced reconnected successfully"
-          );
-        }
+        debugLog(
+          "Automatic reconnect promise failed, this can be ignored if deviced reconnected successfully"
+        );
       };
 
       exponentialBackoff(
