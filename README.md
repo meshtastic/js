@@ -101,7 +101,7 @@ connectionOne
 
 For more examples see /examples.
 
-[Documentation/API Reference](https://meshtastic.github.io/meshtastic.js)
+[Documentation/API Reference](https://js.meshtastic.org)
 
 ## Compatibility
 
