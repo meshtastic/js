@@ -47,11 +47,11 @@ export class NodeDB extends EventTarget {
         );
       }
 
-      this.dispatchInterfaceEvent("nodeListChanged", null);
+      this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
     }
 
     node.user = user;
-    this.dispatchInterfaceEvent("nodeListChanged", null);
+    this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
   }
 
   /**
@@ -139,9 +139,9 @@ export class NodeDB extends EventTarget {
   /**
    * Short description
    * @param eventType
-   * @param payload NodeInfo.num or null
+   * @param nodeNumber NodeInfo.num
    */
-  private dispatchInterfaceEvent(eventType: string, payload: number | null) {
-    this.dispatchEvent(new CustomEvent(eventType, { detail: payload }));
+  private dispatchInterfaceEvent(eventType: string, nodeNumber: number) {
+    this.dispatchEvent(new CustomEvent(eventType, { detail: nodeNumber }));
   }
 }

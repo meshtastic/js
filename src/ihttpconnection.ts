@@ -1,4 +1,5 @@
 import { IMeshDevice } from "./imeshdevice";
+import { DebugLevelEnum } from "./settingsmanager";
 import { debugLog, typedArrayToBuffer } from "./utils";
 
 /**
@@ -121,7 +122,8 @@ export class IHTTPConnection extends IMeshDevice {
   disconnect() {
     if (!this.isConnected) {
       debugLog(
-        "meshtasticjs.IHTTPConnection.disconnect: device already disconnected"
+        "meshtasticjs.IHTTPConnection.disconnect: device already disconnected",
+        DebugLevelEnum.DEBUG
       );
     }
 
@@ -227,7 +229,7 @@ export class IHTTPConnection extends IMeshDevice {
     }
 
     await this.readFromRadio().catch((e) => {
-      debugLog(e);
+      debugLog(e, DebugLevelEnum.ERROR);
     });
 
     // Calculate new interval and set timeout again
