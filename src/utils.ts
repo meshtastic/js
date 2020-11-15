@@ -1,4 +1,4 @@
-import { SettingsManager } from "./settingsmanager";
+import { DebugLevelEnum, SettingsManager } from "./settingsmanager";
 
 /**
  * Converts a `ArrayBuffer` to a hex string
@@ -53,9 +53,29 @@ const exponentialBackoff = async (
   }
 };
 
-const debugLog = (data: any) => {
-  if (SettingsManager.debugMode) {
-    console.log(data);
+/**
+ * Global event logger
+ * @param data data to be logged
+ * @param logLevel loglevel to associate data with
+ */
+const debugLog = (data: any, logLevel: DebugLevelEnum) => {
+  if (logLevel >= SettingsManager.debugMode) {
+    switch (logLevel) {
+      case DebugLevelEnum.INFO:
+        console.info(data);
+        break;
+      case DebugLevelEnum.DEBUG:
+        console.debug(data);
+        break;
+      case DebugLevelEnum.WARN:
+        console.warn(data);
+        break;
+      case DebugLevelEnum.ERROR:
+        console.error(data);
+        break;
+      default:
+        break;
+    }
   }
 };
 

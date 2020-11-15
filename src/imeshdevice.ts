@@ -16,6 +16,7 @@ import {
   UserPreferences,
 } from "./protobuf";
 import { debugLog } from "./utils";
+import { DebugLevelEnum } from "./settingsmanager";
 
 /**
  * @todo is the event tag required on classes that contain events?
@@ -385,7 +386,7 @@ export abstract class IMeshDevice extends EventTarget {
     let fromRadioObj: FromRadio;
 
     if (fromRadio.byteLength < 1) {
-      debugLog("Empty buffer received");
+      debugLog("Empty buffer received", DebugLevelEnum.DEBUG);
     }
 
     try {
@@ -396,7 +397,7 @@ export abstract class IMeshDevice extends EventTarget {
       );
     }
 
-    debugLog(fromRadioObj);
+    debugLog(fromRadioObj, DebugLevelEnum.DEBUG);
 
     if (this.isConfigDone) {
       this.dispatchInterfaceEvent("fromRadio", fromRadioObj);
@@ -435,7 +436,8 @@ export abstract class IMeshDevice extends EventTarget {
       await this.configure();
     } else {
       debugLog(
-        "Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received"
+        "Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received",
+        DebugLevelEnum.ERROR
       );
     }
   }
@@ -500,7 +502,10 @@ export abstract class IMeshDevice extends EventTarget {
   private onConfigured() {
     this.isConfigDone = true;
     this.dispatchInterfaceEvent("configDone", this);
-    debugLog(`Configured device with node number ${this.myInfo.myNodeNum}`);
+    debugLog(
+      `Configured device with node number ${this.myInfo.myNodeNum}`,
+      DebugLevelEnum.DEBUG
+    );
   }
 
   /**

@@ -1,5 +1,6 @@
 import * as constants from "./constants";
 import { IMeshDevice } from "./imeshdevice";
+import { DebugLevelEnum } from "./settingsmanager";
 import { exponentialBackoff, typedArrayToBuffer, debugLog } from "./utils";
 
 /**
@@ -119,10 +120,14 @@ export class IBLEConnection extends IMeshDevice {
 
     if (!this.isConnected && !this.isReconnecting) {
       debugLog(
-        "meshtasticjs.IBLEConnection.disconnect: device already disconnected"
+        "meshtasticjs.IBLEConnection.disconnect: device already disconnected",
+        DebugLevelEnum.INFO
       );
     } else if (!this.isConnected && this.isReconnecting) {
-      debugLog("meshtasticjs.IBLEConnection.disconnect: reconnect cancelled");
+      debugLog(
+        "meshtasticjs.IBLEConnection.disconnect: reconnect cancelled",
+        DebugLevelEnum.DEBUG
+      );
     }
 
     this.connection.disconnect();
@@ -203,7 +208,10 @@ export class IBLEConnection extends IMeshDevice {
    * @param device Desired Bluetooth device
    */
   private async connectToDevice(device: BluetoothDevice) {
-    debugLog(`selected ${device.name}, trying to connect now`);
+    debugLog(
+      `selected ${device.name}, trying to connect now`,
+      DebugLevelEnum.DEBUG
+    );
 
     return device.gatt.connect().catch((e) => {
       throw new Error(
@@ -233,18 +241,18 @@ export class IBLEConnection extends IMeshDevice {
       this.toRadioCharacteristic = await service.getCharacteristic(
         constants.TORADIO_UUID
       );
-      debugLog("successfully got characteristic ");
-      debugLog(this.toRadioCharacteristic);
+      debugLog("successfully got toRadioCharacteristic ", DebugLevelEnum.DEBUG);
       this.fromRadioCharacteristic = await service.getCharacteristic(
         constants.FROMRADIO_UUID
       );
-      debugLog("successfully got characteristic ");
-      debugLog(this.fromRadioCharacteristic);
+      debugLog(
+        "successfully got fromRadioCharacteristic ",
+        DebugLevelEnum.DEBUG
+      );
       this.fromNumCharacteristic = await service.getCharacteristic(
         constants.FROMNUM_UUID
       );
-      debugLog("successfully got characteristic ");
-      debugLog(this.fromNumCharacteristic);
+      debugLog("successfully got fromNumCharacteristic ", DebugLevelEnum.DEBUG);
     } catch (e) {
       throw new Error(
         `Error in meshtasticjs.IBLEConnection.getCharacteristics: ${e.message}`
@@ -262,7 +270,7 @@ export class IBLEConnection extends IMeshDevice {
       this.handleBLENotification.bind(this)
     ); // bind.this makes the object reference to IBLEConnection accessible within the callback
 
-    debugLog("BLE notifications activated");
+    debugLog("BLE notifications activated", DebugLevelEnum.DEBUG);
   }
 
   /**
@@ -281,11 +289,10 @@ export class IBLEConnection extends IMeshDevice {
    * @param event
    */
   private async handleBLENotification(event: string) {
-    debugLog("BLE notification received");
-    debugLog(event);
+    debugLog(`BLE notification received: ${event}`, DebugLevelEnum.DEBUG);
 
     await this.readFromRadio().catch((e) => {
-      debugLog(e);
+      debugLog(e, DebugLevelEnum.ERROR);
     });
   }
 
@@ -308,7 +315,8 @@ export class IBLEConnection extends IMeshDevice {
 
       const fail = () => {
         debugLog(
-          "Automatic reconnect promise failed, this can be ignored if deviced reconnected successfully"
+          "Automatic reconnect promise failed, this can be ignored if deviced reconnected successfully",
+          DebugLevelEnum.DEBUG
         );
       };
 
