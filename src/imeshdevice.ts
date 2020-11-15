@@ -19,8 +19,7 @@ import { debugLog } from "./utils";
 import { DebugLevelEnum } from "./settingsmanager";
 
 /**
- * @todo is the event tag required on classes that contain events?
- * @event
+ * Base class for connection methods to extend
  */
 export abstract class IMeshDevice extends EventTarget {
   /**
