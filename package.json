@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@types/web-bluetooth": "0.0.9",
+    "pre-commit": "^1.2.2",
     "prettier": "2.1.2",
     "ts-loader": "^8.0.7",
     "typedoc": "^0.19.2",
@@ -21,8 +22,12 @@
   "scripts": {
     "build": "tsc && npx webpack --config webpack.config.js",
     "generate-docs": "npx typedoc",
+    "lint": "prettier --check .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "pre-commit": [
+    "lint"
+  ],
   "keywords": [
     "meshtastic bluetooth http library meshtasticjs"
   ],
