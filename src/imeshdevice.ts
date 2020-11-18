@@ -17,6 +17,7 @@ import {
 } from "./protobuf";
 import { debugLog } from "./utils";
 import { DebugLevelEnum } from "./settingsmanager";
+import { SubEvent } from "sub-events";
 
 /**
  * Base class for connection methods to extend
@@ -76,10 +77,7 @@ export abstract class IMeshDevice extends EventTarget {
     this.isConfigStarted = false;
 
     this.nodes = new NodeDB();
-    this.nodes.addEventListener(
-      "nodeListChanged",
-      this.onNodeListChanged.bind(this)
-    );
+    addEventListener("nodeListChanged", this.onNodeListChanged.bind(this));
 
     this.radioConfig = undefined;
     this.currentPacketId = undefined;
@@ -107,6 +105,15 @@ export abstract class IMeshDevice extends EventTarget {
    * Short description
    */
   abstract disconnect(): void;
+
+  readonly onFromRadioEvent: SubEvent<FromRadio> = new SubEvent();
+  readonly onDataPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+  readonly onUserPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+  readonly onPositionPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+  readonly onConnectedEvent: SubEvent<any> = new SubEvent();
+  readonly onDisconnectedEvent: SubEvent<any> = new SubEvent();
+  readonly onConfigDoneEvent: SubEvent<any> = new SubEvent();
+  readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
 
   /**
    * Sends a text over the radio
@@ -399,7 +406,7 @@ export abstract class IMeshDevice extends EventTarget {
     debugLog(fromRadioObj, DebugLevelEnum.DEBUG);
 
     if (this.isConfigDone) {
-      this.dispatchInterfaceEvent("fromRadio", fromRadioObj);
+      this.onFromRadioEvent.emit(fromRadioObj);
     }
 
     if (fromRadioObj.hasOwnProperty("myInfo")) {
@@ -447,23 +454,16 @@ export abstract class IMeshDevice extends EventTarget {
    * @param meshPacket
    */
   private handleMeshPacket(meshPacket: MeshPacket) {
-    let eventName: string;
-
     if (meshPacket.decoded.hasOwnProperty("data")) {
       if (!meshPacket.decoded.data.hasOwnProperty("typ")) {
         meshPacket.decoded.data.typ = TypeEnum.OPAQUE;
       }
-
-      eventName = "dataPacket";
+      this.onDataPacketEvent.emit(meshPacket);
     } else if (meshPacket.decoded.hasOwnProperty("user")) {
-      this.nodes.addUserData(meshPacket.from, meshPacket.decoded.user);
-      eventName = "userPacket";
+      this.onUserPacketEvent.emit(meshPacket);
     } else if (meshPacket.decoded.hasOwnProperty("position")) {
-      this.nodes.addPositionData(meshPacket.from, meshPacket.decoded.position);
-      eventName = "positionPacket";
+      this.onPositionPacketEvent.emit(meshPacket);
     }
-
-    this.dispatchInterfaceEvent(eventName, meshPacket);
   }
 
   /**
@@ -474,7 +474,7 @@ export abstract class IMeshDevice extends EventTarget {
   protected async onConnected(noAutoConfig: boolean) {
     this.isConnected = true;
     this.isReconnecting = false;
-    this.dispatchInterfaceEvent("connected", this);
+    this.onConnectedEvent.emit(this);
 
     if (!noAutoConfig) {
       await this.configure().catch((e) => {
@@ -490,7 +490,7 @@ export abstract class IMeshDevice extends EventTarget {
    * @event
    */
   protected onDisconnected() {
-    this.dispatchInterfaceEvent("disconnected", this);
+    this.onDisconnectedEvent.emit(this);
     this.isConnected = false;
   }
 
@@ -500,7 +500,7 @@ export abstract class IMeshDevice extends EventTarget {
    */
   private onConfigured() {
     this.isConfigDone = true;
-    this.dispatchInterfaceEvent("configDone", this);
+    this.onConfigDoneEvent.emit(this);
     debugLog(
       `Configured device with node number ${this.myInfo.myNodeNum}`,
       DebugLevelEnum.DEBUG
@@ -513,18 +513,7 @@ export abstract class IMeshDevice extends EventTarget {
    */
   private onNodeListChanged() {
     if (this.isConfigDone) {
-      this.dispatchInterfaceEvent("nodeListChanged", this);
+      this.onNodeListChangedEvent.emit(this);
     }
-  }
-
-  /**
-   * Short description
-   * @todo change eventType to enum
-   * @todo define payload type
-   * @param eventType
-   * @param payload
-   */
-  private dispatchInterfaceEvent(eventType: string, payload: any) {
-    this.dispatchEvent(new CustomEvent(eventType, { detail: payload }));
   }
 }

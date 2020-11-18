@@ -1,4 +1,5 @@
 import EventTarget from "@ungap/event-target";
+import { SubEvent } from "sub-events";
 import { NodeInfo, Position, User } from "./protobuf";
 
 /**
@@ -16,13 +17,15 @@ export class NodeDB extends EventTarget {
     this.nodes = new Map();
   }
 
+  readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
+
   /**
    * Adds a node object to the database.
    * @param nodeInfo Information about the new node
    */
   addNode(nodeInfo: NodeInfo) {
     this.nodes.set(nodeInfo.num, nodeInfo);
-    this.dispatchInterfaceEvent("nodeListChanged", nodeInfo.num);
+    this.onNodeListChangedEvent.emit(nodeInfo.num);
   }
 
   /**
@@ -47,11 +50,11 @@ export class NodeDB extends EventTarget {
         );
       }
 
-      this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+      this.onNodeListChangedEvent.emit(nodeNumber);
     }
 
     node.user = user;
-    this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+    this.onNodeListChangedEvent.emit(nodeNumber);
   }
 
   /**
@@ -76,11 +79,11 @@ export class NodeDB extends EventTarget {
         );
       }
 
-      this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+      this.onNodeListChangedEvent.emit(nodeNumber);
     }
 
     node.position = position;
-    this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+    this.onNodeListChangedEvent.emit(nodeNumber);
   }
 
   /**
@@ -89,7 +92,7 @@ export class NodeDB extends EventTarget {
    */
   removeNode(nodeNumber: number) {
     this.nodes.delete(nodeNumber);
-    this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+    this.onNodeListChangedEvent.emit(nodeNumber);
   }
 
   /**
@@ -134,14 +137,5 @@ export class NodeDB extends EventTarget {
     });
 
     return nodeNumber;
-  }
-
-  /**
-   * Short description
-   * @param eventType
-   * @param nodeNumber NodeInfo.num
-   */
-  private dispatchInterfaceEvent(eventType: string, nodeNumber: number) {
-    this.dispatchEvent(new CustomEvent(eventType, { detail: nodeNumber }));
   }
 }

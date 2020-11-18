@@ -7,7 +7,8 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@ungap/event-target": "^0.2.2",
-    "protobufjs": "^6.10.1"
+    "protobufjs": "^6.10.1",
+    "sub-events": "^1.8.6"
   },
   "devDependencies": {
     "@types/web-bluetooth": "0.0.9",
