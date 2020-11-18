@@ -1,6 +1,5 @@
 import * as constants from "./constants";
 import { NodeDB } from "./nodedb";
-import EventTarget from "@ungap/event-target";
 import {
   ChannelSettings,
   Data,
@@ -22,7 +21,7 @@ import { SubEvent } from "sub-events";
 /**
  * Base class for connection methods to extend
  */
-export abstract class IMeshDevice extends EventTarget {
+export abstract class IMeshDevice {
   /**
    * States if the current device is currently connected or not
    */
@@ -69,8 +68,6 @@ export abstract class IMeshDevice extends EventTarget {
   myInfo: MyNodeInfo;
 
   constructor() {
-    super();
-
     this.isConnected = false;
     this.isReconnecting = false;
     this.isConfigDone = false;
@@ -110,7 +107,7 @@ export abstract class IMeshDevice extends EventTarget {
   readonly onDataPacketEvent: SubEvent<MeshPacket> = new SubEvent();
   readonly onUserPacketEvent: SubEvent<MeshPacket> = new SubEvent();
   readonly onPositionPacketEvent: SubEvent<MeshPacket> = new SubEvent();
-  readonly onConnectedEvent: SubEvent<any> = new SubEvent();
+  readonly onConnectedEvent: SubEvent<IMeshDevice> = new SubEvent();
   readonly onDisconnectedEvent: SubEvent<any> = new SubEvent();
   readonly onConfigDoneEvent: SubEvent<any> = new SubEvent();
   readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();

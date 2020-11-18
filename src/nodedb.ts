@@ -1,19 +1,16 @@
-import EventTarget from "@ungap/event-target";
 import { SubEvent } from "sub-events";
 import { NodeInfo, Position, User } from "./protobuf";
 
 /**
  * Stores and manages Node objects
  */
-export class NodeDB extends EventTarget {
+export class NodeDB {
   /**
    * Short description
    */
   nodes: Map<number, NodeInfo>;
 
   constructor() {
-    super();
-
     this.nodes = new Map();
   }
 
