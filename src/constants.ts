@@ -21,11 +21,6 @@ export const SERVICE_UUID = "6ba1b218-15a8-461f-9fa8-5dcae273eafd";
 /**
  * Short Description
  */
-export const BROADCAST_ADDR = "^all";
-
-/**
- * Short Description
- */
 export const BROADCAST_NUM = 0xffffffff;
 
 /**

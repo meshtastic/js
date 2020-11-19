@@ -74,7 +74,9 @@ export abstract class IMeshDevice {
     this.isConfigStarted = false;
 
     this.nodes = new NodeDB();
-    addEventListener("nodeListChanged", this.onNodeListChanged.bind(this));
+    this.onNodeListChangedEvent.subscribe(() => {
+      this.onNodeListChanged.bind(this);
+    });
 
     this.radioConfig = undefined;
     this.currentPacketId = undefined;
@@ -103,13 +105,52 @@ export abstract class IMeshDevice {
    */
   abstract disconnect(): void;
 
+  /**
+   * Short description
+   * @event
+   */
   readonly onFromRadioEvent: SubEvent<FromRadio> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
   readonly onDataPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
   readonly onUserPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
   readonly onPositionPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
   readonly onConnectedEvent: SubEvent<IMeshDevice> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
   readonly onDisconnectedEvent: SubEvent<any> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
   readonly onConfigDoneEvent: SubEvent<any> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
   readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
 
   /**
@@ -121,7 +162,7 @@ export abstract class IMeshDevice {
    */
   sendText(
     text: string,
-    destinationNum = constants.BROADCAST_ADDR,
+    destinationNum?: number,
     wantAck = false,
     wantResponse = false
   ) {
@@ -130,8 +171,8 @@ export abstract class IMeshDevice {
 
     return this.sendData(
       enc.encode(text),
-      destinationNum,
       TypeEnum.CLEAR_TEXT,
+      destinationNum,
       wantAck,
       wantResponse
     );
@@ -140,15 +181,15 @@ export abstract class IMeshDevice {
   /**
    * Sends generic data over the radio
    * @param byteData
-   * @param destinationNum Node number of the destination node
    * @param dataType dataType Enum of protobuf data type
+   * @param destinationNum Node number of the destination node
    * @param wantAck
    * @param wantResponse
    */
   sendData(
     byteData: Uint8Array,
-    destinationNum = constants.BROADCAST_ADDR,
     dataType: TypeEnum,
+    destinationNum?: number,
     wantAck = false,
     wantResponse = false
   ) {
@@ -182,7 +223,7 @@ export abstract class IMeshDevice {
     longitude?: number,
     altitude?: number,
     timeSec = 0,
-    destinationNum = constants.BROADCAST_ADDR,
+    destinationNum?: number,
     wantAck = false,
     wantResponse = false
   ) {
@@ -211,7 +252,7 @@ export abstract class IMeshDevice {
    */
   async sendPacket(
     meshPacket: MeshPacket,
-    destinationNum = constants.BROADCAST_ADDR,
+    destinationNum?: number,
     wantAck = false
   ) {
     if (!this.isDeviceReady()) {
@@ -220,19 +261,7 @@ export abstract class IMeshDevice {
       );
     }
 
-    let rcptNodeNum: number;
-
-    if (typeof destinationNum === "number") {
-      rcptNodeNum = destinationNum;
-    } else if (destinationNum === constants.BROADCAST_ADDR) {
-      rcptNodeNum = constants.BROADCAST_NUM;
-    } else {
-      throw new Error(
-        "Error in meshtasticjs.MeshInterface.sendPacket: Invalid destinationNum"
-      );
-    }
-
-    meshPacket.to = rcptNodeNum;
+    meshPacket.to = destinationNum ? destinationNum : constants.BROADCAST_NUM;
     meshPacket.wantAck = wantAck;
 
     if (!meshPacket?.hasOwnProperty("id")) {
@@ -382,7 +411,6 @@ export abstract class IMeshDevice {
   /**
    * Gets called whenever a fromRadio message is received from device, returns fromRadio data
    * @todo change to support `all=true` (batch requests)
-   * @event
    * @param fromRadio Uint8Array containing raw radio data
    */
   protected async handleFromRadio(fromRadio: Uint8Array) {
@@ -426,7 +454,12 @@ export abstract class IMeshDevice {
           this.user &&
           this.currentPacketId
         ) {
-          this.onConfigured();
+          this.isConfigDone = true;
+          this.onConfigDoneEvent.emit(this);
+          debugLog(
+            `Configured device with node number ${this.myInfo.myNodeNum}`,
+            DebugLevelEnum.DEBUG
+          );
         } else {
           throw new Error(
             "Error in meshtasticjs.MeshInterface.handleFromRadio: Config received from device incomplete"
@@ -447,7 +480,6 @@ export abstract class IMeshDevice {
 
   /**
    * Gets called when a data, user or position packet is received from device
-   * @event
    * @param meshPacket
    */
   private handleMeshPacket(meshPacket: MeshPacket) {
@@ -465,7 +497,6 @@ export abstract class IMeshDevice {
 
   /**
    * Gets called when a link to the device has been established
-   * @event
    * @param noAutoConfig Disables autoconfiguration
    */
   protected async onConnected(noAutoConfig: boolean) {
@@ -484,7 +515,6 @@ export abstract class IMeshDevice {
 
   /**
    * Gets called when a link to the device has been disconnected
-   * @event
    */
   protected onDisconnected() {
     this.onDisconnectedEvent.emit(this);
@@ -492,21 +522,7 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Gets called when the device has been configured (myInfo, radio and node data received). device interface is now ready to be used
-   * @event
-   */
-  private onConfigured() {
-    this.isConfigDone = true;
-    this.onConfigDoneEvent.emit(this);
-    debugLog(
-      `Configured device with node number ${this.myInfo.myNodeNum}`,
-      DebugLevelEnum.DEBUG
-    );
-  }
-
-  /**
    * Gets called when node database has been changed, returns changed node number
-   * @event
    */
   private onNodeListChanged() {
     if (this.isConfigDone) {

@@ -14,6 +14,10 @@ export class NodeDB {
     this.nodes = new Map();
   }
 
+  /**
+   * Short description
+   * @event
+   */
   readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
 
   /**
