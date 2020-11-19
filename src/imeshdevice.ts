@@ -489,8 +489,10 @@ export abstract class IMeshDevice {
       }
       this.onDataPacketEvent.emit(meshPacket);
     } else if (meshPacket.decoded.hasOwnProperty("user")) {
+      this.nodes.addUserData(meshPacket.from, meshPacket.decoded.user);
       this.onUserPacketEvent.emit(meshPacket);
     } else if (meshPacket.decoded.hasOwnProperty("position")) {
+      this.nodes.addPositionData(meshPacket.from, meshPacket.decoded.position);
       this.onPositionPacketEvent.emit(meshPacket);
     }
   }
