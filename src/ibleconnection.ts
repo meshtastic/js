@@ -101,7 +101,6 @@ export class IBLEConnection extends IMeshDevice {
 
       await this.subscribeToBLENotification();
 
-      // At this point device is connected
       this.isConnected = true;
 
       await this.onConnected(noAutoConfig);
@@ -116,7 +115,7 @@ export class IBLEConnection extends IMeshDevice {
    * Disconnects from the meshtastic device
    */
   disconnect() {
-    this.userInitiatedDisconnect = true; // Don't reconnect
+    this.userInitiatedDisconnect = true;
 
     if (!this.isConnected && !this.isReconnecting) {
       debugLog(
@@ -130,8 +129,10 @@ export class IBLEConnection extends IMeshDevice {
       );
     }
 
+    /**
+     * No need to call parent _onDisconnected here, calling disconnect() triggers gatt event
+     */
     this.connection.disconnect();
-    // No need to call parent _onDisconnected here, calling disconnect() triggers gatt event
   }
 
   /**

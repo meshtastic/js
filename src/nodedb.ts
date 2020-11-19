@@ -1,20 +1,24 @@
-import EventTarget from "@ungap/event-target";
+import { SubEvent } from "sub-events";
 import { NodeInfo, Position, User } from "./protobuf";
 
 /**
  * Stores and manages Node objects
  */
-export class NodeDB extends EventTarget {
+export class NodeDB {
   /**
    * Short description
    */
   nodes: Map<number, NodeInfo>;
 
   constructor() {
-    super();
-
     this.nodes = new Map();
   }
+
+  /**
+   * Short description
+   * @event
+   */
+  readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
 
   /**
    * Adds a node object to the database.
@@ -22,7 +26,7 @@ export class NodeDB extends EventTarget {
    */
   addNode(nodeInfo: NodeInfo) {
     this.nodes.set(nodeInfo.num, nodeInfo);
-    this.dispatchInterfaceEvent("nodeListChanged", nodeInfo.num);
+    this.onNodeListChangedEvent.emit(nodeInfo.num);
   }
 
   /**
@@ -47,11 +51,11 @@ export class NodeDB extends EventTarget {
         );
       }
 
-      this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+      this.onNodeListChangedEvent.emit(nodeNumber);
     }
 
     node.user = user;
-    this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+    this.onNodeListChangedEvent.emit(nodeNumber);
   }
 
   /**
@@ -76,11 +80,11 @@ export class NodeDB extends EventTarget {
         );
       }
 
-      this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+      this.onNodeListChangedEvent.emit(nodeNumber);
     }
 
     node.position = position;
-    this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+    this.onNodeListChangedEvent.emit(nodeNumber);
   }
 
   /**
@@ -89,7 +93,7 @@ export class NodeDB extends EventTarget {
    */
   removeNode(nodeNumber: number) {
     this.nodes.delete(nodeNumber);
-    this.dispatchInterfaceEvent("nodeListChanged", nodeNumber);
+    this.onNodeListChangedEvent.emit(nodeNumber);
   }
 
   /**
@@ -134,14 +138,5 @@ export class NodeDB extends EventTarget {
     });
 
     return nodeNumber;
-  }
-
-  /**
-   * Short description
-   * @param eventType
-   * @param nodeNumber NodeInfo.num
-   */
-  private dispatchInterfaceEvent(eventType: string, nodeNumber: number) {
-    this.dispatchEvent(new CustomEvent(eventType, { detail: nodeNumber }));
   }
 }

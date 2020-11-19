@@ -40,9 +40,9 @@ export class SettingsManager {
    * @param active Whether the application is in debug mode or not
    */
   static setDebugMode(active: DebugLevelEnum) {
-    if (typeof active !== "boolean") {
+    if (!(active in DebugLevelEnum)) {
       throw new Error(
-        "Error in meshtasticjs.SettingsManager.setDebugMode: param must be boolean"
+        "Error in meshtasticjs.SettingsManager.setDebugMode: param must be a member of DebugLevelEnum"
       );
     }
 

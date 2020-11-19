@@ -1,6 +1,5 @@
 import * as constants from "./constants";
 import { NodeDB } from "./nodedb";
-import EventTarget from "@ungap/event-target";
 import {
   ChannelSettings,
   Data,
@@ -17,11 +16,12 @@ import {
 } from "./protobuf";
 import { debugLog } from "./utils";
 import { DebugLevelEnum } from "./settingsmanager";
+import { SubEvent } from "sub-events";
 
 /**
  * Base class for connection methods to extend
  */
-export abstract class IMeshDevice extends EventTarget {
+export abstract class IMeshDevice {
   /**
    * States if the current device is currently connected or not
    */
@@ -68,18 +68,15 @@ export abstract class IMeshDevice extends EventTarget {
   myInfo: MyNodeInfo;
 
   constructor() {
-    super();
-
     this.isConnected = false;
     this.isReconnecting = false;
     this.isConfigDone = false;
     this.isConfigStarted = false;
 
     this.nodes = new NodeDB();
-    this.nodes.addEventListener(
-      "nodeListChanged",
-      this.onNodeListChanged.bind(this)
-    );
+    this.onNodeListChangedEvent.subscribe(() => {
+      this.onNodeListChanged.bind(this);
+    });
 
     this.radioConfig = undefined;
     this.currentPacketId = undefined;
@@ -109,6 +106,54 @@ export abstract class IMeshDevice extends EventTarget {
   abstract disconnect(): void;
 
   /**
+   * Short description
+   * @event
+   */
+  readonly onFromRadioEvent: SubEvent<FromRadio> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
+  readonly onDataPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
+  readonly onUserPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
+  readonly onPositionPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
+  readonly onConnectedEvent: SubEvent<IMeshDevice> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
+  readonly onDisconnectedEvent: SubEvent<any> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
+  readonly onConfigDoneEvent: SubEvent<any> = new SubEvent();
+
+  /**
+   * Short description
+   * @event
+   */
+  readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
+
+  /**
    * Sends a text over the radio
    * @param text
    * @param destinationNum Node number of the destination node
@@ -117,7 +162,7 @@ export abstract class IMeshDevice extends EventTarget {
    */
   sendText(
     text: string,
-    destinationNum = constants.BROADCAST_ADDR,
+    destinationNum?: number,
     wantAck = false,
     wantResponse = false
   ) {
@@ -126,8 +171,8 @@ export abstract class IMeshDevice extends EventTarget {
 
     return this.sendData(
       enc.encode(text),
-      destinationNum,
       TypeEnum.CLEAR_TEXT,
+      destinationNum,
       wantAck,
       wantResponse
     );
@@ -136,15 +181,15 @@ export abstract class IMeshDevice extends EventTarget {
   /**
    * Sends generic data over the radio
    * @param byteData
-   * @param destinationNum Node number of the destination node
    * @param dataType dataType Enum of protobuf data type
+   * @param destinationNum Node number of the destination node
    * @param wantAck
    * @param wantResponse
    */
   sendData(
     byteData: Uint8Array,
-    destinationNum = constants.BROADCAST_ADDR,
     dataType: TypeEnum,
+    destinationNum?: number,
     wantAck = false,
     wantResponse = false
   ) {
@@ -178,7 +223,7 @@ export abstract class IMeshDevice extends EventTarget {
     longitude?: number,
     altitude?: number,
     timeSec = 0,
-    destinationNum = constants.BROADCAST_ADDR,
+    destinationNum?: number,
     wantAck = false,
     wantResponse = false
   ) {
@@ -207,7 +252,7 @@ export abstract class IMeshDevice extends EventTarget {
    */
   async sendPacket(
     meshPacket: MeshPacket,
-    destinationNum = constants.BROADCAST_ADDR,
+    destinationNum?: number,
     wantAck = false
   ) {
     if (!this.isDeviceReady()) {
@@ -216,19 +261,7 @@ export abstract class IMeshDevice extends EventTarget {
       );
     }
 
-    let rcptNodeNum: number;
-
-    if (typeof destinationNum === "number") {
-      rcptNodeNum = destinationNum;
-    } else if (destinationNum === constants.BROADCAST_ADDR) {
-      rcptNodeNum = constants.BROADCAST_NUM;
-    } else {
-      throw new Error(
-        "Error in meshtasticjs.MeshInterface.sendPacket: Invalid destinationNum"
-      );
-    }
-
-    meshPacket.to = rcptNodeNum;
+    meshPacket.to = destinationNum ? destinationNum : constants.BROADCAST_NUM;
     meshPacket.wantAck = wantAck;
 
     if (!meshPacket?.hasOwnProperty("id")) {
@@ -378,7 +411,6 @@ export abstract class IMeshDevice extends EventTarget {
   /**
    * Gets called whenever a fromRadio message is received from device, returns fromRadio data
    * @todo change to support `all=true` (batch requests)
-   * @event
    * @param fromRadio Uint8Array containing raw radio data
    */
   protected async handleFromRadio(fromRadio: Uint8Array) {
@@ -399,7 +431,7 @@ export abstract class IMeshDevice extends EventTarget {
     debugLog(fromRadioObj, DebugLevelEnum.DEBUG);
 
     if (this.isConfigDone) {
-      this.dispatchInterfaceEvent("fromRadio", fromRadioObj);
+      this.onFromRadioEvent.emit(fromRadioObj);
     }
 
     if (fromRadioObj.hasOwnProperty("myInfo")) {
@@ -422,7 +454,12 @@ export abstract class IMeshDevice extends EventTarget {
           this.user &&
           this.currentPacketId
         ) {
-          this.onConfigured();
+          this.isConfigDone = true;
+          this.onConfigDoneEvent.emit(this);
+          debugLog(
+            `Configured device with node number ${this.myInfo.myNodeNum}`,
+            DebugLevelEnum.DEBUG
+          );
         } else {
           throw new Error(
             "Error in meshtasticjs.MeshInterface.handleFromRadio: Config received from device incomplete"
@@ -443,38 +480,31 @@ export abstract class IMeshDevice extends EventTarget {
 
   /**
    * Gets called when a data, user or position packet is received from device
-   * @event
    * @param meshPacket
    */
   private handleMeshPacket(meshPacket: MeshPacket) {
-    let eventName: string;
-
     if (meshPacket.decoded.hasOwnProperty("data")) {
       if (!meshPacket.decoded.data.hasOwnProperty("typ")) {
         meshPacket.decoded.data.typ = TypeEnum.OPAQUE;
       }
-
-      eventName = "dataPacket";
+      this.onDataPacketEvent.emit(meshPacket);
     } else if (meshPacket.decoded.hasOwnProperty("user")) {
       this.nodes.addUserData(meshPacket.from, meshPacket.decoded.user);
-      eventName = "userPacket";
+      this.onUserPacketEvent.emit(meshPacket);
     } else if (meshPacket.decoded.hasOwnProperty("position")) {
       this.nodes.addPositionData(meshPacket.from, meshPacket.decoded.position);
-      eventName = "positionPacket";
+      this.onPositionPacketEvent.emit(meshPacket);
     }
-
-    this.dispatchInterfaceEvent(eventName, meshPacket);
   }
 
   /**
    * Gets called when a link to the device has been established
-   * @event
    * @param noAutoConfig Disables autoconfiguration
    */
   protected async onConnected(noAutoConfig: boolean) {
     this.isConnected = true;
     this.isReconnecting = false;
-    this.dispatchInterfaceEvent("connected", this);
+    this.onConnectedEvent.emit(this);
 
     if (!noAutoConfig) {
       await this.configure().catch((e) => {
@@ -487,44 +517,18 @@ export abstract class IMeshDevice extends EventTarget {
 
   /**
    * Gets called when a link to the device has been disconnected
-   * @event
    */
   protected onDisconnected() {
-    this.dispatchInterfaceEvent("disconnected", this);
+    this.onDisconnectedEvent.emit(this);
     this.isConnected = false;
   }
 
   /**
-   * Gets called when the device has been configured (myInfo, radio and node data received). device interface is now ready to be used
-   * @event
-   */
-  private onConfigured() {
-    this.isConfigDone = true;
-    this.dispatchInterfaceEvent("configDone", this);
-    debugLog(
-      `Configured device with node number ${this.myInfo.myNodeNum}`,
-      DebugLevelEnum.DEBUG
-    );
-  }
-
-  /**
    * Gets called when node database has been changed, returns changed node number
-   * @event
    */
   private onNodeListChanged() {
     if (this.isConfigDone) {
-      this.dispatchInterfaceEvent("nodeListChanged", this);
+      this.onNodeListChangedEvent.emit(this);
     }
-  }
-
-  /**
-   * Short description
-   * @todo change eventType to enum
-   * @todo define payload type
-   * @param eventType
-   * @param payload
-   */
-  private dispatchInterfaceEvent(eventType: string, payload: any) {
-    this.dispatchEvent(new CustomEvent(eventType, { detail: payload }));
   }
 }
