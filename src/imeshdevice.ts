@@ -33,37 +33,37 @@ export abstract class IMeshDevice {
   isReconnecting: boolean;
 
   /**
-   * Short description
+   * States if the device has been configured
    */
   isConfigDone: boolean;
 
   /**
-   * Short description
+   * States if device configure process has been started
    */
   isConfigStarted: boolean;
 
   /**
-   * Short description
+   * Contains the current devices' node database
    */
   nodes: NodeDB;
 
   /**
-   * Short description
+   * Configuration of current device
    */
   radioConfig: RadioConfig;
 
   /**
-   * Short description
+   * Packet identifier of last message sent, gets increased by one on every sent message
    */
   currentPacketId: number;
 
   /**
-   * Short description
+   * Owner data of current device
    */
   user: User;
 
   /**
-   * Short description
+   * Node info of current device
    */
   myInfo: MyNodeInfo;
 
@@ -106,49 +106,49 @@ export abstract class IMeshDevice {
   abstract disconnect(): void;
 
   /**
-   * Short description
+   * Fires when a new FromRadio message has been received from device
    * @event
    */
   readonly onFromRadioEvent: SubEvent<FromRadio> = new SubEvent();
 
   /**
-   * Short description
+   * Fires when a new FromRadio message containing a Data packet has been received from device
    * @event
    */
   readonly onDataPacketEvent: SubEvent<MeshPacket> = new SubEvent();
 
   /**
-   * Short description
+   * Fires when a new FromRadio message containing a User packet has been received from device
    * @event
    */
   readonly onUserPacketEvent: SubEvent<MeshPacket> = new SubEvent();
 
   /**
-   * Short description
+   * Fires when a new FromRadio message containing a Position packet has been received from device
    * @event
    */
   readonly onPositionPacketEvent: SubEvent<MeshPacket> = new SubEvent();
 
   /**
-   * Short description
+   * Fires when the link to a device has been established. Does not mean that device can be used
    * @event
    */
   readonly onConnectedEvent: SubEvent<IMeshDevice> = new SubEvent();
 
   /**
-   * Short description
+   * Fires when the link to a device has been disconnected
    * @event
    */
   readonly onDisconnectedEvent: SubEvent<any> = new SubEvent();
 
   /**
-   * Short description
+   * Fires when the device configuration was successful. The device can then be used
    * @event
    */
   readonly onConfigDoneEvent: SubEvent<any> = new SubEvent();
 
   /**
-   * Short description
+   * Fires when the node database has changed
    * @event
    */
   readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
@@ -396,7 +396,7 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Short description
+   * Generates packet identifier for new message by increasing previous packet id by one
    */
   private generatePacketId() {
     if (!this.currentPacketId) {
