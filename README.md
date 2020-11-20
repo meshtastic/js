@@ -14,7 +14,7 @@ Supported features:
 - Set device preferences
 - Set owner data
 
-[Documentation/API Reference](https://meshtastic.github.io/meshtastic.js) (work in progress)
+[Documentation/API Reference](https://js.meshtastic.org) (work in progress)
 
 ## Installation & Usage
 
@@ -46,29 +46,29 @@ After that, a new connection can be created. it returns an IBLEConnection interf
 const connectionOne = client.createBLEConnection();
 ```
 
-The connection interface provides events that can be listened on:
+The connection interface provides events that can subscribed to:
 
-- `fromRadio` Gets called whenever a fromRadio message is received from device, returns fromRadio data object in event.detail
-- `dataPacket` Gets called when a data packet is received from device, returns fromRadio data object in event.detail
-- `userPacket` Gets called when a user packet is received from device, returns fromRadio data object in event.detail
-- `positionPacket` Gets called when a position packet is received from device, returns fromRadio data in event.detail
-- `nodeListChanged` Gets called when node database has been changed, returns changed node number in event.detail
-- `connected` Gets called when link to device is connected
-- `disconnected` Gets called when link to device is disconnected
-- `configDone` Gets called when device has been configured (myInfo, radio and node data received). device interface is now ready to be used
+- `onFromRadioEvent` Gets called whenever a fromRadio message is received from device, returns fromRadio data object in event.detail
+- `onDataPacketEvent` Gets called when a data packet is received from device, returns fromRadio data object in event.detail
+- `onUserPacketEvent` Gets called when a user packet is received from device, returns fromRadio data object in event.detail
+- `onPositionPacketEvent` Gets called when a position packet is received from device, returns fromRadio data in event.detail
+- `onConnectedEvent` Gets called when link to device is connected
+- `onDisconnectedEvent` Gets called when link to device is disconnected
+- `onConfigDoneEvent` Gets called when device has been configured (myInfo, radio and node data received). device interface is now ready to be used
+- `onNodeListChangedEvent` Gets called when node database has been changed, returns changed node number in event.detail
 
 ```typescript
-// Registering event listeners
-connectionOne.addEventListener("fromRadio", (event) => {
-  console.log(event.detail.toJSON());
-});
+// Registering an onFromRadioEvent listener
+connectionOne.onFromRadioEvent.subscribe(data) => {
+        console.log(data);
+})
 ```
 
 ### Connect to a device
 
 Now we can connect to the device asynchronously. It returns a promise, so it must be used either in an async/await function or with .then.
 
-**Important: the connect action must be called from a user interaction (e.g. button press), otherwise the browsers won't allow the connect.**
+**Important when using BLE connections: the connect action must be called from a user interaction (e.g. button press), otherwise the browsers won't allow the connect to a BLE device**
 
 ```typescript
 connectionOne
