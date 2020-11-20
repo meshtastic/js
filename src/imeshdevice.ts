@@ -487,6 +487,15 @@ export abstract class IMeshDevice {
       if (!meshPacket.decoded.data.hasOwnProperty("typ")) {
         meshPacket.decoded.data.typ = TypeEnum.OPAQUE;
       }
+
+      let pckDat = meshPacket.decoded.data;
+      if (
+        pckDat.typ === TypeEnum.CLEAR_TEXT ||
+        pckDat.typ === TypeEnum.CLEAR_READACK
+      ) {
+        pckDat.payload = new TextDecoder().decode(pckDat.payload as Uint8Array);
+      }
+
       this.onDataPacketEvent.emit(meshPacket);
     } else if (meshPacket.decoded.hasOwnProperty("user")) {
       this.nodes.addUserData(meshPacket.from, meshPacket.decoded.user);

@@ -79,7 +79,7 @@ export class Data extends Message<Data> {
   typ: TypeEnum;
 
   @Field.d(2, "bytes")
-  payload: Uint8Array;
+  payload: Uint8Array | string;
 }
 
 /**
