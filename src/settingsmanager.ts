@@ -37,16 +37,16 @@ export class SettingsManager {
 
   /**
    * Debug mode enables verbose console output.
-   * @param active Whether the application is in debug mode or not
+   * @param mode Whether the application is in debug mode or not
    */
-  static setDebugMode(active: DebugLevelEnum) {
-    if (!(active in DebugLevelEnum)) {
+  static setDebugMode(level: DebugLevelEnum) {
+    if (!(level in DebugLevelEnum)) {
       throw new Error(
         "Error in meshtasticjs.SettingsManager.setDebugMode: param must be a member of DebugLevelEnum"
       );
     }
 
-    SettingsManager.debugMode = active;
+    SettingsManager.debugMode = level;
   }
 }
 

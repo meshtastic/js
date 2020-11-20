@@ -15,7 +15,7 @@ export class NodeDB {
   }
 
   /**
-   * Short description
+   * Fires when the node database has changed
    * @event
    */
   readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();

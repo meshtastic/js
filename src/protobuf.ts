@@ -50,7 +50,7 @@ export enum LocationSharing {
 }
 
 /**
- * Short description
+ * A GPS Position
  */
 @Type.d("Position")
 export class Position extends Message<Position> {
@@ -71,7 +71,7 @@ export class Position extends Message<Position> {
 }
 
 /**
- * Short description
+ * A Data message received by another device over the radio
  */
 @Type.d("Data")
 export class Data extends Message<Data> {
@@ -79,11 +79,11 @@ export class Data extends Message<Data> {
   typ: TypeEnum;
 
   @Field.d(2, "bytes")
-  payload: Uint8Array;
+  payload: Uint8Array | string;
 }
 
 /**
- * Short description
+ * User structure contains owner information
  */
 @Type.d("User")
 export class User extends Message<User> {
@@ -101,7 +101,7 @@ export class User extends Message<User> {
 }
 
 /**
- * Short description
+ * A message used in our Dynamic Source Routing protocol (RFC 4728 based)
  */
 @Type.d("RouteDiscovery")
 export class RouteDiscovery extends Message<RouteDiscovery> {
@@ -110,7 +110,8 @@ export class RouteDiscovery extends Message<RouteDiscovery> {
 }
 
 /**
- * Short description
+ * The payload portion fo a packet, this is the actual bytes that are sent
+ * inside a radio packet (because from/to are broken out by the comms library)
  */
 @Type.d("SubPacket")
 export class SubPacket extends Message<SubPacket> {
@@ -165,7 +166,10 @@ export class SubPacket extends Message<SubPacket> {
 }
 
 /**
- * Short description
+ * A full packet sent/received over the mesh
+ * Note: For simplicity reasons (and that we want to keep over the radio packets
+ * very small, we now assume that there is only _one_ SubPacket in each
+ * MeshPacket).
  */
 @Type.d("MeshPacket")
 export class MeshPacket extends Message<MeshPacket> {
@@ -204,7 +208,7 @@ export class MeshPacket extends Message<MeshPacket> {
 }
 
 /**
- * Short description
+ * Contains radio interface settings that are sent to device inside of RadioConfig
  */
 @Type.d("ChannelSettings")
 export class ChannelSettings extends Message<ChannelSettings> {
@@ -234,7 +238,7 @@ export class ChannelSettings extends Message<ChannelSettings> {
 }
 
 /**
- * Short description
+ * Contains general preferences that are sent to device inside of RadioConfig
  */
 @Type.d("UserPreferences")
 export class UserPreferences extends Message<UserPreferences> {
@@ -309,7 +313,9 @@ export class UserPreferences extends Message<UserPreferences> {
 }
 
 /**
- * Short description
+ * The entire set of user settable/readable settings for our radio device.
+ * Includes both the current channel settings and any preferences the user has
+ * set for behavior of their node
  */
 @Type.d("RadioConfig")
 export class RadioConfig extends Message<RadioConfig> {
@@ -321,7 +327,7 @@ export class RadioConfig extends Message<RadioConfig> {
 }
 
 /**
- * Short description
+ * Full information about a node on the mesh
  */
 @Type.d("NodeInfo")
 export class NodeInfo extends Message<NodeInfo> {
@@ -342,7 +348,9 @@ export class NodeInfo extends Message<NodeInfo> {
 }
 
 /**
- * Short description
+ * Unique local debugging info for this node.
+ * Note: we don't include position or the user info, because that will be
+ * sent by the device in a separate User/Position object.
  */
 @Type.d("MyNodeInfo")
 export class MyNodeInfo extends Message<MyNodeInfo> {
@@ -390,7 +398,8 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
 }
 
 /**
- * Short description
+ * This message is never sent over the wire, but it is used for serializing DB
+ * state to flash in the device code
  */
 @Type.d("DeviceState")
 export class DeviceState extends Message<DeviceState> {
@@ -423,7 +432,7 @@ export class DeviceState extends Message<DeviceState> {
 }
 
 /**
- * Short description
+ * Debug output from the device
  */
 @Type.d("DebugString")
 export class DebugString extends Message<DebugString> {
@@ -432,7 +441,7 @@ export class DebugString extends Message<DebugString> {
 }
 
 /**
- * Short description
+ * Packets from the radio to the client will have this type
  */
 @Type.d("FromRadio")
 export class FromRadio extends Message<FromRadio> {
@@ -480,7 +489,7 @@ export class FromRadio extends Message<FromRadio> {
 }
 
 /**
- * Short description
+ * Packets from the client to the radio will have this type
  */
 @Type.d("ToRadio")
 export class ToRadio extends Message<ToRadio> {
@@ -501,7 +510,8 @@ export class ToRadio extends Message<ToRadio> {
 }
 
 /**
- * Short description
+ * Placeholder for data we will eventually set during initial programming.
+ * This will allow us to stop having a load for each region.
  */
 @Type.d("ManufacturingData")
 export class ManufacturingData extends Message<ManufacturingData> {
