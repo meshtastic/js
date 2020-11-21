@@ -60,8 +60,8 @@ The connection interface provides events that can subscribed to:
 ```typescript
 // Registering an onFromRadioEvent listener
 connectionOne.onFromRadioEvent.subscribe((data) => {
-        console.log(data);
-})
+  console.log(data);
+});
 ```
 
 ### Connect to a device

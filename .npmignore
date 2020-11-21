@@ -6,3 +6,4 @@ build.sh
 jsdoc.json
 tsconfig.json
 webpack.config.js
+.github

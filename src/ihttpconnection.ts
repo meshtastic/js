@@ -190,6 +190,9 @@ export class IHTTPConnection extends IMeshDevice {
         // cant use mode: no-cors here, because browser then obscures if request was successful
         response = await fetch(url, {
           method: "GET",
+          headers: {
+            Accept: "application/x-protobuf",
+          },
         });
 
         break;
