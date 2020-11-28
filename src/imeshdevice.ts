@@ -16,7 +16,7 @@ import {
 } from "./protobuf";
 import { debugLog } from "./utils";
 import { DebugLevelEnum } from "./settingsmanager";
-import { SubEvent } from "sub-events";
+import { IEmitOptions, SubEvent } from "sub-events";
 
 /**
  * Base class for connection methods to extend
@@ -67,6 +67,11 @@ export abstract class IMeshDevice {
    */
   myInfo: MyNodeInfo;
 
+  /**
+   * SubEvents IEmitOptions
+   */
+  myEmitOptions: IEmitOptions;
+
   constructor() {
     this.isConnected = false;
     this.isReconnecting = false;
@@ -82,6 +87,13 @@ export abstract class IMeshDevice {
     this.currentPacketId = undefined;
     this.user = undefined;
     this.myInfo = undefined;
+    this.myEmitOptions = {
+      onError: (err, name) => {
+        throw new Error(
+          `Error: meshtasticjs.IMeshDevice: Error from event subscriber: ${name}: ${err}`
+        );
+      },
+    };
   }
 
   /**
@@ -371,6 +383,10 @@ export abstract class IMeshDevice {
 
     this.isConfigStarted = true;
 
+    debugLog(
+      "meshtasticjs.IMeshDevice: requesting radio configuration",
+      DebugLevelEnum.DEBUG
+    );
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
@@ -379,8 +395,15 @@ export abstract class IMeshDevice {
       ).finish()
     );
 
+    debugLog(
+      "meshtasticjs.IMeshDevice: Waiting to read radio configuration",
+      DebugLevelEnum.DEBUG
+    );
     await this.readFromRadio();
-
+    debugLog(
+      "meshtasticjs.IMeshDevice: Completed reading radio configuration",
+      DebugLevelEnum.DEBUG
+    );
     if (!this.isConfigDone) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.configure: configuring device was not successful"
@@ -431,7 +454,7 @@ export abstract class IMeshDevice {
     debugLog(fromRadioObj, DebugLevelEnum.DEBUG);
 
     if (this.isConfigDone) {
-      this.onFromRadioEvent.emit(fromRadioObj);
+      this.onFromRadioEvent.emit(fromRadioObj, this.myEmitOptions);
     }
 
     if (fromRadioObj.hasOwnProperty("myInfo")) {
@@ -455,7 +478,7 @@ export abstract class IMeshDevice {
           this.currentPacketId
         ) {
           this.isConfigDone = true;
-          this.onConfigDoneEvent.emit(this);
+          this.onConfigDoneEvent.emit(this, this.myEmitOptions);
           debugLog(
             `Configured device with node number ${this.myInfo.myNodeNum}`,
             DebugLevelEnum.DEBUG
@@ -496,13 +519,13 @@ export abstract class IMeshDevice {
         pckDat.payload = new TextDecoder().decode(pckDat.payload as Uint8Array);
       }
 
-      this.onDataPacketEvent.emit(meshPacket);
+      this.onDataPacketEvent.emit(meshPacket, this.myEmitOptions);
     } else if (meshPacket.decoded.hasOwnProperty("user")) {
       this.nodes.addUserData(meshPacket.from, meshPacket.decoded.user);
-      this.onUserPacketEvent.emit(meshPacket);
+      this.onUserPacketEvent.emit(meshPacket, this.myEmitOptions);
     } else if (meshPacket.decoded.hasOwnProperty("position")) {
       this.nodes.addPositionData(meshPacket.from, meshPacket.decoded.position);
-      this.onPositionPacketEvent.emit(meshPacket);
+      this.onPositionPacketEvent.emit(meshPacket, this.myEmitOptions);
     }
   }
 
@@ -513,7 +536,7 @@ export abstract class IMeshDevice {
   protected async onConnected(noAutoConfig: boolean) {
     this.isConnected = true;
     this.isReconnecting = false;
-    this.onConnectedEvent.emit(this);
+    this.onConnectedEvent.emit(this, this.myEmitOptions);
 
     if (!noAutoConfig) {
       await this.configure().catch((e) => {
@@ -528,7 +551,7 @@ export abstract class IMeshDevice {
    * Gets called when a link to the device has been disconnected
    */
   protected onDisconnected() {
-    this.onDisconnectedEvent.emit(this);
+    this.onDisconnectedEvent.emit(this, this.myEmitOptions);
     this.isConnected = false;
   }
 
@@ -537,7 +560,7 @@ export abstract class IMeshDevice {
    */
   private onNodeListChanged() {
     if (this.isConfigDone) {
-      this.onNodeListChangedEvent.emit(this);
+      this.onNodeListChangedEvent.emit(this, this.myEmitOptions);
     }
   }
 }
