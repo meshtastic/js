@@ -1,4 +1,9 @@
-import * as constants from "./constants";
+import {
+  FROMNUM_UUID,
+  FROMRADIO_UUID,
+  SERVICE_UUID,
+  TORADIO_UUID,
+} from "./constants";
 import { IMeshDevice } from "./imeshdevice";
 import { DebugLevelEnum } from "./settingsmanager";
 import { exponentialBackoff, typedArrayToBuffer, debugLog } from "./utils";
@@ -192,7 +197,7 @@ export class IBLEConnection extends IMeshDevice {
   ) {
     if (!requestDeviceFilterParams?.hasOwnProperty("filters")) {
       requestDeviceFilterParams = {
-        filters: [{ services: [constants.SERVICE_UUID] }],
+        filters: [{ services: [SERVICE_UUID] }],
       };
     }
     return navigator.bluetooth
@@ -226,7 +231,7 @@ export class IBLEConnection extends IMeshDevice {
    * @param connection
    */
   private async getService(connection: BluetoothRemoteGATTServer) {
-    return connection.getPrimaryService(constants.SERVICE_UUID).catch((e) => {
+    return connection.getPrimaryService(SERVICE_UUID).catch((e) => {
       throw new Error(
         `Error in meshtasticjs.IBLEConnection.getService: ${e.message}`
       );
@@ -240,18 +245,18 @@ export class IBLEConnection extends IMeshDevice {
   private async getCharacteristics(service: BluetoothRemoteGATTService) {
     try {
       this.toRadioCharacteristic = await service.getCharacteristic(
-        constants.TORADIO_UUID
+        TORADIO_UUID
       );
       debugLog("successfully got toRadioCharacteristic ", DebugLevelEnum.DEBUG);
       this.fromRadioCharacteristic = await service.getCharacteristic(
-        constants.FROMRADIO_UUID
+        FROMRADIO_UUID
       );
       debugLog(
         "successfully got fromRadioCharacteristic ",
         DebugLevelEnum.DEBUG
       );
       this.fromNumCharacteristic = await service.getCharacteristic(
-        constants.FROMNUM_UUID
+        FROMNUM_UUID
       );
       debugLog("successfully got fromNumCharacteristic ", DebugLevelEnum.DEBUG);
     } catch (e) {

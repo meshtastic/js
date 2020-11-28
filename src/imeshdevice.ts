@@ -1,4 +1,3 @@
-import * as constants from "./constants";
 import { NodeDB } from "./nodedb";
 import {
   ChannelSettings,
@@ -17,6 +16,7 @@ import {
 import { debugLog } from "./utils";
 import { DebugLevelEnum } from "./settingsmanager";
 import { IEmitOptions, SubEvent } from "sub-events";
+import { BROADCAST_NUM, MY_CONFIG_ID } from "./constants";
 
 /**
  * Base class for connection methods to extend
@@ -273,7 +273,7 @@ export abstract class IMeshDevice {
       );
     }
 
-    meshPacket.to = destinationNum ? destinationNum : constants.BROADCAST_NUM;
+    meshPacket.to = destinationNum ? destinationNum : BROADCAST_NUM;
     meshPacket.wantAck = wantAck;
 
     if (!meshPacket?.hasOwnProperty("id")) {
@@ -390,7 +390,7 @@ export abstract class IMeshDevice {
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
-          wantConfigId: constants.MY_CONFIG_ID,
+          wantConfigId: MY_CONFIG_ID,
         })
       ).finish()
     );
@@ -470,7 +470,7 @@ export abstract class IMeshDevice {
         this.user = fromRadioObj.nodeInfo.user;
       }
     } else if (fromRadioObj.hasOwnProperty("configCompleteId")) {
-      if (fromRadioObj.configCompleteId === constants.MY_CONFIG_ID) {
+      if (fromRadioObj.configCompleteId === MY_CONFIG_ID) {
         if (
           this.myInfo &&
           this.radioConfig &&
