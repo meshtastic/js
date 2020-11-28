@@ -82,7 +82,7 @@ export abstract class IMeshDevice {
     this.currentPacketId = undefined;
     this.user = undefined;
     this.myInfo = undefined;
-  }
+      }
 
   /**
    * Short description
@@ -371,6 +371,10 @@ export abstract class IMeshDevice {
 
     this.isConfigStarted = true;
 
+    debugLog(
+      "meshtasticjs.IMeshDevice: requesting radio configuration",
+      DebugLevelEnum.DEBUG
+    );
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
@@ -379,8 +383,15 @@ export abstract class IMeshDevice {
       ).finish()
     );
 
+    debugLog(
+      "meshtasticjs.IMeshDevice: Waiting to read radio configuration",
+      DebugLevelEnum.DEBUG
+    );
     await this.readFromRadio();
-
+    debugLog(
+      "meshtasticjs.IMeshDevice: Completed reading radio configuration",
+      DebugLevelEnum.DEBUG
+    );
     if (!this.isConfigDone) {
       throw new Error(
         "Error in meshtasticjs.MeshInterface.configure: configuring device was not successful"

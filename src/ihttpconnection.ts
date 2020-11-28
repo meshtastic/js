@@ -104,7 +104,10 @@ export class IHTTPConnection extends IMeshDevice {
 
     // At this point device is (presumably) connected, maybe check with ping-like request first
     this.isConnected = true;
-
+    debugLog(
+      "meshtasticjs.IHTTPConnection.connect: URL set to " + this.url,
+      DebugLevelEnum.DEBUG
+    );
     await this.onConnected(noAutoConfig);
 
     // Implement reading from device config here: fetchMode and Interval
@@ -113,6 +116,10 @@ export class IHTTPConnection extends IMeshDevice {
     this.fetchInterval = fetchInterval;
 
     this.lastInteractionTime = Date.now();
+    debugLog(
+      "meshtasticjs.IHTTPConnection.connect:  starting timer",
+      DebugLevelEnum.DEBUG
+    );
     setTimeout(this.fetchTimer.bind(this), 5000);
   }
 
@@ -142,6 +149,13 @@ export class IHTTPConnection extends IMeshDevice {
         readBuffer = await this.httpRequest(
           this.url + `/api/v1/fromradio?all=${this.receiveBatchRequests}`,
           "GET"
+        );
+
+        debugLog(
+          "meshtasticjs.IHTTPConnection.readFromRadio: received " +
+            readBuffer.byteLength +
+            " bytes from radio",
+          DebugLevelEnum.DEBUG
         );
 
         if (readBuffer.byteLength > 0) {
