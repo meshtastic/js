@@ -10,8 +10,9 @@ jobs:
       - uses: actions/setup-node@v2-beta
         with:
           node-version: 14
-      - run: npm install
-      - run: npm run build
+      - run: npm install -g yarn
+      - run: yarn install
+      - run: yarn run build
       - uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
