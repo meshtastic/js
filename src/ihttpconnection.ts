@@ -1,6 +1,7 @@
 import { IMeshDevice } from "./imeshdevice";
 import { DebugLevelEnum } from "./settingsmanager";
 import { debugLog, typedArrayToBuffer } from "./utils";
+import { SubEvent } from "sub-events";
 
 /**
  * Allows to connect to a meshtastic device over HTTP(S)
@@ -45,6 +46,12 @@ export class IHTTPConnection extends IMeshDevice {
    * Enables receiving messages all at once, versus one per request
    */
   receiveBatchRequests: boolean;
+
+  /**
+   * Fires whenever a HTTP transaction is completed with the radio
+   * @event
+   */
+  readonly onHTTPTransactionEvent: SubEvent<any> = new SubEvent();
 
   constructor() {
     super();
@@ -108,6 +115,12 @@ export class IHTTPConnection extends IMeshDevice {
       `meshtasticjs.IHTTPConnection.connect: URL set to: ${this.url}`,
       DebugLevelEnum.DEBUG
     );
+
+    this.onHTTPTransactionEvent.emit({
+      status: "connected",
+      interaction_time: Date.now(),
+    });
+
     await this.onConnected(noAutoConfig);
 
     // Implement reading from device config here: fetchMode and Interval
@@ -133,6 +146,10 @@ export class IHTTPConnection extends IMeshDevice {
         DebugLevelEnum.DEBUG
       );
     }
+    this.onHTTPTransactionEvent.emit({
+      status: "disconnected",
+      interaction_time: Date.now(),
+    });
 
     this.onDisconnected();
   }
@@ -221,6 +238,12 @@ export class IHTTPConnection extends IMeshDevice {
       default:
         break;
     }
+
+    this.onHTTPTransactionEvent.emit({
+      status: response.status,
+      consecutiveFailedRequests: this.consecutiveFailedRequests,
+      interaction_time: Date.now(),
+    });
 
     if (response.status === 200) {
       // Response is a ReadableStream
