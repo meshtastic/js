@@ -105,7 +105,7 @@ export class IHTTPConnection extends IMeshDevice {
     // At this point device is (presumably) connected, maybe check with ping-like request first
     this.isConnected = true;
     debugLog(
-      "meshtasticjs.IHTTPConnection.connect: URL set to " + this.url,
+      `meshtasticjs.IHTTPConnection.connect: URL set to: ${this.url}`,
       DebugLevelEnum.DEBUG
     );
     await this.onConnected(noAutoConfig);
@@ -152,9 +152,7 @@ export class IHTTPConnection extends IMeshDevice {
         );
 
         debugLog(
-          "meshtasticjs.IHTTPConnection.readFromRadio: received " +
-            readBuffer.byteLength +
-            " bytes from radio",
+          `meshtasticjs.IHTTPConnection.readFromRadio: received ${readBuffer.byteLength} bytes from radio`,
           DebugLevelEnum.DEBUG
         );
 

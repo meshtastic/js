@@ -90,10 +90,7 @@ export abstract class IMeshDevice {
     this.myEmitOptions = {
       onError: (err, name) => {
         throw new Error(
-          "Error: meshtasticjs.IMeshDevice: Error from event subscriber: " +
-            name +
-            ": " +
-            err
+          `Error: meshtasticjs.IMeshDevice: Error from event subscriber: ${name}: ${err}`
         );
       },
     };
