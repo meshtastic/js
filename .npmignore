@@ -1,9 +1,0 @@
-src
-docs
-.prettierignore
-.prettierrc.json
-build.sh
-jsdoc.json
-tsconfig.json
-webpack.config.js
-.github
