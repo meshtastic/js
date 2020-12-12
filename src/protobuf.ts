@@ -1,9 +1,13 @@
 import { Message, Field, OneOf, Type } from "protobufjs/light";
 
-export enum TypeEnum {
-  OPAQUE = 0,
-  CLEAR_TEXT = 1,
-  CLEAR_READACK = 2,
+export enum PortNumEnum {
+  UNKNOWN_APP = 0,
+  TEXT_MESSAGE_APP = 1,
+  REMOTE_HARDWARE_APP = 2,
+  POSITION_APP = 3,
+  NODEINFO_APP = 4,
+  PRIVATE_APP = 256,
+  IP_TUNNEL_APP = 1024,
 }
 
 export enum RouteErrorEnum {
@@ -75,8 +79,8 @@ export class Position extends Message<Position> {
  */
 @Type.d("Data")
 export class Data extends Message<Data> {
-  @Field.d(1, TypeEnum)
-  typ: TypeEnum;
+  @Field.d(1, PortNumEnum)
+  portnum: PortNumEnum;
 
   @Field.d(2, "bytes")
   payload: Uint8Array | string;
