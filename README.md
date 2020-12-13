@@ -2,142 +2,66 @@
 
 ## Overview
 
-Meshtastic.js is a javascript library that provides an interface to Meshtastic devices. It can be used to build applications interacting with the Meshtastic network natively in the browser. Currently HTTP(S) and bluetooth connections are possible.
+Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic](https://meshtastic.org) devices. It can be used to build applications to interface with a [Meshtastic](https://meshtastic.org) network. Currently HTTP(S) and Bluetooth connections are supported.
 
-Supported features:
-
-- Connect to multiple meshtastic devices via bluetooth
-- Start configuration process on connect
-- Get device info and node database
-- Receive messages from device
-- Send messages (text, position, data, packet)
-- Set device preferences
-- Set owner data
-
-[Documentation/API Reference](https://js.meshtastic.org) (work in progress)
+**[Documentation/API Reference](https://js.meshtastic.org)**
 
 ## Installation & Usage
 
-### Basic Init
+The library is available from [NPM](https://www.npmjs.com/package/@meshtastic/meshtasticjs) and can be installed with:
+`npm`: `yarn add @meshtastic/meshtasticjs`
+`yarn`: `npm install @meshtastic/meshtasticjs`
+If you prefer a pre-bundled version you can generate one with the following command from inside the projects folder:
+`npm`: `npm install --global webpack-cli && webpack-cli --entry ./dist -o dist/bundle.js`
+`yarn`: `yarn global add webpack-cli && webpack-cli --entry ./dist -o dist/bundle.js`
 
-This includes meshtastic.js into an html file and makes it available through the global variable meshtasticjs and creates a new meshtastic client instance and initializes the client:
+#### Usage
 
-#### Generic usage
-
-```html
-<script src="path/to/meshtastic.js"></script>
-```
-
-```javascript
-var client = new meshtasticjs.Client();
-```
-
-#### ES6
+The library has a built in connection manager that will handle multiple devices of different connection types.
 
 ```typescript
 import { Client } from "meshtasticjs";
 
+// Instantiate a new device manager
 const client = new Client();
+
+// Create the connection type of your choice
+const httpConnection = client.createHTTPConnection();
+const bleConnection = client.createBLEConnection();
+
+// connect to the device with the desired paramaters
+httpConnection.connect(...connectionParams);
+bleConnection.connect(...connectionParams);
+
+// Device can now be accessed individually or via `deviceInterfaces`
+client.deviceInterfaces.forEach(connection => {
+  ...
+})
 ```
 
-After that, a new connection can be created. it returns an IBLEConnection interface:
-
-```javascript
-const connectionOne = client.createBLEConnection();
-```
-
-The connection interface provides events that can subscribed to:
-
-- `onFromRadioEvent` Gets called whenever a fromRadio message is received from device, returns fromRadio data object in event.detail
-- `onDataPacketEvent` Gets called when a data packet is received from device, returns fromRadio data object in event.detail
-- `onUserPacketEvent` Gets called when a user packet is received from device, returns fromRadio data object in event.detail
-- `onPositionPacketEvent` Gets called when a position packet is received from device, returns fromRadio data in event.detail
-- `onConnectedEvent` Gets called when link to device is connected
-- `onDisconnectedEvent` Gets called when link to device is disconnected
-- `onConfigDoneEvent` Gets called when device has been configured (myInfo, radio and node data received). device interface is now ready to be used
-- `onNodeListChangedEvent` Gets called when node database has been changed, returns changed node number in event.detail
+All events can be handled via any of the inbuilt on**_x_**Event methods.
 
 ```typescript
-// Registering an onFromRadioEvent listener
-connectionOne.onFromRadioEvent.subscribe((data) => {
-  console.log(data);
-});
+// Avaliable methods: onFromRadioEvent, onDataPacketEvent, onUserPacketEvent, onPositionPacketEvent, onConnectedEvent, onDisconnectedEvent, onConfigDoneEvent
+httpConnection.onFromRadioEvent.subscribe(event => {
+    ...
+})
 ```
 
-### Connect to a device
+### Sending data
 
-Now we can connect to the device asynchronously. It returns a promise, so it must be used either in an async/await function or with .then.
-
-**Important when using BLE connections: the connect action must be called from a user interaction (e.g. button press), otherwise the browsers won't allow the connect to a BLE device**
+Data in multiple formats can be send over the radio
 
 ```typescript
-connectionOne
-  .connect()
-  .then((result) => {
-    // This code gets executed when the connection has been established
-    console.log("Successfully connected!");
-  })
-  .catch((error) => {
-    console.log(error);
-  });
+// Plain text message
+bleConnection.sendText("Message");
+
+// With recipient
+bleConnection.sendText("Message", 1234);
+
+// Arbitrary data
+bleConnection.sendData(new Uint8Array([...data]));
+
+// Send custom location
+bleConnection.sendPosition(lat, lng, alt, time);
 ```
-
-### Send a text message
-
-Send a text message via the device over the meshtastic radio. If no recipient node is provided, it gets sent as a broadcast:
-
-```typescript
-connectionOne
-  .sendText("meshtastic is awesome")
-  .then((result) => {
-    console.log(result);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-```
-
-**All calls (if not using then/catch promise syntax) should be wrapped in a try/catch to handle errors.**
-
-For more examples see /examples.
-
-[Documentation/API Reference](https://js.meshtastic.org)
-
-## Compatibility
-
-The library is tested with meshtastic devices running firmware versions 0.9.5, 1.0.0 and 1.1.6
-
-Since meshtastic.js relies on the bluetooth web api (<https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API>), bluetooth connections only work in the later versions of Google Chrome, Opera and Microsoft Edge. On windows systems, the meshtastic device has to be paired via windows settings beforehand once.
-
-### Bluetooth Version Details
-
-- Google Chrome 56+
-- Google Chrome for Android 85+
-- Microsoft Edge 79+
-- Opera 43+
-
-More detailed compatibility information can be found at <https://caniuse.com/web-bluetooth>
-
-## Build
-
-Clone the library into a local directory and run:
-
-```bash
-npm install
-```
-
-to fetch the needed dependencies.
-
-To build:
-
-```bash
-npm run build
-npm run generate-docs
-```
-
-## Development
-
-Roadmap for version 1.0:
-
-- Support for serial usb connections
-- More granular error management
