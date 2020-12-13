@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "browser library for interfacing with meshtastic devices",
   "sideEffects": false,
   "module": "dist/meshtastic.d.ts",

@@ -1,6 +1,6 @@
 # Meshtastic.js
 
-![](https://badgen.net/npm/v/@meshtastic/meshtasticjs) ![](https://badgen.net/npm/dt/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/minzip/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/dependency-count/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/tree-shaking/@meshtastic/meshtasticjs) 
+![](https://badgen.net/npm/v/@meshtastic/meshtasticjs) ![](https://badgen.net/npm/dt/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/minzip/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/dependency-count/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/tree-shaking/@meshtastic/meshtasticjs)
 
 ## Overview
 
