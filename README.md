@@ -57,7 +57,8 @@ client.deviceInterfaces.forEach(connection => {
 All events can be handled via any of the inbuilt on**_x_**Event methods.
 
 ```typescript
-// Avaliable methods: onFromRadioEvent, onDataPacketEvent, onUserPacketEvent, onPositionPacketEvent, onConnectedEvent, onDisconnectedEvent, onConfigDoneEvent
+// Avaliable methods: onFromRadioEvent, onDataPacketEvent, onUserPacketEvent,
+// onPositionPacketEvent, onConnectedEvent, onDisconnectedEvent, onConfigDoneEvent
 httpConnection.onFromRadioEvent.subscribe(event => {
     ...
 })
