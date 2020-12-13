@@ -1,5 +1,7 @@
 # Meshtastic.js
 
+![](https://badgen.net/npm/v/@meshtastic/meshtasticjs) ![](https://badgen.net/npm/dt/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/minzip/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/dependency-count/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/tree-shaking/@meshtastic/meshtasticjs)
+
 ## Overview
 
 Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic](https://meshtastic.org) devices. It can be used to build applications to interface with a [Meshtastic](https://meshtastic.org) network. Currently HTTP(S) and Bluetooth connections are supported.
@@ -9,11 +11,24 @@ Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic]
 ## Installation & Usage
 
 The library is available from [NPM](https://www.npmjs.com/package/@meshtastic/meshtasticjs) and can be installed with:
-`npm`: `yarn add @meshtastic/meshtasticjs`
-`yarn`: `npm install @meshtastic/meshtasticjs`
+
+```bash
+yarn add @meshtastic/meshtasticjs
+```
+
+```bash
+npm install @meshtastic/meshtasticjs
+```
+
 If you prefer a pre-bundled version you can generate one with the following command from inside the projects folder:
-`npm`: `npm install --global webpack-cli && webpack-cli --entry ./dist -o dist/bundle.js`
-`yarn`: `yarn global add webpack-cli && webpack-cli --entry ./dist -o dist/bundle.js`
+
+```bash
+npm run build && npm install --global webpack-cli && webpack-cli --entry ./dist -o dist/bundle.js
+```
+
+```bash
+yarn build && yarn global add webpack-cli && webpack-cli --entry ./dist -o dist/bundle.js
+```
 
 #### Usage
 
@@ -42,7 +57,8 @@ client.deviceInterfaces.forEach(connection => {
 All events can be handled via any of the inbuilt on**_x_**Event methods.
 
 ```typescript
-// Avaliable methods: onFromRadioEvent, onDataPacketEvent, onUserPacketEvent, onPositionPacketEvent, onConnectedEvent, onDisconnectedEvent, onConfigDoneEvent
+// Avaliable methods: onFromRadioEvent, onDataPacketEvent, onUserPacketEvent,
+// onPositionPacketEvent, onConnectedEvent, onDisconnectedEvent, onConfigDoneEvent
 httpConnection.onFromRadioEvent.subscribe(event => {
     ...
 })
