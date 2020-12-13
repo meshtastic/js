@@ -1,3 +1,7 @@
+/**
+ * Current as of Meshtastic-protobufs #8729bad7f6cfa461be02e3ea65fbde29435b3fe3
+ */
+
 import { Message, Field, OneOf, Type } from "protobufjs/light";
 
 export enum PortNumEnum {
