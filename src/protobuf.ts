@@ -24,7 +24,7 @@ export enum RouteErrorEnum {
 
 export enum ConstantsEnum {
   Unused = 0,
-  DATA_PAYLOAD_LEN = 240;
+  DATA_PAYLOAD_LEN = 240,
 }
 
 export enum ModemConfigEnum {
