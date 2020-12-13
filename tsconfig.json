@@ -3,6 +3,7 @@
     "module": "ES6",
     "moduleResolution": "Node",
     "target": "ES2018",
+    "sourceMap": true,
     "declaration": true,
     "outDir": "./dist",
     "noImplicitAny": true,

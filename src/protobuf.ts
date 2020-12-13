@@ -17,14 +17,14 @@ export enum ConstantsEnum {
   Unused = 0,
 }
 
-export enum ModemConfig {
+export enum ModemConfigEnum {
   Bw125Cr45Sf128 = 0,
   Bw500Cr45Sf128 = 1,
   Bw31_25Cr48Sf512 = 2,
   Bw125Cr48Sf4096 = 3,
 }
 
-export enum RegionCode {
+export enum RegionCodeEnum {
   Unset = 0,
   US = 1,
   EU433 = 2,
@@ -36,14 +36,14 @@ export enum RegionCode {
   TW = 8,
 }
 
-export enum GpsOperation {
+export enum GpsOperationEnum {
   GpsOpUnset = 0,
   GpsOpMobile = 2,
   GpsOpTimeOnly = 3,
   GpsOpDisabled = 4,
 }
 
-export enum LocationSharing {
+export enum LocationSharingEnum {
   LocUnset = 0,
   LocEnabled = 1,
   LocDisabled = 2,
@@ -215,8 +215,8 @@ export class ChannelSettings extends Message<ChannelSettings> {
   @Field.d(1, "int32")
   txPower: number;
 
-  @Field.d(3, ModemConfig)
-  modemConfig: ModemConfig;
+  @Field.d(3, ModemConfigEnum)
+  modemConfig: ModemConfigEnum;
 
   @Field.d(6, "uint32")
   bandwidth: number;
@@ -284,8 +284,8 @@ export class UserPreferences extends Message<UserPreferences> {
   @Field.d(14, "bool")
   wifiApMode: boolean;
 
-  @Field.d(15, RegionCode)
-  region: RegionCode;
+  @Field.d(15, RegionCodeEnum)
+  region: RegionCodeEnum;
 
   @Field.d(37, "bool")
   isRouter: boolean;
@@ -296,11 +296,11 @@ export class UserPreferences extends Message<UserPreferences> {
   @Field.d(100, "bool")
   factoryReset: boolean;
 
-  @Field.d(32, LocationSharing)
-  locationShare: LocationSharing;
+  @Field.d(32, LocationSharingEnum)
+  locationShare: LocationSharingEnum;
 
-  @Field.d(33, GpsOperation)
-  gpsOperation: GpsOperation;
+  @Field.d(33, GpsOperationEnum)
+  gpsOperation: GpsOperationEnum;
 
   @Field.d(34, "uint32")
   gpsUpdateInterval: number;
