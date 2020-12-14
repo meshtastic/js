@@ -9,7 +9,7 @@ import {
   RadioConfig,
   SubPacket,
   ToRadio,
-  TypeEnum,
+  PortNumEnum,
   User,
   UserPreferences,
 } from "./protobuf";
@@ -183,7 +183,7 @@ export abstract class IMeshDevice {
 
     return this.sendData(
       enc.encode(text),
-      TypeEnum.CLEAR_TEXT,
+      PortNumEnum.TEXT_MESSAGE_APP,
       destinationNum,
       wantAck,
       wantResponse
@@ -200,7 +200,7 @@ export abstract class IMeshDevice {
    */
   sendData(
     byteData: Uint8Array,
-    dataType: TypeEnum,
+    dataType: PortNumEnum,
     destinationNum?: number,
     wantAck = false,
     wantResponse = false
@@ -210,7 +210,7 @@ export abstract class IMeshDevice {
         decoded: new SubPacket({
           data: new Data({
             payload: byteData,
-            typ: dataType,
+            portnum: dataType,
           }),
           wantResponse,
         }),
@@ -507,15 +507,12 @@ export abstract class IMeshDevice {
    */
   private handleMeshPacket(meshPacket: MeshPacket) {
     if (meshPacket.decoded.hasOwnProperty("data")) {
-      if (!meshPacket.decoded.data.hasOwnProperty("typ")) {
-        meshPacket.decoded.data.typ = TypeEnum.OPAQUE;
+      if (!meshPacket.decoded.data.hasOwnProperty("portnum")) {
+        meshPacket.decoded.data.portnum = PortNumEnum.UNKNOWN_APP;
       }
 
       let pckDat = meshPacket.decoded.data;
-      if (
-        pckDat.typ === TypeEnum.CLEAR_TEXT ||
-        pckDat.typ === TypeEnum.CLEAR_READACK
-      ) {
+      if (pckDat.portnum === PortNumEnum.TEXT_MESSAGE_APP) {
         pckDat.payload = new TextDecoder().decode(pckDat.payload as Uint8Array);
       }
 

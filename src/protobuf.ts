@@ -1,9 +1,18 @@
+/**
+ * Current as of Meshtastic-protobufs #8729bad7f6cfa461be02e3ea65fbde29435b3fe3
+ */
+
 import { Message, Field, OneOf, Type } from "protobufjs/light";
 
-export enum TypeEnum {
-  OPAQUE = 0,
-  CLEAR_TEXT = 1,
-  CLEAR_READACK = 2,
+export enum PortNumEnum {
+  UNKNOWN_APP = 0,
+  TEXT_MESSAGE_APP = 1,
+  REMOTE_HARDWARE_APP = 2,
+  POSITION_APP = 3,
+  NODEINFO_APP = 4,
+  REPLY_APP = 32,
+  PRIVATE_APP = 256,
+  IP_TUNNEL_APP = 1024,
 }
 
 export enum RouteErrorEnum {
@@ -15,6 +24,7 @@ export enum RouteErrorEnum {
 
 export enum ConstantsEnum {
   Unused = 0,
+  DATA_PAYLOAD_LEN = 240,
 }
 
 export enum ModemConfigEnum {
@@ -75,8 +85,8 @@ export class Position extends Message<Position> {
  */
 @Type.d("Data")
 export class Data extends Message<Data> {
-  @Field.d(1, TypeEnum)
-  typ: TypeEnum;
+  @Field.d(1, PortNumEnum)
+  portnum: PortNumEnum;
 
   @Field.d(2, "bytes")
   payload: Uint8Array | string;
@@ -128,12 +138,18 @@ export class SubPacket extends Message<SubPacket> {
   @OneOf.d("successId", "failId")
   ack: number;
 
+  /**
+   * @deprecated
+   */
   @Field.d(1, Position)
   position: Position;
 
   @Field.d(3, Data)
   data: Data;
 
+  /**
+   * @deprecated
+   */
   @Field.d(4, User)
   user: User;
 
@@ -292,9 +308,15 @@ export class UserPreferences extends Message<UserPreferences> {
 
   @Field.d(38, "bool")
   isLowPower: boolean;
+  
+  @Field.d(39, "bool")
+  fixedPosition: boolean;
 
   @Field.d(100, "bool")
   factoryReset: boolean;
+  
+  @Field.d(101, "bool")
+  debugLogEnabled: boolean;
 
   @Field.d(32, LocationSharingEnum)
   locationShare: LocationSharingEnum;
