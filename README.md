@@ -81,3 +81,9 @@ bleConnection.sendData(new Uint8Array([...data]));
 // Send custom location
 bleConnection.sendPosition(lat, lng, alt, time);
 ```
+
+### Compatibility
+
+The Bluetooth connection option relies on the availability of the Web Bluetooth API, which is represented in the compatibility matrix below.
+
+![](https://caniuse.bitsofco.de/image/web-bluetooth.png)
