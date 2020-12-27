@@ -308,13 +308,13 @@ export class UserPreferences extends Message<UserPreferences> {
 
   @Field.d(38, "bool")
   isLowPower: boolean;
-  
+
   @Field.d(39, "bool")
   fixedPosition: boolean;
 
   @Field.d(100, "bool")
   factoryReset: boolean;
-  
+
   @Field.d(101, "bool")
   debugLogEnabled: boolean;
 

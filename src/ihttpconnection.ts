@@ -1,7 +1,13 @@
+import { Subject } from "rxjs";
 import { IMeshDevice } from "./imeshdevice";
 import { DebugLevelEnum } from "./settingsmanager";
 import { debugLog, typedArrayToBuffer } from "./utils";
-import { SubEvent } from "sub-events";
+
+interface HTTPTransaction {
+  status: number;
+  interaction_time: Number;
+  consecutiveFailedRequests?: number;
+}
 
 /**
  * Allows to connect to a meshtastic device over HTTP(S)
@@ -51,7 +57,7 @@ export class IHTTPConnection extends IMeshDevice {
    * Fires whenever a HTTP transaction is completed with the radio
    * @event
    */
-  readonly onHTTPTransactionEvent: SubEvent<any> = new SubEvent();
+  readonly onHTTPTransactionEvent: Subject<HTTPTransaction> = new Subject();
 
   constructor() {
     super();
@@ -92,38 +98,51 @@ export class IHTTPConnection extends IMeshDevice {
     this.consecutiveFailedRequests = 0;
 
     if (!this.url && !address && !tls) {
-      // Do nothing as url has already been set in previous connect
-      // and no new params have been given
+      /**
+       * Do nothing as url has already been set in previous connect and no new params have been given
+       */
     } else {
-      // Set the address
+      /**
+       * Set the address
+       */
       if (!address) {
         throw new Error(
           "Error in meshtasticjs.IBLEConnection.connect: Please specify connect address"
         );
       }
 
-      // set the protocol
+      /**
+       * set the protocol
+       */
       this.tls = !!tls;
 
-      // assemble url
+      /**
+       * assemble url
+       */
       this.url = !!this.tls ? "https://" : "http://" + address;
     }
 
-    // At this point device is (presumably) connected, maybe check with ping-like request first
+    /**
+     * At this point device is (presumably) connected, maybe check with ping-like request first
+     * @todo use ping endpoint
+     */
     this.isConnected = true;
     debugLog(
       `meshtasticjs.IHTTPConnection.connect: URL set to: ${this.url}`,
       DebugLevelEnum.DEBUG
     );
 
-    this.onHTTPTransactionEvent.emit({
-      status: "connected",
+    this.onHTTPTransactionEvent.next({
+      status: 200,
       interaction_time: Date.now(),
+      consecutiveFailedRequests: this.consecutiveFailedRequests,
     });
 
     await this.onConnected(noAutoConfig);
 
-    // Implement reading from device config here: fetchMode and Interval
+    /**
+     * Implement reading from device config here: fetchMode and Interval
+     */
 
     this.fetchMode = fetchMode;
     this.fetchInterval = fetchInterval;
@@ -146,9 +165,10 @@ export class IHTTPConnection extends IMeshDevice {
         DebugLevelEnum.DEBUG
       );
     }
-    this.onHTTPTransactionEvent.emit({
-      status: "disconnected",
+    this.onHTTPTransactionEvent.next({
+      status: 503,
       interaction_time: Date.now(),
+      consecutiveFailedRequests: this.consecutiveFailedRequests,
     });
 
     this.onDisconnected();
@@ -160,7 +180,9 @@ export class IHTTPConnection extends IMeshDevice {
   async readFromRadio() {
     let readBuffer = new ArrayBuffer(1);
 
-    // read as long as the previous read buffer is bigger 0
+    /**
+     * read as long as the previous read buffer is bigger 0
+     */
     while (readBuffer.byteLength > 0) {
       try {
         readBuffer = await this.httpRequest(
@@ -216,7 +238,9 @@ export class IHTTPConnection extends IMeshDevice {
 
     switch (type) {
       case "GET":
-        // cant use mode: no-cors here, because browser then obscures if request was successful
+        /**
+         * cant use mode: no-cors here, because browser then obscures if request was successful
+         */
         response = await fetch(url, {
           method: "GET",
           headers: {
@@ -239,14 +263,13 @@ export class IHTTPConnection extends IMeshDevice {
         break;
     }
 
-    this.onHTTPTransactionEvent.emit({
+    this.onHTTPTransactionEvent.next({
       status: response.status,
-      consecutiveFailedRequests: this.consecutiveFailedRequests,
       interaction_time: Date.now(),
+      consecutiveFailedRequests: this.consecutiveFailedRequests,
     });
 
     if (response.status === 200) {
-      // Response is a ReadableStream
       return response.arrayBuffer();
     } else {
       throw new Error(
@@ -270,7 +293,9 @@ export class IHTTPConnection extends IMeshDevice {
       debugLog(e, DebugLevelEnum.ERROR);
     });
 
-    // Calculate new interval and set timeout again
+    /**
+     * Calculate new interval and set timeout again
+     */
     let newInterval = 5e3;
 
     if (!this.fetchInterval) {

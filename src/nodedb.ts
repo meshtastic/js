@@ -1,4 +1,4 @@
-import { SubEvent } from "sub-events";
+import { Subject } from "rxjs";
 import { NodeInfo, Position, User } from "./protobuf";
 
 /**
@@ -18,7 +18,7 @@ export class NodeDB {
    * Fires when the node database has changed
    * @event
    */
-  readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
+  readonly onNodeListChangedEvent: Subject<Number> = new Subject();
 
   /**
    * Adds a node object to the database.
@@ -26,7 +26,7 @@ export class NodeDB {
    */
   addNode(nodeInfo: NodeInfo) {
     this.nodes.set(nodeInfo.num, nodeInfo);
-    this.onNodeListChangedEvent.emit(nodeInfo.num);
+    this.onNodeListChangedEvent.next(nodeInfo.num);
   }
 
   /**
@@ -51,11 +51,11 @@ export class NodeDB {
         );
       }
 
-      this.onNodeListChangedEvent.emit(nodeNumber);
+      this.onNodeListChangedEvent.next(nodeNumber);
     }
 
     node.user = user;
-    this.onNodeListChangedEvent.emit(nodeNumber);
+    this.onNodeListChangedEvent.next(nodeNumber);
   }
 
   /**
@@ -80,11 +80,11 @@ export class NodeDB {
         );
       }
 
-      this.onNodeListChangedEvent.emit(nodeNumber);
+      this.onNodeListChangedEvent.next(nodeNumber);
     }
 
     node.position = position;
-    this.onNodeListChangedEvent.emit(nodeNumber);
+    this.onNodeListChangedEvent.next(nodeNumber);
   }
 
   /**
@@ -93,7 +93,7 @@ export class NodeDB {
    */
   removeNode(nodeNumber: number) {
     this.nodes.delete(nodeNumber);
-    this.onNodeListChangedEvent.emit(nodeNumber);
+    this.onNodeListChangedEvent.next(nodeNumber);
   }
 
   /**

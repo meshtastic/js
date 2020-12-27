@@ -15,8 +15,8 @@ import {
 } from "./protobuf";
 import { debugLog } from "./utils";
 import { DebugLevelEnum } from "./settingsmanager";
-import { IEmitOptions, SubEvent } from "sub-events";
 import { BROADCAST_NUM, MY_CONFIG_ID } from "./constants";
+import { Subject } from "rxjs";
 
 /**
  * Base class for connection methods to extend
@@ -67,11 +67,6 @@ export abstract class IMeshDevice {
    */
   myInfo: MyNodeInfo;
 
-  /**
-   * SubEvents IEmitOptions
-   */
-  myEmitOptions: IEmitOptions;
-
   constructor() {
     this.isConnected = false;
     this.isReconnecting = false;
@@ -87,13 +82,6 @@ export abstract class IMeshDevice {
     this.currentPacketId = undefined;
     this.user = undefined;
     this.myInfo = undefined;
-    this.myEmitOptions = {
-      onError: (err, name) => {
-        throw new Error(
-          `Error: meshtasticjs.IMeshDevice: Error from event subscriber: ${name}: ${err}`
-        );
-      },
-    };
   }
 
   /**
@@ -121,49 +109,49 @@ export abstract class IMeshDevice {
    * Fires when a new FromRadio message has been received from device
    * @event
    */
-  readonly onFromRadioEvent: SubEvent<FromRadio> = new SubEvent();
+  readonly onFromRadioEvent: Subject<FromRadio> = new Subject();
 
   /**
    * Fires when a new FromRadio message containing a Data packet has been received from device
    * @event
    */
-  readonly onDataPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+  readonly onDataPacketEvent: Subject<MeshPacket> = new Subject();
 
   /**
    * Fires when a new FromRadio message containing a User packet has been received from device
    * @event
    */
-  readonly onUserPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+  readonly onUserPacketEvent: Subject<MeshPacket> = new Subject();
 
   /**
    * Fires when a new FromRadio message containing a Position packet has been received from device
    * @event
    */
-  readonly onPositionPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+  readonly onPositionPacketEvent: Subject<MeshPacket> = new Subject();
 
   /**
    * Fires when the link to a device has been established. Does not mean that device can be used
    * @event
    */
-  readonly onConnectedEvent: SubEvent<IMeshDevice> = new SubEvent();
+  readonly onConnectedEvent: Subject<IMeshDevice> = new Subject();
 
   /**
    * Fires when the link to a device has been disconnected
    * @event
    */
-  readonly onDisconnectedEvent: SubEvent<any> = new SubEvent();
+  readonly onDisconnectedEvent: Subject<any> = new Subject();
 
   /**
    * Fires when the device configuration was successful. The device can then be used
    * @event
    */
-  readonly onConfigDoneEvent: SubEvent<any> = new SubEvent();
+  readonly onConfigDoneEvent: Subject<any> = new Subject();
 
   /**
    * Fires when the node database has changed
    * @event
    */
-  readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
+  readonly onNodeListChangedEvent: Subject<any> = new Subject();
 
   /**
    * Sends a text over the radio
@@ -178,7 +166,9 @@ export abstract class IMeshDevice {
     wantAck = false,
     wantResponse = false
   ) {
-    // DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
+    /**
+     * DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
+     */
     const enc = new TextEncoder();
 
     return this.sendData(
@@ -454,7 +444,7 @@ export abstract class IMeshDevice {
     debugLog(fromRadioObj, DebugLevelEnum.DEBUG);
 
     if (this.isConfigDone) {
-      this.onFromRadioEvent.emit(fromRadioObj, this.myEmitOptions);
+      this.onFromRadioEvent.next(fromRadioObj);
     }
 
     if (fromRadioObj.hasOwnProperty("myInfo")) {
@@ -478,7 +468,7 @@ export abstract class IMeshDevice {
           this.currentPacketId
         ) {
           this.isConfigDone = true;
-          this.onConfigDoneEvent.emit(this, this.myEmitOptions);
+          this.onConfigDoneEvent.next(this);
           debugLog(
             `Configured device with node number ${this.myInfo.myNodeNum}`,
             DebugLevelEnum.DEBUG
@@ -516,13 +506,13 @@ export abstract class IMeshDevice {
         pckDat.payload = new TextDecoder().decode(pckDat.payload as Uint8Array);
       }
 
-      this.onDataPacketEvent.emit(meshPacket, this.myEmitOptions);
+      this.onDataPacketEvent.next(meshPacket);
     } else if (meshPacket.decoded.hasOwnProperty("user")) {
       this.nodes.addUserData(meshPacket.from, meshPacket.decoded.user);
-      this.onUserPacketEvent.emit(meshPacket, this.myEmitOptions);
+      this.onUserPacketEvent.next(meshPacket);
     } else if (meshPacket.decoded.hasOwnProperty("position")) {
       this.nodes.addPositionData(meshPacket.from, meshPacket.decoded.position);
-      this.onPositionPacketEvent.emit(meshPacket, this.myEmitOptions);
+      this.onPositionPacketEvent.next(meshPacket);
     }
   }
 
@@ -533,7 +523,7 @@ export abstract class IMeshDevice {
   protected async onConnected(noAutoConfig: boolean) {
     this.isConnected = true;
     this.isReconnecting = false;
-    this.onConnectedEvent.emit(this, this.myEmitOptions);
+    this.onConnectedEvent.next(this);
 
     if (!noAutoConfig) {
       await this.configure().catch((e) => {
@@ -548,7 +538,7 @@ export abstract class IMeshDevice {
    * Gets called when a link to the device has been disconnected
    */
   protected onDisconnected() {
-    this.onDisconnectedEvent.emit(this, this.myEmitOptions);
+    this.onDisconnectedEvent.next(this);
     this.isConnected = false;
   }
 
@@ -557,7 +547,7 @@ export abstract class IMeshDevice {
    */
   private onNodeListChanged() {
     if (this.isConfigDone) {
-      this.onNodeListChangedEvent.emit(this, this.myEmitOptions);
+      this.onNodeListChangedEvent.next(this);
     }
   }
 }

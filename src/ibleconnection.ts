@@ -89,7 +89,9 @@ export class IBLEConnection extends IMeshDevice {
     }
 
     try {
-      // If no device has been selected, open request device browser prompt
+      /**
+       * If no device has been selected, open request device browser prompt
+       */
       if (!this.device) {
         this.device = await this.requestDevice(requestDeviceFilterParams);
       }
@@ -146,7 +148,9 @@ export class IBLEConnection extends IMeshDevice {
   async readFromRadio() {
     let readBuffer = new ArrayBuffer(1);
 
-    // read as long as the previous read buffer is bigger 0
+    /**
+     * read as long as the previous read buffer is bigger 0
+     */
     while (readBuffer.byteLength > 0) {
       readBuffer = await this.readFromCharacteristic(
         this.fromRadioCharacteristic
@@ -271,10 +275,13 @@ export class IBLEConnection extends IMeshDevice {
    */
   private async subscribeToBLENotification() {
     await this.fromNumCharacteristic.startNotifications();
+    /**
+     * bind.this makes the object reference to IBLEConnection accessible within the callback
+     */
     this.fromNumCharacteristic.addEventListener(
       "characteristicvaluechanged",
       this.handleBLENotification.bind(this)
-    ); // bind.this makes the object reference to IBLEConnection accessible within the callback
+    );
 
     debugLog("BLE notifications activated", DebugLevelEnum.DEBUG);
   }
