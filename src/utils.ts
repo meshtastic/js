@@ -1,4 +1,5 @@
-import { DebugLevelEnum, SettingsManager } from "./settingsmanager";
+import { LogLevelEnum } from "./protobuf";
+import { SettingsManager } from "./settingsmanager";
 
 /**
  * Converts a `ArrayBuffer` to a hex string
@@ -55,22 +56,23 @@ const exponentialBackoff = async (
 
 /**
  * Global event logger
+ * @todo, accomodate all of LogLevelEnum's members
  * @param data data to be logged
  * @param logLevel loglevel to associate data with
  */
-const debugLog = (data: any, logLevel: DebugLevelEnum) => {
+const debugLog = (data: any, logLevel: LogLevelEnum) => {
   if (logLevel >= SettingsManager.debugMode) {
     switch (logLevel) {
-      case DebugLevelEnum.INFO:
+      case LogLevelEnum.INFO:
         console.info(data);
         break;
-      case DebugLevelEnum.DEBUG:
+      case LogLevelEnum.DEBUG:
         console.debug(data);
         break;
-      case DebugLevelEnum.WARN:
+      case LogLevelEnum.WARNING:
         console.warn(data);
         break;
-      case DebugLevelEnum.ERROR:
+      case LogLevelEnum.ERROR:
         console.error(data);
         break;
       default:

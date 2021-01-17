@@ -12,9 +12,9 @@ import {
   PortNumEnum,
   User,
   UserPreferences,
+  LogLevelEnum,
 } from "./protobuf";
 import { debugLog } from "./utils";
-import { DebugLevelEnum } from "./settingsmanager";
 import { BROADCAST_NUM, MY_CONFIG_ID } from "./constants";
 import { Subject } from "rxjs";
 
@@ -375,7 +375,7 @@ export abstract class IMeshDevice {
 
     debugLog(
       "meshtasticjs.IMeshDevice: requesting radio configuration",
-      DebugLevelEnum.DEBUG
+      LogLevelEnum.DEBUG
     );
     await this.writeToRadio(
       ToRadio.encode(
@@ -387,12 +387,12 @@ export abstract class IMeshDevice {
 
     debugLog(
       "meshtasticjs.IMeshDevice: Waiting to read radio configuration",
-      DebugLevelEnum.DEBUG
+      LogLevelEnum.DEBUG
     );
     await this.readFromRadio();
     debugLog(
       "meshtasticjs.IMeshDevice: Completed reading radio configuration",
-      DebugLevelEnum.DEBUG
+      LogLevelEnum.DEBUG
     );
     if (!this.isConfigDone) {
       throw new Error(
@@ -430,7 +430,7 @@ export abstract class IMeshDevice {
     let fromRadioObj: FromRadio;
 
     if (fromRadio.byteLength < 1) {
-      debugLog("Empty buffer received", DebugLevelEnum.DEBUG);
+      debugLog("Empty buffer received", LogLevelEnum.DEBUG);
     }
 
     try {
@@ -441,7 +441,7 @@ export abstract class IMeshDevice {
       );
     }
 
-    debugLog(fromRadioObj, DebugLevelEnum.DEBUG);
+    debugLog(fromRadioObj, LogLevelEnum.DEBUG);
 
     if (this.isConfigDone) {
       this.onFromRadioEvent.next(fromRadioObj);
@@ -471,7 +471,7 @@ export abstract class IMeshDevice {
           this.onConfigDoneEvent.next(this);
           debugLog(
             `Configured device with node number ${this.myInfo.myNodeNum}`,
-            DebugLevelEnum.DEBUG
+            LogLevelEnum.DEBUG
           );
         } else {
           throw new Error(
@@ -486,7 +486,7 @@ export abstract class IMeshDevice {
     } else {
       debugLog(
         "Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received",
-        DebugLevelEnum.ERROR
+        LogLevelEnum.ERROR
       );
     }
   }
@@ -510,7 +510,7 @@ export abstract class IMeshDevice {
     } else if (meshPacket.decoded.hasOwnProperty("user")) {
       this.nodes.addUserData(meshPacket.from, meshPacket.decoded.user);
       this.onUserPacketEvent.next(meshPacket);
-    } else if (meshPacket.decoded.hasOwnProperty("position")) {
+    } else if (meshPacket.decoded.data.portnum === PortNumEnum.POSITION_APP) {
       this.nodes.addPositionData(meshPacket.from, meshPacket.decoded.position);
       this.onPositionPacketEvent.next(meshPacket);
     }

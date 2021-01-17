@@ -1,28 +1,4 @@
-/**
- * Desired logging output level
- */
-export enum DebugLevelEnum {
-  /**
-   * All events will be logged (verbose)
-   */
-  INFO,
-  /**
-   * All debug and higher events will be logged
-   */
-  DEBUG,
-  /**
-   * Log only non critial waning events and higher
-   */
-  WARN,
-  /**
-   * Log only the highest level error messages
-   */
-  ERROR,
-  /**
-   * Disables logging of all events
-   */
-  NONE,
-}
+import { LogLevelEnum } from "./protobuf";
 
 /**
  * Handles library-wide settings
@@ -31,7 +7,7 @@ export class SettingsManager {
   /**
    * debugMode state for the application
    */
-  static debugMode: DebugLevelEnum;
+  static debugMode: LogLevelEnum;
 
   constructor() {}
 
@@ -39,8 +15,8 @@ export class SettingsManager {
    * Debug mode enables verbose console output.
    * @param mode Whether the application is in debug mode or not
    */
-  static setDebugMode(level: DebugLevelEnum) {
-    if (!(level in DebugLevelEnum)) {
+  static setDebugMode(level: LogLevelEnum) {
+    if (!(level in LogLevelEnum)) {
       throw new Error(
         "Error in meshtasticjs.SettingsManager.setDebugMode: param must be a member of DebugLevelEnum"
       );
@@ -50,4 +26,4 @@ export class SettingsManager {
   }
 }
 
-SettingsManager.debugMode = DebugLevelEnum.NONE;
+SettingsManager.debugMode = LogLevelEnum.WARNING;

@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { IMeshDevice } from "./imeshdevice";
-import { DebugLevelEnum } from "./settingsmanager";
+import { LogLevelEnum } from "./protobuf";
 import { debugLog, typedArrayToBuffer } from "./utils";
 
 interface HTTPTransaction {
@@ -129,7 +129,7 @@ export class IHTTPConnection extends IMeshDevice {
     this.isConnected = true;
     debugLog(
       `meshtasticjs.IHTTPConnection.connect: URL set to: ${this.url}`,
-      DebugLevelEnum.DEBUG
+      LogLevelEnum.DEBUG
     );
 
     this.onHTTPTransactionEvent.next({
@@ -150,7 +150,7 @@ export class IHTTPConnection extends IMeshDevice {
     this.lastInteractionTime = Date.now();
     debugLog(
       "meshtasticjs.IHTTPConnection.connect:  starting timer",
-      DebugLevelEnum.DEBUG
+      LogLevelEnum.DEBUG
     );
     setTimeout(this.fetchTimer.bind(this), 5000);
   }
@@ -162,7 +162,7 @@ export class IHTTPConnection extends IMeshDevice {
     if (!this.isConnected) {
       debugLog(
         "meshtasticjs.IHTTPConnection.disconnect: device already disconnected",
-        DebugLevelEnum.DEBUG
+        LogLevelEnum.DEBUG
       );
     }
     this.onHTTPTransactionEvent.next({
@@ -192,7 +192,7 @@ export class IHTTPConnection extends IMeshDevice {
 
         debugLog(
           `meshtasticjs.IHTTPConnection.readFromRadio: received ${readBuffer.byteLength} bytes from radio`,
-          DebugLevelEnum.DEBUG
+          LogLevelEnum.DEBUG
         );
 
         if (readBuffer.byteLength > 0) {
@@ -290,7 +290,7 @@ export class IHTTPConnection extends IMeshDevice {
     }
 
     await this.readFromRadio().catch((e) => {
-      debugLog(e, DebugLevelEnum.ERROR);
+      debugLog(e, LogLevelEnum.ERROR);
     });
 
     /**
