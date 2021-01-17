@@ -24,12 +24,12 @@
     "@types/web-bluetooth": "0.0.9",
     "pre-commit": "^1.2.2",
     "prettier": "^2.2.1",
-    "typedoc": "^0.19.2",
+    "typedoc": "^0.20.16",
     "typescript": "^4.1.3"
   },
   "scripts": {
     "build": "tsc",
-    "generate-docs": "npx typedoc",
+    "generate-docs": "npx typedoc src/index.ts",
     "lint": "prettier --check .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
