@@ -130,7 +130,7 @@ export class Data extends Message<Data> {
   portnum: PortNumEnum;
 
   @Field.d(2, "bytes")
-  payload: Uint8Array | string;
+  payload: Uint8Array;
 }
 
 /**

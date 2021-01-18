@@ -13,6 +13,7 @@ import {
   User,
   UserPreferences,
   LogLevelEnum,
+  NodeInfo,
 } from "./protobuf";
 import { debugLog } from "./utils";
 import { BROADCAST_NUM, MY_CONFIG_ID } from "./constants";
@@ -121,13 +122,25 @@ export abstract class IMeshDevice {
    * Fires when a new FromRadio message containing a User packet has been received from device
    * @event
    */
-  readonly onUserPacketEvent: Subject<MeshPacket> = new Subject();
+  readonly onNodeInfoPacketEvent: Subject<
+    MeshPacket & { data: NodeInfo }
+  > = new Subject();
 
   /**
    * Fires when a new FromRadio message containing a Position packet has been received from device
    * @event
    */
-  readonly onPositionPacketEvent: Subject<MeshPacket> = new Subject();
+  readonly onPositionPacketEvent: Subject<
+    MeshPacket & { data: Position }
+  > = new Subject();
+
+  /**
+   * Fires when a new FromRadio message containing a Position packet has been received from device
+   * @event
+   */
+  readonly onTextPacketEvent: Subject<
+    MeshPacket & { data: string }
+  > = new Subject();
 
   /**
    * Fires when the link to a device has been established. Does not mean that device can be used
@@ -201,42 +214,6 @@ export abstract class IMeshDevice {
           data: new Data({
             payload: byteData,
             portnum: dataType,
-          }),
-          wantResponse,
-        }),
-      }),
-      destinationNum,
-      wantAck
-    );
-  }
-
-  /**
-   * Sends position over the radio
-   * @param latitude
-   * @param longitude
-   * @param altitude
-   * @param timeSec
-   * @param destinationNum Node number of the destination node
-   * @param wantAck
-   * @param wantResponse
-   */
-  sendPosition(
-    latitude?: number,
-    longitude?: number,
-    altitude?: number,
-    timeSec = 0,
-    destinationNum?: number,
-    wantAck = false,
-    wantResponse = false
-  ) {
-    return this.sendPacket(
-      new MeshPacket({
-        decoded: new SubPacket({
-          position: new Position({
-            latitudeI: latitude !== 0.0 ? ~~(latitude / 1e-7) : 0.0,
-            longitudeI: longitude !== 0.0 ? ~~(longitude / 1e-7) : 0.0,
-            altitude: altitude !== 0 ? ~~altitude : 0,
-            time: timeSec !== 0 ? timeSec : ~~(Date.now() / 1000),
           }),
           wantResponse,
         }),
@@ -496,23 +473,32 @@ export abstract class IMeshDevice {
    * @param meshPacket
    */
   private handleMeshPacket(meshPacket: MeshPacket) {
-    if (meshPacket.decoded.hasOwnProperty("data")) {
-      if (!meshPacket.decoded.data.hasOwnProperty("portnum")) {
-        meshPacket.decoded.data.portnum = PortNumEnum.UNKNOWN_APP;
-      }
-
-      let pckDat = meshPacket.decoded.data;
-      if (pckDat.portnum === PortNumEnum.TEXT_MESSAGE_APP) {
-        pckDat.payload = new TextDecoder().decode(pckDat.payload as Uint8Array);
-      }
-
-      this.onDataPacketEvent.next(meshPacket);
-    } else if (meshPacket.decoded.hasOwnProperty("user")) {
-      this.nodes.addUserData(meshPacket.from, meshPacket.decoded.user);
-      this.onUserPacketEvent.next(meshPacket);
+    /**
+     * Text messages
+     */
+    if (meshPacket.decoded.data.portnum === PortNumEnum.TEXT_MESSAGE_APP) {
+      const text = new TextDecoder().decode(meshPacket.decoded.data.payload);
+      this.onTextPacketEvent.next(Object.assign(meshPacket, { data: text }));
+    } else if (meshPacket.decoded.data.portnum === PortNumEnum.NODEINFO_APP) {
+      /**
+       * Node Info
+       */
+      const nodeInfo = NodeInfo.decode(meshPacket.decoded.data.payload);
+      this.nodes.addUserData(meshPacket.from, nodeInfo.user);
+      this.onNodeInfoPacketEvent.next(
+        Object.assign(meshPacket, { data: nodeInfo })
+      );
     } else if (meshPacket.decoded.data.portnum === PortNumEnum.POSITION_APP) {
-      this.nodes.addPositionData(meshPacket.from, meshPacket.decoded.position);
-      this.onPositionPacketEvent.next(meshPacket);
+      /**
+       * Position
+       */
+      const position = Position.decode(meshPacket.decoded.data.payload);
+      console.log(position);
+
+      // this.nodes.addPositionData(meshPacket.from, position);
+      this.onPositionPacketEvent.next(
+        Object.assign(meshPacket, { data: position })
+      );
     }
   }
 
