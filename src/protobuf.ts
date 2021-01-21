@@ -11,8 +11,19 @@ export enum PortNumEnum {
   POSITION_APP = 3,
   NODEINFO_APP = 4,
   REPLY_APP = 32,
+  IP_TUNNEL_APP = 33,
+  SERIAL_APP = 64,
   PRIVATE_APP = 256,
-  IP_TUNNEL_APP = 1024,
+  ATAK_FORWARDER = 257,
+}
+
+export enum GPIOTypeEnum {
+  UNSET = 0,
+  WRITE_GPIOS = 1,
+  WATCH_GPIOS = 2,
+  GPIOS_CHANGED = 3,
+  READ_GPIOS = 4,
+  READ_GPIOS_REPLY = 5,
 }
 
 export enum RouteErrorEnum {
@@ -233,9 +244,6 @@ export class MeshPacket extends Message<MeshPacket> {
   @OneOf.d("decoded", "encrypted")
   payload: SubPacket | Uint8Array;
 
-  @OneOf.d("successId", "failId")
-  ack: string;
-
   @Field.d(1, "uint32")
   from: number;
 
@@ -296,7 +304,7 @@ export class ChannelSettings extends Message<ChannelSettings> {
   @Field.d(5, "string")
   name: string;
 
-  @Field.d(10, "uint32")
+  @Field.d(10, "fixed32")
   id: number;
 
   @Field.d(16, "bool")
@@ -499,7 +507,7 @@ export class LogRecord extends Message<LogRecord> {
   @Field.d(1, "string")
   message: string;
 
-  @Field.d(2, "uint32")
+  @Field.d(2, "fixed32")
   time: number;
 
   @Field.d(3, "string")
@@ -584,4 +592,19 @@ export class ToRadio extends Message<ToRadio> {
 
   @Field.d(103, ChannelSettings)
   setChannel: ChannelSettings;
+}
+
+/**
+ * Provides easy remote access to any GPIO.
+ */
+@Type.d("HardwareMessage")
+export class HardwareMessage extends Message<HardwareMessage> {
+  @Field.d(1, GPIOTypeEnum)
+  typ: GPIOTypeEnum;
+
+  @Field.d(2, "uint64")
+  gpioMask: number;
+
+  @Field.d(3, "uint64")
+  gpioValue: number;
 }
