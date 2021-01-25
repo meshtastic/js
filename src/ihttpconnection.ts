@@ -114,6 +114,11 @@ export class IHTTPConnection extends IMeshDevice {
 
     fetch(this.url + `/hotspot-detect.html`, {})
       .then((response) => {
+        log(
+          `IHTTPConnection.connect`,
+          "Sending onHTTPTransactionEvent",
+          LogLevelEnum.DEBUG
+        );
         this.onHTTPTransactionEvent.next({
           status: response.status,
           interaction_time: Date.now(),
@@ -179,6 +184,11 @@ export class IHTTPConnection extends IMeshDevice {
         }
       )
         .then(async (response) => {
+          log(
+            `IHTTPConnection.readFromRadio`,
+            "Sending onHTTPTransactionEvent",
+            LogLevelEnum.DEBUG
+          );
           this.onHTTPTransactionEvent.next({
             status: response.status,
             interaction_time: Date.now(),
@@ -219,6 +229,11 @@ export class IHTTPConnection extends IMeshDevice {
       body: typedArrayToBuffer(ToRadioUInt8Array),
     })
       .then((response) => {
+        log(
+          `IHTTPConnection.writeToRadio`,
+          "Sending onHTTPTransactionEvent",
+          LogLevelEnum.DEBUG
+        );
         this.onHTTPTransactionEvent.next({
           status: response.status,
           interaction_time: Date.now(),

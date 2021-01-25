@@ -368,12 +368,12 @@ export abstract class IMeshDevice {
     } catch (e) {
       log(`IMeshDevice.handleFromRadio`, e.message, LogLevelEnum.ERROR);
     }
-    /**
-     * @todo this never seems to be executed
-     */
     if (this.isConfigDone) {
-      console.log("catch2");
-
+      log(
+        `IMeshDevice.handleFromRadio`,
+        "Sending onFromRadioEvent",
+        LogLevelEnum.DEBUG
+      );
       this.onFromRadioEvent.next(fromRadioObj);
     }
 
@@ -383,6 +383,11 @@ export abstract class IMeshDevice {
     } else if (fromRadioObj.hasOwnProperty("radio")) {
       this.radioConfig = fromRadioObj.radio;
     } else if (fromRadioObj.hasOwnProperty("nodeInfo")) {
+      log(
+        `IMeshDevice.handleFromRadio`,
+        "Sending onNodeInfoPacketEvent",
+        LogLevelEnum.DEBUG
+      );
       this.onNodeInfoPacketEvent.next({
         packet: fromRadioObj.packet,
         data: fromRadioObj.nodeInfo,
@@ -391,6 +396,11 @@ export abstract class IMeshDevice {
       if (fromRadioObj.configCompleteId === MY_CONFIG_ID) {
         if (this.myInfo && this.radioConfig && this.currentPacketId) {
           this.isConfigDone = true;
+          log(
+            `IMeshDevice.handleFromRadio`,
+            "Sending onConfigDoneEvent",
+            LogLevelEnum.DEBUG
+          );
           this.onConfigDoneEvent.next(this);
           log(
             `IMeshDevice.handleFromRadio`,
@@ -428,6 +438,11 @@ export abstract class IMeshDevice {
      */
     if (meshPacket.decoded.data.portnum === PortNumEnum.TEXT_MESSAGE_APP) {
       const text = new TextDecoder().decode(meshPacket.decoded.data.payload);
+      log(
+        `IMeshDevice.handleMeshPacket`,
+        "Sending onTextPacketEvent",
+        LogLevelEnum.DEBUG
+      );
       this.onTextPacketEvent.next({
         packet: meshPacket,
         data: text,
@@ -437,6 +452,11 @@ export abstract class IMeshDevice {
        * Node Info
        */
       const nodeInfo = NodeInfo.decode(meshPacket.decoded.data.payload);
+      log(
+        `IMeshDevice.handleMeshPacket`,
+        "Sending onNodeInfoPacketEvent",
+        LogLevelEnum.DEBUG
+      );
       this.onNodeInfoPacketEvent.next({
         packet: meshPacket,
         data: nodeInfo,
@@ -445,6 +465,11 @@ export abstract class IMeshDevice {
       /**
        * Position
        */
+      log(
+        `IMeshDevice.handleMeshPacket`,
+        "Sending onPositionPacketEvent",
+        LogLevelEnum.DEBUG
+      );
       const position = Position.decode(meshPacket.decoded.data.payload);
       this.onPositionPacketEvent.next({
         packet: meshPacket,
@@ -454,6 +479,11 @@ export abstract class IMeshDevice {
       /**
        * All other portnums
        */
+      log(
+        `IMeshDevice.handleMeshPacket`,
+        "Sending onDataPacketEvent",
+        LogLevelEnum.DEBUG
+      );
       this.onDataPacketEvent.next(meshPacket);
     }
   }
@@ -465,6 +495,11 @@ export abstract class IMeshDevice {
   protected async onConnected(noAutoConfig: boolean) {
     this.isConnected = true;
     this.isReconnecting = false;
+    log(
+      `IMeshDevice.onConnected`,
+      "Sending onConnectionEvent",
+      LogLevelEnum.DEBUG
+    );
     this.onConnectionEvent.next(ConnectionEventEnum.DEVICE_CONNECTED);
 
     if (!noAutoConfig) {
@@ -478,6 +513,11 @@ export abstract class IMeshDevice {
    * Gets called when a link to the device has been disconnected
    */
   protected onDisconnected() {
+    log(
+      `IMeshDevice.onDisconnected`,
+      "Sending onConnectionEvent",
+      LogLevelEnum.DEBUG
+    );
     this.onConnectionEvent.next(ConnectionEventEnum.DEVICE_DISCONNECTED);
     this.isConnected = false;
   }
