@@ -97,7 +97,10 @@ bleConnection.sendText("Message", 1234);
 /**
  * Arbitrary data
  */
-bleConnection.sendData(new Uint8Array([...data]), Protobuf.PortNumEnum.PRIVATE_APP);
+bleConnection.sendData(
+  new Uint8Array([...data]),
+  Protobuf.PortNumEnum.PRIVATE_APP
+);
 
 /**
  * Send custom location
