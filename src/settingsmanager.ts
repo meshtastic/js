@@ -1,24 +1,27 @@
 import { LogLevelEnum } from "./protobuf";
+import { log } from "./utils";
 
 /**
  * Handles library-wide settings
  */
 export class SettingsManager {
   /**
-   * debugMode state for the application
+   * Logging level for the application
    */
   static debugMode: LogLevelEnum;
 
   constructor() {}
 
   /**
-   * Debug mode enables verbose console output.
-   * @param mode Whether the application is in debug mode or not
+   * Sets the library-wide logging level
+   * @param level Desired level of logging
    */
   static setDebugMode(level: LogLevelEnum) {
     if (!(level in LogLevelEnum)) {
-      throw new Error(
-        "Error in meshtasticjs.SettingsManager.setDebugMode: param must be a member of DebugLevelEnum"
+      log(
+        `SettingsManager.setDebugMode`,
+        `Specified log level must be a member of LogLevelEnum.`,
+        LogLevelEnum.WARNING
       );
     }
 

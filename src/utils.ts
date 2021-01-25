@@ -3,7 +3,6 @@ import { SettingsManager } from "./settingsmanager";
 
 /**
  * Converts a `ArrayBuffer` to a hex string
- * @todo verify `x` data type
  * @param arrayBuffer Input `ArrayBuffer` to be converted
  */
 const bufferToHex = (arrayBuffer: ArrayBuffer) => {
@@ -56,24 +55,63 @@ const exponentialBackoff = async (
 
 /**
  * Global event logger
- * @todo, accomodate all of LogLevelEnum's members
  * @param data data to be logged
  * @param logLevel loglevel to associate data with
  */
-const debugLog = (data: any, logLevel: LogLevelEnum) => {
+const log = (emitter: string, message: string, logLevel: LogLevelEnum) => {
   if (logLevel >= SettingsManager.debugMode) {
     switch (logLevel) {
-      case LogLevelEnum.INFO:
-        console.info(data);
+      case LogLevelEnum.TRACE:
+        console.info(
+          `%c[TRACE]%c ${emitter}\n%c${message}`,
+          "color:grey",
+          "color:darkgrey",
+          "color:white"
+        );
         break;
+
       case LogLevelEnum.DEBUG:
-        console.debug(data);
+        console.info(
+          `%c[DEBUG]%c ${emitter}\n%c${message}`,
+          "color:lightcyan",
+          "color:darkgrey",
+          "color:white"
+        );
+        break;
+
+      case LogLevelEnum.INFO:
+        console.info(
+          `%c[INFO]%c ${emitter}\n%c${message}`,
+          "color:lightgreen",
+          "color:darkgrey",
+          "color:white"
+        );
         break;
       case LogLevelEnum.WARNING:
-        console.warn(data);
+        console.warn(
+          `%c[WARNING]%c ${emitter}\n%c${message}`,
+          "color:yellow",
+          "color:darkgrey",
+          "color:white"
+        );
         break;
+
       case LogLevelEnum.ERROR:
-        console.error(data);
+        console.error(
+          `%c[ERROR]%c ${emitter}\n%c${message}`,
+          "color:orangered",
+          "color:darkgrey",
+          "color:white"
+        );
+        break;
+
+      case LogLevelEnum.CRITICAL:
+        console.error(
+          `%c[CRITICAL]%c ${emitter}\n%c${message}`,
+          "color:red",
+          "color:darkgrey",
+          "color:white"
+        );
         break;
       default:
         break;
@@ -81,4 +119,4 @@ const debugLog = (data: any, logLevel: LogLevelEnum) => {
   }
 };
 
-export { bufferToHex, typedArrayToBuffer, exponentialBackoff, debugLog };
+export { bufferToHex, typedArrayToBuffer, exponentialBackoff, log };

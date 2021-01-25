@@ -6,7 +6,7 @@ import {
 } from "./constants";
 import { IMeshDevice } from "./imeshdevice";
 import { LogLevelEnum } from "./protobuf";
-import { exponentialBackoff, typedArrayToBuffer, debugLog } from "./utils";
+import { exponentialBackoff, typedArrayToBuffer, log } from "./utils";
 
 /**
  * Allows to connect to a meshtastic device via bluetooth
@@ -79,12 +79,17 @@ export class IBLEConnection extends IMeshDevice {
     noAutoConfig = false
   ) {
     if (this.isConnected) {
-      throw new Error(
-        "Error in meshtasticjs.IBLEConnection.connect: Device is already connected"
+      log(
+        `IBLEConnection.connect`,
+        `Device is already connected`,
+        LogLevelEnum.WARNING
       );
+      return;
     } else if (!navigator.bluetooth) {
-      throw new Error(
-        "Error in meshtasticjs.IBLEConnection.connect: this browser doesn't support the bluetooth web api, see https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API"
+      log(
+        `IBLEConnection.connect`,
+        `This browser doesn't support the WebBluetooth API`,
+        LogLevelEnum.WARNING
       );
     }
 
@@ -93,16 +98,45 @@ export class IBLEConnection extends IMeshDevice {
        * If no device has been selected, open request device browser prompt
        */
       if (!this.device) {
-        this.device = await this.requestDevice(requestDeviceFilterParams);
+        const device = await this.requestDevice(requestDeviceFilterParams);
+        if (!device) {
+          log(
+            `IBLEConnection.connect`,
+            `No device selected`,
+            LogLevelEnum.ERROR
+          );
+        } else {
+          this.device = device;
+        }
       }
 
       if (!this.isReconnecting) {
         this.subscribeToBLEConnectionEvents();
       }
 
-      this.connection = await this.connectToDevice(this.device);
+      const connection = await this.connectToDevice(this.device);
 
-      this.service = await this.getService(this.connection);
+      if (connection) {
+        this.connection = connection;
+      } else {
+        log(
+          `IBLEConnection.connect`,
+          `Connection has not been establised`,
+          LogLevelEnum.ERROR
+        );
+      }
+
+      const service = await this.getService(this.connection);
+
+      if (service) {
+        this.service = service;
+      } else {
+        log(
+          `IBLEConnection.connect`,
+          `Service has not been establised`,
+          LogLevelEnum.ERROR
+        );
+      }
 
       await this.getCharacteristics(this.service);
 
@@ -112,9 +146,7 @@ export class IBLEConnection extends IMeshDevice {
 
       await this.onConnected(noAutoConfig);
     } catch (e) {
-      throw new Error(
-        `Error in meshtasticjs.IBLEConnection.connect: ${e.message}`
-      );
+      log(`IBLEConnection.connect`, e.message, LogLevelEnum.ERROR);
     }
   }
 
@@ -125,19 +157,21 @@ export class IBLEConnection extends IMeshDevice {
     this.userInitiatedDisconnect = true;
 
     if (!this.isConnected && !this.isReconnecting) {
-      debugLog(
-        "meshtasticjs.IBLEConnection.disconnect: device already disconnected",
+      log(
+        `IBLEConnection.disconnect`,
+        `Device already disconnected.`,
         LogLevelEnum.TRACE
       );
     } else if (!this.isConnected && this.isReconnecting) {
-      debugLog(
-        "meshtasticjs.IBLEConnection.disconnect: reconnect cancelled",
+      log(
+        `IBLEConnection.disconnect`,
+        `Reconnect cancelled.`,
         LogLevelEnum.DEBUG
       );
     }
 
     /**
-     * No need to call parent _onDisconnected here, calling disconnect() triggers gatt event
+     * No need to call parent onDisconnected here, calling disconnect() triggers gatt event
      */
     this.connection.disconnect();
   }
@@ -152,17 +186,16 @@ export class IBLEConnection extends IMeshDevice {
      * read as long as the previous read buffer is bigger 0
      */
     while (readBuffer.byteLength > 0) {
-      readBuffer = await this.readFromCharacteristic(
-        this.fromRadioCharacteristic
-      ).catch((e) => {
-        throw new Error(
-          `Error in meshtasticjs.IBLEConnection.readFromRadio: ${e.message}`
-        );
-      });
-
-      if (readBuffer.byteLength > 0) {
-        await this.handleFromRadio(new Uint8Array(readBuffer, 0));
-      }
+      await this.readFromCharacteristic(this.fromRadioCharacteristic)
+        .then((value) => {
+          if (value && value.byteLength > 0) {
+            this.handleFromRadio(new Uint8Array(readBuffer, 0));
+          }
+        })
+        .catch((e) => {
+          log(`IBLEConnection.readFromRadio`, e.message, LogLevelEnum.ERROR);
+          return new ArrayBuffer(0);
+        });
     }
   }
 
@@ -181,13 +214,18 @@ export class IBLEConnection extends IMeshDevice {
   private async readFromCharacteristic(
     characteristic: BluetoothRemoteGATTCharacteristic
   ) {
-    return (
-      await characteristic.readValue().catch((e) => {
-        throw new Error(
-          `Error in meshtasticjs.IBLEConnection.readFromCharacteristic: ${e.message}`
-        );
+    return await characteristic
+      .readValue()
+      .then((value) => {
+        return value.buffer;
       })
-    ).buffer;
+      .catch((e) => {
+        log(
+          `IBLEConnection.readFromCharacteristic`,
+          e.message,
+          LogLevelEnum.ERROR
+        );
+      });
   }
 
   /**
@@ -207,9 +245,7 @@ export class IBLEConnection extends IMeshDevice {
     return navigator.bluetooth
       .requestDevice(requestDeviceFilterParams as RequestDeviceOptions)
       .catch((e) => {
-        throw new Error(
-          `Error in meshtasticjs.IBLEConnection.requestDevice: ${e.message}`
-        );
+        log(`IBLEConnection.requestDevice`, e.message, LogLevelEnum.ERROR);
       });
   }
 
@@ -218,15 +254,14 @@ export class IBLEConnection extends IMeshDevice {
    * @param device Desired Bluetooth device
    */
   private async connectToDevice(device: BluetoothDevice) {
-    debugLog(
-      `selected ${device.name}, trying to connect now`,
+    log(
+      `IBLEConnection.connectToDevice`,
+      `${device.name}, trying to connect now.`,
       LogLevelEnum.DEBUG
     );
 
     return device.gatt.connect().catch((e) => {
-      throw new Error(
-        `Error in meshtasticjs.IBLEConnection.connectToDevice: ${e.message}`
-      );
+      log(`IBLEConnection.connectToDevice`, e.message, LogLevelEnum.ERROR);
     });
   }
 
@@ -236,9 +271,7 @@ export class IBLEConnection extends IMeshDevice {
    */
   private async getService(connection: BluetoothRemoteGATTServer) {
     return connection.getPrimaryService(SERVICE_UUID).catch((e) => {
-      throw new Error(
-        `Error in meshtasticjs.IBLEConnection.getService: ${e.message}`
-      );
+      log(`IBLEConnection.getService`, e.message, LogLevelEnum.ERROR);
     });
   }
 
@@ -251,19 +284,29 @@ export class IBLEConnection extends IMeshDevice {
       this.toRadioCharacteristic = await service.getCharacteristic(
         TORADIO_UUID
       );
-      debugLog("successfully got toRadioCharacteristic ", LogLevelEnum.DEBUG);
+      log(
+        `IBLEConnection.getCharacteristics`,
+        `Successfully got toRadioCharacteristic.`,
+        LogLevelEnum.DEBUG
+      );
       this.fromRadioCharacteristic = await service.getCharacteristic(
         FROMRADIO_UUID
       );
-      debugLog("successfully got fromRadioCharacteristic ", LogLevelEnum.DEBUG);
+      log(
+        `IBLEConnection.getCharacteristics`,
+        `Successfully got fromRadioCharacteristic.`,
+        LogLevelEnum.DEBUG
+      );
       this.fromNumCharacteristic = await service.getCharacteristic(
         FROMNUM_UUID
       );
-      debugLog("successfully got fromNumCharacteristic ", LogLevelEnum.DEBUG);
-    } catch (e) {
-      throw new Error(
-        `Error in meshtasticjs.IBLEConnection.getCharacteristics: ${e.message}`
+      log(
+        `IBLEConnection.getCharacteristics`,
+        `Successfully got fromNumCharacteristic.`,
+        LogLevelEnum.DEBUG
       );
+    } catch (e) {
+      log(`IBLEConnection.getCharacteristics`, e.message, LogLevelEnum.ERROR);
     }
   }
 
@@ -280,7 +323,11 @@ export class IBLEConnection extends IMeshDevice {
       this.handleBLENotification.bind(this)
     );
 
-    debugLog("BLE notifications activated", LogLevelEnum.DEBUG);
+    log(
+      `IBLEConnection.subscribeToBLENotification`,
+      `BLE notifications activated.`,
+      LogLevelEnum.DEBUG
+    );
   }
 
   /**
@@ -295,14 +342,17 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Short description
-   * @todo verify that event is a string
    * @param event
    */
   private async handleBLENotification(event: string) {
-    debugLog(`BLE notification received: ${event}`, LogLevelEnum.DEBUG);
+    log(
+      `IBLEConnection.handleBLENotification`,
+      `BLE notification received: ${event}.`,
+      LogLevelEnum.DEBUG
+    );
 
     await this.readFromRadio().catch((e) => {
-      debugLog(e, LogLevelEnum.ERROR);
+      log(`IBLEConnection.handleBLENotification`, e, LogLevelEnum.ERROR);
     });
   }
 
@@ -324,8 +374,9 @@ export class IBLEConnection extends IMeshDevice {
       };
 
       const fail = () => {
-        debugLog(
-          "Automatic reconnect promise failed, this can be ignored if deviced reconnected successfully",
+        log(
+          `IBLEConnection.handleBLEDisconnect`,
+          `Automatic reconnect failed.`,
           LogLevelEnum.DEBUG
         );
       };

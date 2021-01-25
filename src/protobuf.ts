@@ -177,33 +177,14 @@ export class RouteDiscovery extends Message<RouteDiscovery> {
  */
 @Type.d("SubPacket")
 export class SubPacket extends Message<SubPacket> {
-  @OneOf.d(
-    "position",
-    "data",
-    "user",
-    "routeRequest",
-    "routeReply",
-    "routeError"
-  )
+  @OneOf.d("data", "routeRequest", "routeReply", "routeError")
   payload: Position | Data | User | RouteDiscovery | RouteErrorEnum;
 
   @OneOf.d("successId", "failId")
   ack: number;
 
-  /**
-   * @deprecated
-   */
-  @Field.d(1, Position)
-  position: Position;
-
   @Field.d(3, Data)
   data: Data;
-
-  /**
-   * @deprecated
-   */
-  @Field.d(4, User)
-  user: User;
 
   @Field.d(6, RouteDiscovery)
   routeRequest: RouteDiscovery;
@@ -419,12 +400,6 @@ export class UserPreferences extends Message<UserPreferences> {
 export class RadioConfig extends Message<RadioConfig> {
   @Field.d(1, UserPreferences)
   preferences: UserPreferences;
-
-  /**
-   * @deprecated
-   */
-  @Field.d(2, ChannelSettings)
-  channelSettings: ChannelSettings;
 }
 
 /**

@@ -36,7 +36,6 @@ export class Client {
 
   /**
    * Creates a new Serial connection interface
-   * @todo implement
    */
   createSerialConnection() {}
 
