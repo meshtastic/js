@@ -1,5 +1,4 @@
 import {
-  ChannelSettings,
   Data,
   FromRadio,
   MeshPacket,
@@ -89,6 +88,12 @@ export abstract class IMeshDevice {
   abstract disconnect(): void;
 
   /**
+   * Ping abstract class
+   * @todo
+   */
+  abstract ping(): boolean;
+
+  /**
    * Fires when a new FromRadio message has been received from device
    * @event
    */
@@ -129,9 +134,10 @@ export abstract class IMeshDevice {
 
   /**
    * Fires when the device configuration was successful. The device can then be used
+   * @todo strongly type this, likely multiple events for different config items, i.e. (radioConfig), ChannelSettings and UserPreferences
    * @event
    */
-  readonly onConfigDoneEvent: Subject<any> = new Subject();
+  readonly onConfigEvent: Subject<any> = new Subject();
 
   /**
    * Fires when the node database has changed
@@ -167,7 +173,7 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Sends generic data over the radio
+   * Sends arbitrary data over the radio
    * @param byteData
    * @param dataType dataType Enum of protobuf data type
    * @param destinationNum Node number of the destination node
@@ -232,7 +238,7 @@ export abstract class IMeshDevice {
    * Writes radio config to device
    * @param configOptions
    */
-  async setRadioConfig(configOptionsObj: RadioConfig) {
+  async setRadioConfig(configOptions: RadioConfig) {
     if (!this.radioConfig || !this.isDeviceReady()) {
       log(
         `IMeshDevice.setRadioConfig`,
@@ -241,11 +247,11 @@ export abstract class IMeshDevice {
       );
     }
 
-    if (this.radioConfig.hasOwnProperty("preferences")) {
-      Object.assign(this.radioConfig.preferences, configOptionsObj.preferences);
+    if (this.radioConfig?.preferences) {
+      Object.assign(this.radioConfig.preferences, configOptions.preferences);
     } else {
       this.radioConfig.preferences = new UserPreferences(
-        configOptionsObj.preferences
+        configOptions.preferences
       );
     }
 
@@ -260,9 +266,9 @@ export abstract class IMeshDevice {
 
   /**
    * Sets devices owner data
-   * @param ownerDataObj
+   * @param ownerData
    */
-  async setOwner(ownerDataObj: User) {
+  async setOwner(ownerData: User) {
     if (!this.isDeviceReady()) {
       /**
        * @todo used to check if user had been read from radio, change this
@@ -277,7 +283,7 @@ export abstract class IMeshDevice {
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
-          setOwner: ownerDataObj,
+          setOwner: ownerData,
         })
       ).finish()
     );
@@ -368,6 +374,10 @@ export abstract class IMeshDevice {
     } catch (e) {
       log(`IMeshDevice.handleFromRadio`, e.message, LogLevelEnum.ERROR);
     }
+    /**
+     * @todo
+     * ? Why do we need to check if isConfigDone, as the rest of the code executes regardless
+     */
     if (this.isConfigDone) {
       log(
         `IMeshDevice.handleFromRadio`,
@@ -377,12 +387,12 @@ export abstract class IMeshDevice {
       this.onFromRadioEvent.next(fromRadioObj);
     }
 
-    if (fromRadioObj.hasOwnProperty("myInfo")) {
+    if (fromRadioObj?.myInfo) {
       this.myInfo = fromRadioObj.myInfo;
       this.currentPacketId = fromRadioObj.myInfo.currentPacketId;
-    } else if (fromRadioObj.hasOwnProperty("radio")) {
+    } else if (fromRadioObj?.radio) {
       this.radioConfig = fromRadioObj.radio;
-    } else if (fromRadioObj.hasOwnProperty("nodeInfo")) {
+    } else if (fromRadioObj?.nodeInfo) {
       log(
         `IMeshDevice.handleFromRadio`,
         "Sending onNodeInfoPacketEvent",
@@ -392,16 +402,16 @@ export abstract class IMeshDevice {
         packet: fromRadioObj.packet,
         data: fromRadioObj.nodeInfo,
       });
-    } else if (fromRadioObj.hasOwnProperty("configCompleteId")) {
+    } else if (fromRadioObj?.configCompleteId) {
       if (fromRadioObj.configCompleteId === MY_CONFIG_ID) {
         if (this.myInfo && this.radioConfig && this.currentPacketId) {
           this.isConfigDone = true;
           log(
             `IMeshDevice.handleFromRadio`,
-            "Sending onConfigDoneEvent",
+            "Sending onConfigEvent",
             LogLevelEnum.DEBUG
           );
-          this.onConfigDoneEvent.next(this);
+          this.onConfigEvent.next(this);
           log(
             `IMeshDevice.handleFromRadio`,
             `Configured device with node number ${this.myInfo.myNodeNum}`,
@@ -415,9 +425,13 @@ export abstract class IMeshDevice {
           );
         }
       }
-    } else if (fromRadioObj.hasOwnProperty("packet")) {
+    } else if (fromRadioObj?.packet) {
       this.handleMeshPacket(fromRadioObj.packet);
-    } else if (fromRadioObj.hasOwnProperty("rebooted")) {
+    } else if (fromRadioObj?.rebooted) {
+      /**
+       * @todo check if we should move the device ping here, or move it to a seperate method (abstract?) to allow us to ping ble, http, serial devices whenever...
+       */
+
       await this.configure();
     } else {
       log(

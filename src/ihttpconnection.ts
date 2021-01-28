@@ -26,21 +26,19 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Short Description
+   * @todo possibly remove fetchMode and `all=1` and instead add connection parameter `batchRequests: boolean` and set `all=1` based on that
    */
   fetchMode: "slow" | "balanced" | "fast" | "stream";
 
   /**
-   * How often the device should be queried (ms)
-   */
-  fetchInterval: number;
-
-  /**
    * Timestamp of last time device was interacted with
+   * @todo make global (include ble)
    */
   lastInteractionTime: number;
 
   /**
    * Current number of consecutive failed requests
+   * @todo make global (include ble)
    */
   consecutiveFailedRequests: number;
 
@@ -68,7 +66,6 @@ export class IHTTPConnection extends IMeshDevice {
     this.url = undefined;
     this.tls = undefined;
     this.fetchMode = undefined;
-    this.fetchInterval = undefined;
     this.lastInteractionTime = undefined;
     this.consecutiveFailedRequests = 0;
   }
@@ -145,7 +142,6 @@ export class IHTTPConnection extends IMeshDevice {
      */
 
     this.fetchMode = fetchMode;
-    this.fetchInterval = fetchInterval;
 
     this.lastInteractionTime = Date.now();
     log(
@@ -153,7 +149,10 @@ export class IHTTPConnection extends IMeshDevice {
       `Starting new connection timer.`,
       LogLevelEnum.TRACE
     );
-    setTimeout(this.fetchTimer.bind(this), 5000);
+    // setTimeout(this.fetchTimer.bind(this), 5000);
+    setTimeout(() => {
+      this.fetchTimer(fetchInterval);
+    }, 5000);
   }
 
   /**
@@ -161,6 +160,14 @@ export class IHTTPConnection extends IMeshDevice {
    */
   disconnect() {
     this.onDisconnected();
+  }
+
+  /**
+   * Pings device to check if it is avaliable
+   * @todo implement
+   */
+  ping() {
+    return true;
   }
 
   /**
@@ -228,7 +235,7 @@ export class IHTTPConnection extends IMeshDevice {
       },
       body: typedArrayToBuffer(ToRadioUInt8Array),
     })
-      .then((response) => {
+      .then(async (response) => {
         log(
           `IHTTPConnection.writeToRadio`,
           "Sending onHTTPTransactionEvent",
@@ -238,6 +245,9 @@ export class IHTTPConnection extends IMeshDevice {
           status: response.status,
           interaction_time: Date.now(),
           consecutiveFailedRequests: this.consecutiveFailedRequests,
+        });
+        await this.readFromRadio().catch((e) => {
+          log(`IHTTPConnection`, e, LogLevelEnum.ERROR);
         });
       })
       .catch((e) => {
@@ -249,7 +259,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Short description
    */
-  private async fetchTimer() {
+  private async fetchTimer(fetchInterval?: number) {
     if (this.consecutiveFailedRequests > 3) {
       return this.disconnect();
     }
@@ -263,7 +273,7 @@ export class IHTTPConnection extends IMeshDevice {
      */
     let newInterval = 5e3;
 
-    if (!this.fetchInterval) {
+    if (!fetchInterval) {
       if (this.tls) {
         newInterval = 1e4;
       }
@@ -279,7 +289,7 @@ export class IHTTPConnection extends IMeshDevice {
           ? 15e3
           : 1e4;
     } else {
-      newInterval = this.fetchInterval;
+      newInterval = fetchInterval;
     }
 
     setTimeout(this.fetchTimer.bind(this), newInterval);

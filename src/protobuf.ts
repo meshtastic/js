@@ -1,5 +1,5 @@
 /**
- * Current as of Meshtastic-protobufs #855da8701edbb19818069ad8545d5b9f030bb33f
+ * Current as of Meshtastic-protobufs #c1ae40f1c70b32bae18aff25e60dcdba513502ce
  */
 
 import { Message, Field, OneOf, Type } from "protobufjs/light";
@@ -13,6 +13,7 @@ export enum PortNumEnum {
   REPLY_APP = 32,
   IP_TUNNEL_APP = 33,
   SERIAL_APP = 64,
+  STORE_REQUEST_APP = 65,
   PRIVATE_APP = 256,
   ATAK_FORWARDER = 257,
 }
@@ -99,6 +100,7 @@ export enum CriticalErrorCodeEnum {
   UBloxInitFailed = 5,
   NoAXP192 = 6,
   InvalidRadioSetting = 7,
+  TransmitFailed = 8,
 }
 
 export enum LogLevelEnum {
@@ -389,6 +391,27 @@ export class UserPreferences extends Message<UserPreferences> {
 
   @Field.d(124, "uint32")
   serialpluginTimeout: number;
+
+  @Field.d(125, "uint32")
+  serialpluginMode: number;
+
+  @Field.d(126, "bool")
+  extNotificationPluginEnabled: boolean;
+
+  @Field.d(127, "uint32")
+  extNotificationPluginOutputMs: number;
+
+  @Field.d(128, "uint32")
+  extNotificationPluginOutput: number;
+
+  @Field.d(129, "bool")
+  extNotificationPluginActive: boolean;
+
+  @Field.d(130, "bool")
+  extNotificationPluginAlertMessage: boolean;
+
+  @Field.d(131, "bool")
+  extNotificationPluginAlertBell: boolean;
 }
 
 /**

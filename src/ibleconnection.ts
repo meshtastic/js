@@ -177,6 +177,14 @@ export class IBLEConnection extends IMeshDevice {
   }
 
   /**
+   * Pings device to check if it is avaliable
+   * @todo implement
+   */
+  ping() {
+    return true;
+  }
+
+  /**
    * Short description
    */
   async readFromRadio() {
@@ -237,6 +245,9 @@ export class IBLEConnection extends IMeshDevice {
   private async requestDevice(
     requestDeviceFilterParams?: RequestDeviceOptions
   ) {
+    /**
+     * @todo filters does not exist on RequestDeviceOptions?
+     */
     if (!requestDeviceFilterParams?.hasOwnProperty("filters")) {
       requestDeviceFilterParams = {
         filters: [{ services: [SERVICE_UUID] }],
