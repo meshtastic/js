@@ -1,6 +1,4 @@
-import { NodeDB } from "./nodedb";
 import {
-  ChannelSettings,
   Data,
   FromRadio,
   MeshPacket,
@@ -12,11 +10,13 @@ import {
   PortNumEnum,
   User,
   UserPreferences,
+  LogLevelEnum,
+  NodeInfo,
 } from "./protobuf";
-import { debugLog } from "./utils";
-import { DebugLevelEnum } from "./settingsmanager";
-import { IEmitOptions, SubEvent } from "sub-events";
+import { ConnectionEventEnum } from "./types";
+import { log } from "./utils";
 import { BROADCAST_NUM, MY_CONFIG_ID } from "./constants";
+import { Subject } from "rxjs";
 
 /**
  * Base class for connection methods to extend
@@ -43,11 +43,6 @@ export abstract class IMeshDevice {
   isConfigStarted: boolean;
 
   /**
-   * Contains the current devices' node database
-   */
-  nodes: NodeDB;
-
-  /**
    * Configuration of current device
    */
   radioConfig: RadioConfig;
@@ -58,42 +53,18 @@ export abstract class IMeshDevice {
   currentPacketId: number;
 
   /**
-   * Owner data of current device
-   */
-  user: User;
-
-  /**
    * Node info of current device
    */
   myInfo: MyNodeInfo;
-
-  /**
-   * SubEvents IEmitOptions
-   */
-  myEmitOptions: IEmitOptions;
 
   constructor() {
     this.isConnected = false;
     this.isReconnecting = false;
     this.isConfigDone = false;
     this.isConfigStarted = false;
-
-    this.nodes = new NodeDB();
-    this.onNodeListChangedEvent.subscribe(() => {
-      this.onNodeListChanged.bind(this);
-    });
-
     this.radioConfig = undefined;
     this.currentPacketId = undefined;
-    this.user = undefined;
     this.myInfo = undefined;
-    this.myEmitOptions = {
-      onError: (err, name) => {
-        throw new Error(
-          `Error: meshtasticjs.IMeshDevice: Error from event subscriber: ${name}: ${err}`
-        );
-      },
-    };
   }
 
   /**
@@ -108,7 +79,6 @@ export abstract class IMeshDevice {
 
   /**
    * Short description
-   * @todo strongly type and maybe unify this function
    */
   abstract connect(..._: any): Promise<void>;
 
@@ -118,52 +88,62 @@ export abstract class IMeshDevice {
   abstract disconnect(): void;
 
   /**
+   * Ping abstract class
+   * @todo
+   */
+  abstract ping(): boolean;
+
+  /**
    * Fires when a new FromRadio message has been received from device
    * @event
    */
-  readonly onFromRadioEvent: SubEvent<FromRadio> = new SubEvent();
+  readonly onFromRadioEvent: Subject<FromRadio> = new Subject();
 
   /**
    * Fires when a new FromRadio message containing a Data packet has been received from device
    * @event
    */
-  readonly onDataPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+  readonly onDataPacketEvent: Subject<MeshPacket> = new Subject();
 
   /**
-   * Fires when a new FromRadio message containing a User packet has been received from device
+   * Fires when a new FromRadio message containing a NodeInfo packet has been received from device
    * @event
    */
-  readonly onUserPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+  readonly onNodeInfoPacketEvent: Subject<{
+    packet: MeshPacket;
+    data: NodeInfo;
+  }> = new Subject();
 
   /**
    * Fires when a new FromRadio message containing a Position packet has been received from device
    * @event
    */
-  readonly onPositionPacketEvent: SubEvent<MeshPacket> = new SubEvent();
+  readonly onPositionPacketEvent: Subject<{
+    packet: MeshPacket;
+    data: Position;
+  }> = new Subject();
 
   /**
-   * Fires when the link to a device has been established. Does not mean that device can be used
+   * Fires when a new FromRadio message containing a Position packet has been received from device
    * @event
    */
-  readonly onConnectedEvent: SubEvent<IMeshDevice> = new SubEvent();
-
-  /**
-   * Fires when the link to a device has been disconnected
-   * @event
-   */
-  readonly onDisconnectedEvent: SubEvent<any> = new SubEvent();
+  readonly onTextPacketEvent: Subject<{
+    packet: MeshPacket;
+    data: string;
+  }> = new Subject();
 
   /**
    * Fires when the device configuration was successful. The device can then be used
+   * @todo strongly type this, likely multiple events for different config items, i.e. (radioConfig), ChannelSettings and UserPreferences
    * @event
    */
-  readonly onConfigDoneEvent: SubEvent<any> = new SubEvent();
+  readonly onConfigEvent: Subject<any> = new Subject();
 
   /**
    * Fires when the node database has changed
    * @event
    */
-  readonly onNodeListChangedEvent: SubEvent<any> = new SubEvent();
+  readonly onConnectionEvent: Subject<ConnectionEventEnum> = new Subject();
 
   /**
    * Sends a text over the radio
@@ -178,7 +158,9 @@ export abstract class IMeshDevice {
     wantAck = false,
     wantResponse = false
   ) {
-    // DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
+    /**
+     * DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
+     */
     const enc = new TextEncoder();
 
     return this.sendData(
@@ -191,7 +173,7 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Sends generic data over the radio
+   * Sends arbitrary data over the radio
    * @param byteData
    * @param dataType dataType Enum of protobuf data type
    * @param destinationNum Node number of the destination node
@@ -221,42 +203,6 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Sends position over the radio
-   * @param latitude
-   * @param longitude
-   * @param altitude
-   * @param timeSec
-   * @param destinationNum Node number of the destination node
-   * @param wantAck
-   * @param wantResponse
-   */
-  sendPosition(
-    latitude?: number,
-    longitude?: number,
-    altitude?: number,
-    timeSec = 0,
-    destinationNum?: number,
-    wantAck = false,
-    wantResponse = false
-  ) {
-    return this.sendPacket(
-      new MeshPacket({
-        decoded: new SubPacket({
-          position: new Position({
-            latitudeI: latitude !== 0.0 ? ~~(latitude / 1e-7) : 0.0,
-            longitudeI: longitude !== 0.0 ? ~~(longitude / 1e-7) : 0.0,
-            altitude: altitude !== 0 ? ~~altitude : 0,
-            time: timeSec !== 0 ? timeSec : ~~(Date.now() / 1000),
-          }),
-          wantResponse,
-        }),
-      }),
-      destinationNum,
-      wantAck
-    );
-  }
-
-  /**
    * Sends packet over the radio
    * @param meshPacket
    * @param destinationNum Node number of the destination node
@@ -268,17 +214,16 @@ export abstract class IMeshDevice {
     wantAck = false
   ) {
     if (!this.isDeviceReady()) {
-      throw new Error(
-        "Error in meshtasticjs.MeshInterface.sendPacket: Device is not ready"
+      log(
+        `IMeshDevice.sendPacket`,
+        `Device is not ready`,
+        LogLevelEnum.WARNING
       );
     }
 
     meshPacket.to = destinationNum ? destinationNum : BROADCAST_NUM;
     meshPacket.wantAck = wantAck;
-
-    if (!meshPacket?.hasOwnProperty("id")) {
-      meshPacket.id = this.generatePacketId();
-    }
+    meshPacket.id = meshPacket.id ?? this.generatePacketId();
 
     await this.writeToRadio(
       ToRadio.encode(
@@ -293,45 +238,21 @@ export abstract class IMeshDevice {
    * Writes radio config to device
    * @param configOptions
    */
-  async setRadioConfig(configOptionsObj: RadioConfig) {
+  async setRadioConfig(configOptions: RadioConfig) {
     if (!this.radioConfig || !this.isDeviceReady()) {
-      throw new Error(
-        "Error: meshtasticjs.IMeshDevice.setRadioConfig: Radio config has not been read from device, can't set new one. Try reconnecting."
+      log(
+        `IMeshDevice.setRadioConfig`,
+        `Radio config has not been read from device, can't set new one.`,
+        LogLevelEnum.WARNING
       );
     }
 
-    if (
-      !configOptionsObj.hasOwnProperty("channelSettings") &&
-      !configOptionsObj.hasOwnProperty("preferences")
-    ) {
-      throw new Error(
-        "Error: meshtasticjs.IMeshDevice.setRadioConfig: Invalid config options object provided"
+    if (this.radioConfig?.preferences) {
+      Object.assign(this.radioConfig.preferences, configOptions.preferences);
+    } else {
+      this.radioConfig.preferences = new UserPreferences(
+        configOptions.preferences
       );
-    }
-
-    if (configOptionsObj.hasOwnProperty("channelSettings")) {
-      if (this.radioConfig.hasOwnProperty("channelSettings")) {
-        Object.assign(
-          this.radioConfig.channelSettings,
-          configOptionsObj.channelSettings
-        );
-      } else {
-        this.radioConfig.channelSettings = new ChannelSettings(
-          configOptionsObj.channelSettings
-        );
-      }
-    }
-    if (configOptionsObj.hasOwnProperty("preferences")) {
-      if (this.radioConfig.hasOwnProperty("preferences")) {
-        Object.assign(
-          this.radioConfig.preferences,
-          configOptionsObj.preferences
-        );
-      } else {
-        this.radioConfig.preferences = new UserPreferences(
-          configOptionsObj.preferences
-        );
-      }
     }
 
     await this.writeToRadio(
@@ -345,27 +266,24 @@ export abstract class IMeshDevice {
 
   /**
    * Sets devices owner data
-   * @param ownerDataObj
+   * @param ownerData
    */
-  async setOwner(ownerDataObj: User) {
-    if (!this.user || !this.isDeviceReady()) {
-      throw new Error(
-        "Error: meshtasticjs.IMeshDevice.setOwner: Owner config has not been read from device, can't set new one. Try reconnecting."
+  async setOwner(ownerData: User) {
+    if (!this.isDeviceReady()) {
+      /**
+       * @todo used to check if user had been read from radio, change this
+       */
+      log(
+        `IMeshDevice.setOwner`,
+        `Owner config has not been read from device, can't set new one.`,
+        LogLevelEnum.WARNING
       );
     }
-
-    if (typeof ownerDataObj !== "object") {
-      throw new Error(
-        "Error: meshtasticjs.IMeshDevice.setRadioConfig: Invalid config options object provided"
-      );
-    }
-
-    Object.assign(this.user, ownerDataObj);
 
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
-          setOwner: this.user,
+          setOwner: ownerData,
         })
       ).finish()
     );
@@ -376,16 +294,19 @@ export abstract class IMeshDevice {
    */
   async configure() {
     if (!this.isConnected) {
-      throw new Error(
-        "Error in meshtasticjs.MeshInterface.configure: Interface is not connected"
+      console.log(
+        `IMeshDevice.configure`,
+        `Interface is not connected`,
+        LogLevelEnum.ERROR
       );
     }
 
     this.isConfigStarted = true;
 
-    debugLog(
-      "meshtasticjs.IMeshDevice: requesting radio configuration",
-      DebugLevelEnum.DEBUG
+    log(
+      `IMeshDevice.configure`,
+      `Requesting radio configuration.`,
+      LogLevelEnum.DEBUG
     );
     await this.writeToRadio(
       ToRadio.encode(
@@ -395,20 +316,18 @@ export abstract class IMeshDevice {
       ).finish()
     );
 
-    debugLog(
-      "meshtasticjs.IMeshDevice: Waiting to read radio configuration",
-      DebugLevelEnum.DEBUG
+    log(
+      `IMeshDevice.configure`,
+      `Waiting to read radio configuration.`,
+      LogLevelEnum.DEBUG
     );
-    await this.readFromRadio();
-    debugLog(
-      "meshtasticjs.IMeshDevice: Completed reading radio configuration",
-      DebugLevelEnum.DEBUG
-    );
-    if (!this.isConfigDone) {
-      throw new Error(
-        "Error in meshtasticjs.MeshInterface.configure: configuring device was not successful"
+    await this.readFromRadio().then(() => {
+      log(
+        `IMeshDevice.configure`,
+        `Completed reading radio configuration.`,
+        LogLevelEnum.DEBUG
       );
-    }
+    });
   }
 
   /**
@@ -423,9 +342,12 @@ export abstract class IMeshDevice {
    */
   private generatePacketId() {
     if (!this.currentPacketId) {
-      throw new Error(
-        "Error in meshtasticjs.MeshInterface.generatePacketId: Interface is not configured, can't generate packet id"
+      log(
+        `IMeshDevice.generatePacketId`,
+        `Failed to generate packet id.`,
+        LogLevelEnum.ERROR
       );
+      return 0;
     } else {
       return this.currentPacketId++;
     }
@@ -440,63 +362,82 @@ export abstract class IMeshDevice {
     let fromRadioObj: FromRadio;
 
     if (fromRadio.byteLength < 1) {
-      debugLog("Empty buffer received", DebugLevelEnum.DEBUG);
+      log(
+        `IMeshDevice.handleFromRadio`,
+        `Empty buffer received.`,
+        LogLevelEnum.DEBUG
+      );
     }
 
     try {
       fromRadioObj = FromRadio.decode(fromRadio);
     } catch (e) {
-      throw new Error(
-        `Error in meshtasticjs.IMeshDevice.handleFromRadio: ${e.message}`
-      );
+      log(`IMeshDevice.handleFromRadio`, e.message, LogLevelEnum.ERROR);
     }
-
-    debugLog(fromRadioObj, DebugLevelEnum.DEBUG);
-
+    /**
+     * @todo
+     * ? Why do we need to check if isConfigDone, as the rest of the code executes regardless
+     */
     if (this.isConfigDone) {
-      this.onFromRadioEvent.emit(fromRadioObj, this.myEmitOptions);
+      log(
+        `IMeshDevice.handleFromRadio`,
+        "Sending onFromRadioEvent",
+        LogLevelEnum.DEBUG
+      );
+      this.onFromRadioEvent.next(fromRadioObj);
     }
 
-    if (fromRadioObj.hasOwnProperty("myInfo")) {
+    if (fromRadioObj?.myInfo) {
       this.myInfo = fromRadioObj.myInfo;
       this.currentPacketId = fromRadioObj.myInfo.currentPacketId;
-    } else if (fromRadioObj.hasOwnProperty("radio")) {
+    } else if (fromRadioObj?.radio) {
       this.radioConfig = fromRadioObj.radio;
-    } else if (fromRadioObj.hasOwnProperty("nodeInfo")) {
-      this.nodes.addNode(fromRadioObj.nodeInfo);
-
-      /** @fix do this when config done, if myInfo gets sent last, this throws error */
-      if (fromRadioObj.nodeInfo.num === this.myInfo.myNodeNum) {
-        this.user = fromRadioObj.nodeInfo.user;
-      }
-    } else if (fromRadioObj.hasOwnProperty("configCompleteId")) {
+    } else if (fromRadioObj?.nodeInfo) {
+      log(
+        `IMeshDevice.handleFromRadio`,
+        "Sending onNodeInfoPacketEvent",
+        LogLevelEnum.DEBUG
+      );
+      this.onNodeInfoPacketEvent.next({
+        packet: fromRadioObj.packet,
+        data: fromRadioObj.nodeInfo,
+      });
+    } else if (fromRadioObj?.configCompleteId) {
       if (fromRadioObj.configCompleteId === MY_CONFIG_ID) {
-        if (
-          this.myInfo &&
-          this.radioConfig &&
-          this.user &&
-          this.currentPacketId
-        ) {
+        if (this.myInfo && this.radioConfig && this.currentPacketId) {
           this.isConfigDone = true;
-          this.onConfigDoneEvent.emit(this, this.myEmitOptions);
-          debugLog(
+          log(
+            `IMeshDevice.handleFromRadio`,
+            "Sending onConfigEvent",
+            LogLevelEnum.DEBUG
+          );
+          this.onConfigEvent.next(this);
+          log(
+            `IMeshDevice.handleFromRadio`,
             `Configured device with node number ${this.myInfo.myNodeNum}`,
-            DebugLevelEnum.DEBUG
+            LogLevelEnum.DEBUG
           );
         } else {
-          throw new Error(
-            "Error in meshtasticjs.MeshInterface.handleFromRadio: Config received from device incomplete"
+          log(
+            `IMeshDevice.handleFromRadio`,
+            `Incomplete config reveived from device`,
+            LogLevelEnum.WARNING
           );
         }
       }
-    } else if (fromRadioObj.hasOwnProperty("packet")) {
+    } else if (fromRadioObj?.packet) {
       this.handleMeshPacket(fromRadioObj.packet);
-    } else if (fromRadioObj.hasOwnProperty("rebooted")) {
+    } else if (fromRadioObj?.rebooted) {
+      /**
+       * @todo check if we should move the device ping here, or move it to a seperate method (abstract?) to allow us to ping ble, http, serial devices whenever...
+       */
+
       await this.configure();
     } else {
-      debugLog(
-        "Error in meshtasticjs.MeshInterface.handleFromRadio: Invalid data received",
-        DebugLevelEnum.ERROR
+      log(
+        `MeshInterface.handleFromRadio`,
+        `Invalid data received`,
+        LogLevelEnum.ERROR
       );
     }
   }
@@ -506,23 +447,58 @@ export abstract class IMeshDevice {
    * @param meshPacket
    */
   private handleMeshPacket(meshPacket: MeshPacket) {
-    if (meshPacket.decoded.hasOwnProperty("data")) {
-      if (!meshPacket.decoded.data.hasOwnProperty("portnum")) {
-        meshPacket.decoded.data.portnum = PortNumEnum.UNKNOWN_APP;
-      }
-
-      let pckDat = meshPacket.decoded.data;
-      if (pckDat.portnum === PortNumEnum.TEXT_MESSAGE_APP) {
-        pckDat.payload = new TextDecoder().decode(pckDat.payload as Uint8Array);
-      }
-
-      this.onDataPacketEvent.emit(meshPacket, this.myEmitOptions);
-    } else if (meshPacket.decoded.hasOwnProperty("user")) {
-      this.nodes.addUserData(meshPacket.from, meshPacket.decoded.user);
-      this.onUserPacketEvent.emit(meshPacket, this.myEmitOptions);
-    } else if (meshPacket.decoded.hasOwnProperty("position")) {
-      this.nodes.addPositionData(meshPacket.from, meshPacket.decoded.position);
-      this.onPositionPacketEvent.emit(meshPacket, this.myEmitOptions);
+    /**
+     * Text messages
+     */
+    if (meshPacket.decoded.data.portnum === PortNumEnum.TEXT_MESSAGE_APP) {
+      const text = new TextDecoder().decode(meshPacket.decoded.data.payload);
+      log(
+        `IMeshDevice.handleMeshPacket`,
+        "Sending onTextPacketEvent",
+        LogLevelEnum.DEBUG
+      );
+      this.onTextPacketEvent.next({
+        packet: meshPacket,
+        data: text,
+      });
+    } else if (meshPacket.decoded.data.portnum === PortNumEnum.NODEINFO_APP) {
+      /**
+       * Node Info
+       */
+      const nodeInfo = NodeInfo.decode(meshPacket.decoded.data.payload);
+      log(
+        `IMeshDevice.handleMeshPacket`,
+        "Sending onNodeInfoPacketEvent",
+        LogLevelEnum.DEBUG
+      );
+      this.onNodeInfoPacketEvent.next({
+        packet: meshPacket,
+        data: nodeInfo,
+      });
+    } else if (meshPacket.decoded.data.portnum === PortNumEnum.POSITION_APP) {
+      /**
+       * Position
+       */
+      log(
+        `IMeshDevice.handleMeshPacket`,
+        "Sending onPositionPacketEvent",
+        LogLevelEnum.DEBUG
+      );
+      const position = Position.decode(meshPacket.decoded.data.payload);
+      this.onPositionPacketEvent.next({
+        packet: meshPacket,
+        data: position,
+      });
+    } else {
+      /**
+       * All other portnums
+       */
+      log(
+        `IMeshDevice.handleMeshPacket`,
+        "Sending onDataPacketEvent",
+        LogLevelEnum.DEBUG
+      );
+      this.onDataPacketEvent.next(meshPacket);
     }
   }
 
@@ -533,13 +509,16 @@ export abstract class IMeshDevice {
   protected async onConnected(noAutoConfig: boolean) {
     this.isConnected = true;
     this.isReconnecting = false;
-    this.onConnectedEvent.emit(this, this.myEmitOptions);
+    log(
+      `IMeshDevice.onConnected`,
+      "Sending onConnectionEvent",
+      LogLevelEnum.DEBUG
+    );
+    this.onConnectionEvent.next(ConnectionEventEnum.DEVICE_CONNECTED);
 
     if (!noAutoConfig) {
       await this.configure().catch((e) => {
-        throw new Error(
-          `Error in meshtasticjs.IMeshDevice.onConnected: ${e.message}`
-        );
+        log(`IMeshDevice.onConnected`, e.message, LogLevelEnum.ERROR);
       });
     }
   }
@@ -548,16 +527,12 @@ export abstract class IMeshDevice {
    * Gets called when a link to the device has been disconnected
    */
   protected onDisconnected() {
-    this.onDisconnectedEvent.emit(this, this.myEmitOptions);
+    log(
+      `IMeshDevice.onDisconnected`,
+      "Sending onConnectionEvent",
+      LogLevelEnum.DEBUG
+    );
+    this.onConnectionEvent.next(ConnectionEventEnum.DEVICE_DISCONNECTED);
     this.isConnected = false;
-  }
-
-  /**
-   * Gets called when node database has been changed, returns changed node number
-   */
-  private onNodeListChanged() {
-    if (this.isConfigDone) {
-      this.onNodeListChangedEvent.emit(this, this.myEmitOptions);
-    }
   }
 }

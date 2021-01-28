@@ -35,33 +35,48 @@ yarn build && yarn global add webpack-cli && webpack-cli --entry ./dist -o dist/
 The library has a built in connection manager that will handle multiple devices of different connection types.
 
 ```typescript
-import { Client } from "meshtasticjs";
+import {
+  Client,
+  Types,
+  SettingsManager,
+} from "meshtasticjs";
 
-// Instantiate a new device manager
+/**
+ * Instantiate a new device manager
+ */
 const client = new Client();
 
-// Create the connection type of your choice
+/**
+ * Optional: Set the logging level
+ */
+SettingsManager.setDebugMode(Protobuf.LogLevelEnum.DEBUG);
+
+/**
+ * Create the connection type of your choice
+ */
 const httpConnection = client.createHTTPConnection();
 const bleConnection = client.createBLEConnection();
 
-// connect to the device with the desired paramaters
+/**
+ * Connect to the device with the desired paramaters
+ */
 httpConnection.connect(...connectionParams);
 bleConnection.connect(...connectionParams);
 
-// Device can now be accessed individually or via `deviceInterfaces`
+/**
+ * Device can now be accessed individually or via `deviceInterfaces`
+ */
 client.deviceInterfaces.forEach(connection => {
   ...
-})
+});
 ```
 
 All events can be handled via any of the inbuilt on**_x_**Event methods.
 
 ```typescript
-// Avaliable methods: onFromRadioEvent, onDataPacketEvent, onUserPacketEvent,
-// onPositionPacketEvent, onConnectedEvent, onDisconnectedEvent, onConfigDoneEvent
 httpConnection.onFromRadioEvent.subscribe(event => {
     ...
-})
+});
 ```
 
 ### Sending data
@@ -69,16 +84,27 @@ httpConnection.onFromRadioEvent.subscribe(event => {
 Data in multiple formats can be send over the radio
 
 ```typescript
-// Plain text message
+/**
+ * Plaintext message
+ */
 bleConnection.sendText("Message");
 
-// With recipient
+/**
+ * With recipient
+ */
 bleConnection.sendText("Message", 1234);
 
-// Arbitrary data
-bleConnection.sendData(new Uint8Array([...data]));
+/**
+ * Arbitrary data
+ */
+bleConnection.sendData(
+  new Uint8Array([...data]),
+  Protobuf.PortNumEnum.PRIVATE_APP
+);
 
-// Send custom location
+/**
+ * Send custom location
+ */
 bleConnection.sendPosition(lat, lng, alt, time);
 ```
 

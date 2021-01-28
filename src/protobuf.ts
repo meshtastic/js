@@ -1,5 +1,5 @@
 /**
- * Current as of Meshtastic-protobufs #8729bad7f6cfa461be02e3ea65fbde29435b3fe3
+ * Current as of Meshtastic-protobufs #c1ae40f1c70b32bae18aff25e60dcdba513502ce
  */
 
 import { Message, Field, OneOf, Type } from "protobufjs/light";
@@ -11,8 +11,20 @@ export enum PortNumEnum {
   POSITION_APP = 3,
   NODEINFO_APP = 4,
   REPLY_APP = 32,
+  IP_TUNNEL_APP = 33,
+  SERIAL_APP = 64,
+  STORE_REQUEST_APP = 65,
   PRIVATE_APP = 256,
-  IP_TUNNEL_APP = 1024,
+  ATAK_FORWARDER = 257,
+}
+
+export enum GPIOTypeEnum {
+  UNSET = 0,
+  WRITE_GPIOS = 1,
+  WATCH_GPIOS = 2,
+  GPIOS_CHANGED = 3,
+  READ_GPIOS = 4,
+  READ_GPIOS_REPLY = 5,
 }
 
 export enum RouteErrorEnum {
@@ -59,6 +71,48 @@ export enum LocationSharingEnum {
   LocDisabled = 2,
 }
 
+export enum ChargeCurrentEnum {
+  MAUnset = 0,
+  MA100 = 1,
+  MA190 = 2,
+  MA280 = 3,
+  MA360 = 4,
+  MA450 = 5,
+  MA550 = 6,
+  MA630 = 7,
+  MA700 = 8,
+  MA780 = 9,
+  MA880 = 10,
+  MA960 = 11,
+  MA1000 = 12,
+  MA1080 = 13,
+  MA1160 = 14,
+  MA1240 = 15,
+  MA1320 = 16,
+}
+
+export enum CriticalErrorCodeEnum {
+  None = 0,
+  TxWatchdog = 1,
+  SleepEnterWait = 2,
+  NoRadio = 3,
+  Unspecified = 4,
+  UBloxInitFailed = 5,
+  NoAXP192 = 6,
+  InvalidRadioSetting = 7,
+  TransmitFailed = 8,
+}
+
+export enum LogLevelEnum {
+  UNSET = 0,
+  CRITICAL = 50,
+  ERROR = 40,
+  WARNING = 30,
+  INFO = 20,
+  DEBUG = 10,
+  TRACE = 5,
+}
+
 /**
  * A GPS Position
  */
@@ -89,7 +143,7 @@ export class Data extends Message<Data> {
   portnum: PortNumEnum;
 
   @Field.d(2, "bytes")
-  payload: Uint8Array | string;
+  payload: Uint8Array;
 }
 
 /**
@@ -125,33 +179,14 @@ export class RouteDiscovery extends Message<RouteDiscovery> {
  */
 @Type.d("SubPacket")
 export class SubPacket extends Message<SubPacket> {
-  @OneOf.d(
-    "position",
-    "data",
-    "user",
-    "routeRequest",
-    "routeReply",
-    "routeError"
-  )
+  @OneOf.d("data", "routeRequest", "routeReply", "routeError")
   payload: Position | Data | User | RouteDiscovery | RouteErrorEnum;
 
   @OneOf.d("successId", "failId")
   ack: number;
 
-  /**
-   * @deprecated
-   */
-  @Field.d(1, Position)
-  position: Position;
-
   @Field.d(3, Data)
   data: Data;
-
-  /**
-   * @deprecated
-   */
-  @Field.d(4, User)
-  user: User;
 
   @Field.d(6, RouteDiscovery)
   routeRequest: RouteDiscovery;
@@ -192,9 +227,6 @@ export class MeshPacket extends Message<MeshPacket> {
   @OneOf.d("decoded", "encrypted")
   payload: SubPacket | Uint8Array;
 
-  @OneOf.d("successId", "failId")
-  ack: string;
-
   @Field.d(1, "uint32")
   from: number;
 
@@ -203,6 +235,9 @@ export class MeshPacket extends Message<MeshPacket> {
 
   @Field.d(3, SubPacket)
   decoded: SubPacket;
+
+  @Field.d(4, "uint32")
+  channel_index: number;
 
   @Field.d(8, "bytes")
   encrypted: Uint8Array;
@@ -251,6 +286,15 @@ export class ChannelSettings extends Message<ChannelSettings> {
 
   @Field.d(5, "string")
   name: string;
+
+  @Field.d(10, "fixed32")
+  id: number;
+
+  @Field.d(16, "bool")
+  uplink_enabled: boolean;
+
+  @Field.d(17, "bool")
+  downlink_enabled: boolean;
 }
 
 /**
@@ -263,9 +307,6 @@ export class UserPreferences extends Message<UserPreferences> {
 
   @Field.d(2, "uint32")
   sendOwnerInterval: number;
-
-  @Field.d(3, "uint32")
-  numMissedToFail: number;
 
   @Field.d(4, "uint32")
   waitBluetoothSecs: number;
@@ -303,18 +344,21 @@ export class UserPreferences extends Message<UserPreferences> {
   @Field.d(15, RegionCodeEnum)
   region: RegionCodeEnum;
 
+  @Field.d(16, ChargeCurrentEnum)
+  ChargeCurrent: ChargeCurrentEnum;
+
   @Field.d(37, "bool")
   isRouter: boolean;
 
   @Field.d(38, "bool")
   isLowPower: boolean;
-  
+
   @Field.d(39, "bool")
   fixedPosition: boolean;
 
   @Field.d(100, "bool")
   factoryReset: boolean;
-  
+
   @Field.d(101, "bool")
   debugLogEnabled: boolean;
 
@@ -332,6 +376,42 @@ export class UserPreferences extends Message<UserPreferences> {
 
   @Field.d(103, "uint32", "repeated")
   ignoreIncoming: number;
+
+  @Field.d(120, "bool")
+  serialpluginEnabled: boolean;
+
+  @Field.d(121, "bool")
+  serialpluginEcho: boolean;
+
+  @Field.d(122, "uint32")
+  serialpluginRxd: number;
+
+  @Field.d(123, "uint32")
+  serialpluginTxd: number;
+
+  @Field.d(124, "uint32")
+  serialpluginTimeout: number;
+
+  @Field.d(125, "uint32")
+  serialpluginMode: number;
+
+  @Field.d(126, "bool")
+  extNotificationPluginEnabled: boolean;
+
+  @Field.d(127, "uint32")
+  extNotificationPluginOutputMs: number;
+
+  @Field.d(128, "uint32")
+  extNotificationPluginOutput: number;
+
+  @Field.d(129, "bool")
+  extNotificationPluginActive: boolean;
+
+  @Field.d(130, "bool")
+  extNotificationPluginAlertMessage: boolean;
+
+  @Field.d(131, "bool")
+  extNotificationPluginAlertBell: boolean;
 }
 
 /**
@@ -343,9 +423,6 @@ export class UserPreferences extends Message<UserPreferences> {
 export class RadioConfig extends Message<RadioConfig> {
   @Field.d(1, UserPreferences)
   preferences: UserPreferences;
-
-  @Field.d(2, ChannelSettings)
-  channelSettings: ChannelSettings;
 }
 
 /**
@@ -394,8 +471,8 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
   @Field.d(6, "string")
   firmwareVersion: string;
 
-  @Field.d(7, "uint32")
-  errorCode: number;
+  @Field.d(7, CriticalErrorCodeEnum)
+  errorCode: CriticalErrorCodeEnum;
 
   @Field.d(8, "uint32")
   errorAddress: number;
@@ -420,46 +497,22 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
 }
 
 /**
- * This message is never sent over the wire, but it is used for serializing DB
- * state to flash in the device code
+ * Debug output from the device.
  */
-@Type.d("DeviceState")
-export class DeviceState extends Message<DeviceState> {
-  @Field.d(1, RadioConfig)
-  radio: RadioConfig;
-
-  @Field.d(2, MyNodeInfo)
-  myNode: MyNodeInfo;
-
-  @Field.d(3, User)
-  owner: User;
-
-  @Field.d(4, NodeInfo, "repeated")
-  nodeDb: NodeInfo;
-
-  @Field.d(5, MeshPacket, "repeated")
-  receiveQueue: MeshPacket;
-
-  @Field.d(8, "uint32")
-  version: number;
-
-  @Field.d(7, MeshPacket)
-  rxTextMessage: MeshPacket;
-
-  @Field.d(9, "bool")
-  noSave: boolean;
-
-  @Field.d(11, "bool")
-  didGpsReset: boolean;
-}
-
-/**
- * Debug output from the device
- */
-@Type.d("DebugString")
-export class DebugString extends Message<DebugString> {
+@Type.d("LogRecord")
+export class LogRecord extends Message<LogRecord> {
+  //log levels
   @Field.d(1, "string")
-  message: "string";
+  message: string;
+
+  @Field.d(2, "fixed32")
+  time: number;
+
+  @Field.d(3, "string")
+  source: string;
+
+  @Field.d(4, LogLevelEnum)
+  level: LogLevelEnum;
 }
 
 /**
@@ -472,18 +525,20 @@ export class FromRadio extends Message<FromRadio> {
     "myInfo",
     "nodeInfo",
     "radio",
-    "debugString",
+    "logRecord",
     "configCompleteId",
-    "rebooted"
+    "rebooted",
+    "channel"
   )
   variant:
     | MeshPacket
     | MyNodeInfo
     | NodeInfo
     | RadioConfig
-    | DebugString
+    | LogRecord
     | number
-    | boolean;
+    | boolean
+    | ChannelSettings;
 
   @Field.d(1, "uint32")
   num: number;
@@ -500,14 +555,17 @@ export class FromRadio extends Message<FromRadio> {
   @Field.d(6, RadioConfig)
   radio: RadioConfig;
 
-  @Field.d(7, DebugString)
-  debugString: DebugString;
+  @Field.d(7, LogRecord)
+  logRecord: LogRecord;
 
   @Field.d(8, "uint32")
   configCompleteId: number;
 
   @Field.d(9, "bool")
   rebooted: boolean;
+
+  @Field.d(10, ChannelSettings)
+  channel: ChannelSettings;
 }
 
 /**
@@ -515,7 +573,7 @@ export class FromRadio extends Message<FromRadio> {
  */
 @Type.d("ToRadio")
 export class ToRadio extends Message<ToRadio> {
-  @OneOf.d("packet", "wantConfigId", "setRadio", "setOwner")
+  @OneOf.d("packet", "wantConfigId", "setRadio", "setOwner", "setChannel")
   variant: MeshPacket | number | RadioConfig | User;
 
   @Field.d(1, MeshPacket)
@@ -529,23 +587,22 @@ export class ToRadio extends Message<ToRadio> {
 
   @Field.d(102, User)
   setOwner: User;
+
+  @Field.d(103, ChannelSettings)
+  setChannel: ChannelSettings;
 }
 
 /**
- * Placeholder for data we will eventually set during initial programming.
- * This will allow us to stop having a load for each region.
+ * Provides easy remote access to any GPIO.
  */
-@Type.d("ManufacturingData")
-export class ManufacturingData extends Message<ManufacturingData> {
-  @Field.d(1, "uint32")
-  fradioFreq: number;
+@Type.d("HardwareMessage")
+export class HardwareMessage extends Message<HardwareMessage> {
+  @Field.d(1, GPIOTypeEnum)
+  typ: GPIOTypeEnum;
 
-  @Field.d(2, "string")
-  hwModel: string;
+  @Field.d(2, "uint64")
+  gpioMask: number;
 
-  @Field.d(3, "string")
-  hwVersion: string;
-
-  @Field.d(4, "sint32")
-  selftestResult: number;
+  @Field.d(3, "uint64")
+  gpioValue: number;
 }
