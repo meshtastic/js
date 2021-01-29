@@ -100,7 +100,7 @@ export class IHTTPConnection extends IMeshDevice {
       /**
        * assemble url
        */
-      this.url = !!this.tls ? "https://" : "http://" + address;
+      this.url = !!this.tls ? `https://${address}` : `http://${address}`;
     }
 
     log(
@@ -149,7 +149,6 @@ export class IHTTPConnection extends IMeshDevice {
       `Starting new connection timer.`,
       LogLevelEnum.TRACE
     );
-    // setTimeout(this.fetchTimer.bind(this), 5000);
     setTimeout(() => {
       this.fetchTimer(fetchInterval);
     }, 5000);
