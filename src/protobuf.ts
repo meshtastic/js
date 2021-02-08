@@ -1,5 +1,5 @@
 /**
- * Current as of Meshtastic-protobufs #72ad7db305eb7f905543ff656f336803830fa639
+ * Current as of Meshtastic-protobufs #66bb946d7eec12c9d9e8a3ceeadd2ac506a5bc1f
  */
 
 import { Message, Field, OneOf, Type } from "protobufjs/light";
@@ -13,7 +13,8 @@ export enum PortNumEnum {
   REPLY_APP = 32,
   IP_TUNNEL_APP = 33,
   SERIAL_APP = 64,
-  STORE_REQUEST_APP = 65,
+  STORE_FORWARD_APP = 65,
+  RANGE_TEST_APP = 66,
   PRIVATE_APP = 256,
   ATAK_FORWARDER = 257,
 }
@@ -27,11 +28,13 @@ export enum GPIOTypeEnum {
   READ_GPIOS_REPLY = 5,
 }
 
-export enum RouteErrorEnum {
+export enum ErrorReasonEnum {
   NONE = 0,
   NO_ROUTE = 1,
   GOT_NAK = 2,
   TIMEOUT = 3,
+  NO_INTERFACE = 4,
+  MAX_RETRANSMIT = 5,
 }
 
 export enum ConstantsEnum {
@@ -197,8 +200,8 @@ export class SubPacket extends Message<SubPacket> {
   @Field.d(7, RouteDiscovery)
   routeReply: RouteDiscovery;
 
-  @Field.d(13, RouteErrorEnum)
-  routeError: RouteErrorEnum;
+  @Field.d(13, ErrorReasonEnum)
+  errorReason: ErrorReasonEnum;
 
   @Field.d(5, "bool")
   wantResponse: boolean;
@@ -415,6 +418,21 @@ export class UserPreferences extends Message<UserPreferences> {
 
   @Field.d(131, "bool")
   extNotificationPluginAlertBell: boolean;
+
+  @Field.d(132, "bool")
+  rangeTestPluginEnabled: boolean;
+
+  @Field.d(133, "uint32")
+  rangeTestPluginSender: number;
+
+  @Field.d(134, "bool")
+  rangeTestPluginSave: boolean;
+
+  @Field.d(136, "bool")
+  storeForwardPluginEnabled: boolean;
+
+  @Field.d(137, "uint32")
+  storeForwardPluginRecords: number;
 }
 
 /**
@@ -485,9 +503,6 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
 
   @Field.d(10, "uint32")
   packetIdBits: number;
-
-  @Field.d(11, "uint32")
-  currentPacketId: number;
 
   @Field.d(12, "uint32")
   nodeNumBits: number;
