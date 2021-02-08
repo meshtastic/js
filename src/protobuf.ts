@@ -1,5 +1,5 @@
 /**
- * Current as of Meshtastic-protobufs #c1ae40f1c70b32bae18aff25e60dcdba513502ce
+ * Current as of Meshtastic-protobufs #72ad7db305eb7f905543ff656f336803830fa639
  */
 
 import { Message, Field, OneOf, Type } from "protobufjs/light";
@@ -180,10 +180,13 @@ export class RouteDiscovery extends Message<RouteDiscovery> {
 @Type.d("SubPacket")
 export class SubPacket extends Message<SubPacket> {
   @OneOf.d("data", "routeRequest", "routeReply", "routeError")
-  payload: Position | Data | User | RouteDiscovery | RouteErrorEnum;
+  payloadVariant: "data" | "routeRequest" | "routeReply" | "routeError";
 
+  /**
+   * @todo verify that this is a string literal, maybe make optional?
+   */
   @OneOf.d("successId", "failId")
-  ack: number;
+  ackVariant: "successId" | "failId";
 
   @Field.d(3, Data)
   data: Data;
@@ -225,7 +228,7 @@ export class SubPacket extends Message<SubPacket> {
 @Type.d("MeshPacket")
 export class MeshPacket extends Message<MeshPacket> {
   @OneOf.d("decoded", "encrypted")
-  payload: SubPacket | Uint8Array;
+  payloadVariant: "decoded" | "encrypted";
 
   @Field.d(1, "uint32")
   from: number;
@@ -530,15 +533,15 @@ export class FromRadio extends Message<FromRadio> {
     "rebooted",
     "channel"
   )
-  variant:
-    | MeshPacket
-    | MyNodeInfo
-    | NodeInfo
-    | RadioConfig
-    | LogRecord
-    | number
-    | boolean
-    | ChannelSettings;
+  payloadVariant:
+    | "packet"
+    | "myInfo"
+    | "nodeInfo"
+    | "radio"
+    | "logRecord"
+    | "configCompleteId"
+    | "rebooted"
+    | "channel";
 
   @Field.d(1, "uint32")
   num: number;
@@ -574,7 +577,12 @@ export class FromRadio extends Message<FromRadio> {
 @Type.d("ToRadio")
 export class ToRadio extends Message<ToRadio> {
   @OneOf.d("packet", "wantConfigId", "setRadio", "setOwner", "setChannel")
-  variant: MeshPacket | number | RadioConfig | User;
+  payloadVariant:
+    | "packet"
+    | "wantConfigId"
+    | "setRadio"
+    | "setOwner"
+    | "setChannel";
 
   @Field.d(1, MeshPacket)
   packet: MeshPacket;
