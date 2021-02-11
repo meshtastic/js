@@ -1,8 +1,17 @@
 /**
- * Current as of Meshtastic-protobufs #66bb946d7eec12c9d9e8a3ceeadd2ac506a5bc1f
+ * Current as of Meshtastic-protobufs #0221e83d689f7930ed3e5c474eff4fbb8697efbb
  */
 
 import { Message, Field, OneOf, Type } from "protobufjs/light";
+
+export enum PriorityEnum {
+  UNSET = 0,
+  MIN = 1,
+  BACKGROUND = 10,
+  DEFAULT = 64,
+  ACK = 120,
+  MAX = 127,
+}
 
 export enum PortNumEnum {
   UNKNOWN_APP = 0,
@@ -262,6 +271,9 @@ export class MeshPacket extends Message<MeshPacket> {
 
   @Field.d(11, "bool")
   wantAck: boolean;
+
+  @Field.d(12, PriorityEnum)
+  priority: PriorityEnum;
 }
 
 /**
