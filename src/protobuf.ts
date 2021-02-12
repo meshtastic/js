@@ -1,5 +1,5 @@
 /**
- * Current as of Meshtastic-protobufs #0221e83d689f7930ed3e5c474eff4fbb8697efbb
+ * Current as of Meshtastic-protobufs #0cadaed3953f66cf1edc99d0fa53e4fd5ebf56d6
  */
 
 import { Message, Field, OneOf, Type } from "protobufjs/light";
@@ -9,6 +9,7 @@ export enum PriorityEnum {
   MIN = 1,
   BACKGROUND = 10,
   DEFAULT = 64,
+  RELIABLE = 70,
   ACK = 120,
   MAX = 127,
 }
