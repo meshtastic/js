@@ -471,63 +471,79 @@ export abstract class IMeshDevice {
    * @param meshPacket
    */
   private handleMeshPacket(meshPacket: MeshPacket) {
-    /**
-     * Text messages
-     */
-    switch (meshPacket.decoded.data.portnum) {
-      case PortNumEnum.TEXT_MESSAGE_APP:
-        const text = new TextDecoder().decode(meshPacket.decoded.data.payload);
-        log(
-          `IMeshDevice.handleMeshPacket`,
-          "Sending onTextPacketEvent",
-          LogLevelEnum.DEBUG
-        );
-        this.onTextPacketEvent.next({
-          packet: meshPacket,
-          data: text,
-        });
-        break;
-      case PortNumEnum.NODEINFO_APP:
-        /**
-         * Node Info
-         */
-        const nodeInfo = NodeInfo.decode(meshPacket.decoded.data.payload);
+    if (meshPacket.decoded.data?.payload) {
+      /**
+       * Text messages
+       */
+      switch (meshPacket.decoded.data.portnum) {
+        case PortNumEnum.TEXT_MESSAGE_APP:
+          const text = new TextDecoder().decode(
+            meshPacket.decoded.data.payload
+          );
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Sending onTextPacketEvent",
+            LogLevelEnum.DEBUG
+          );
+          this.onTextPacketEvent.next({
+            packet: meshPacket,
+            data: text,
+          });
+          break;
+        case PortNumEnum.NODEINFO_APP:
+          /**
+           * Node Info
+           */
+          const nodeInfo = NodeInfo.decode(meshPacket.decoded.data.payload);
 
-        log(
-          `IMeshDevice.handleMeshPacket`,
-          "Sending onNodeInfoPacketEvent",
-          LogLevelEnum.DEBUG
-        );
-        this.onNodeInfoPacketEvent.next({
-          packet: meshPacket,
-          data: nodeInfo,
-        });
-      case PortNumEnum.POSITION_APP:
-        /**
-         * Position
-         */
-        log(
-          `IMeshDevice.handleMeshPacket`,
-          "Sending onPositionPacketEvent",
-          LogLevelEnum.DEBUG
-        );
-        const position = Position.decode(meshPacket.decoded.data.payload);
-        this.onPositionPacketEvent.next({
-          packet: meshPacket,
-          data: position,
-        });
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Sending onNodeInfoPacketEvent",
+            LogLevelEnum.DEBUG
+          );
+          this.onNodeInfoPacketEvent.next({
+            packet: meshPacket,
+            data: nodeInfo,
+          });
+        case PortNumEnum.POSITION_APP:
+          /**
+           * Position
+           */
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Sending onPositionPacketEvent",
+            LogLevelEnum.DEBUG
+          );
+          const position = Position.decode(meshPacket.decoded.data.payload);
+          this.onPositionPacketEvent.next({
+            packet: meshPacket,
+            data: position,
+          });
 
-      default:
-        /**
-         * All other portnums
-         */
-        log(
-          `IMeshDevice.handleMeshPacket`,
-          "Sending onDataPacketEvent",
-          LogLevelEnum.DEBUG
-        );
-        this.onDataPacketEvent.next(meshPacket);
-        break;
+        default:
+          /**
+           * All other portnums
+           */
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Sending onDataPacketEvent",
+            LogLevelEnum.DEBUG
+          );
+          this.onDataPacketEvent.next(meshPacket);
+          break;
+      }
+    } else if (meshPacket.decoded.ackVariant) {
+      /**
+       * @todo implement
+       * We have just received an ack from the network, either a success or fail
+       */
+      console.log("ack received");
+    } else {
+      log(
+        `IMeshDevice.handleMeshPacket`,
+        "Device received empty data packet, ignoring.",
+        LogLevelEnum.DEBUG
+      );
     }
   }
 
