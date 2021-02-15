@@ -514,6 +514,9 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
   @Field.d(3, "int32")
   numChannels: number;
 
+  /**
+   * @deprecated
+   */
   @Field.d(4, "string")
   region: string;
 
