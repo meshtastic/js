@@ -58,59 +58,72 @@ const exponentialBackoff = async (
  * @param data data to be logged
  * @param logLevel loglevel to associate data with
  */
-const log = (emitter: string, message: string, logLevel: LogLevelEnum) => {
+const log = (
+  emitter: string,
+  message: string,
+  logLevel: LogLevelEnum,
+  data?: string
+) => {
   if (logLevel >= SettingsManager.debugMode) {
     switch (logLevel) {
       case LogLevelEnum.TRACE:
         console.info(
-          `%c[TRACE]%c ${emitter}\n%c${message}`,
+          `%c[TRACE]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
           "color:grey",
           "color:darkgrey",
-          "color:white"
+          "color:white",
+          "color:lightgreen"
         );
         break;
 
       case LogLevelEnum.DEBUG:
         console.info(
-          `%c[DEBUG]%c ${emitter}\n%c${message}`,
+          `%c[DEBUG]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
           "color:lightcyan",
           "color:darkgrey",
-          "color:white"
+          "color:white",
+          "color:lightgreen"
         );
         break;
 
       case LogLevelEnum.INFO:
         console.info(
-          `%c[INFO]%c ${emitter}\n%c${message}`,
+          `%c[INFO]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
           "color:lightgreen",
           "color:darkgrey",
-          "color:white"
+          "color:white",
+          "color:lightgreen"
         );
         break;
       case LogLevelEnum.WARNING:
         console.warn(
-          `%c[WARNING]%c ${emitter}\n%c${message}`,
+          `%c[WARNING]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
           "color:yellow",
           "color:darkgrey",
-          "color:white"
+          "color:white",
+          "color:lightgreen"
         );
         break;
 
       case LogLevelEnum.ERROR:
         console.error(
-          `%c[ERROR]%c ${emitter}\n%c${message}`,
+          `%c[ERROR]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
           "color:orangered",
           "color:darkgrey",
-          "color:white"
+          "color:white",
+          "color:lightgreen"
         );
         break;
 
       case LogLevelEnum.CRITICAL:
         console.error(
-          `%c[CRITICAL]%c ${emitter}\n%c${message}`,
+          `%c[CRITICAL]%c ${emitter}\n%c${message} %c${
+            data ? `(${data})` : ""
+          }`,
           "color:red",
           "color:darkgrey",
-          "color:white"
+          "color:white",
+          "color:lightgreen"
         );
         break;
       default:

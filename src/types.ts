@@ -1,12 +1,15 @@
-export enum ConnectionEventEnum {
-  DEVICE_CONNECTED,
+export enum DeviceStatusEnum {
+  DEVICE_RESTARTING,
   DEVICE_DISCONNECTED,
-  DEVICE_RECONNECTIONG,
-  DEVICE_RECONNECTED,
+  DEVICE_CONNECTING,
+  DEVICE_RECONNECTING,
+  DEVICE_CONNECTED,
+  DEVICE_CONFIGURING,
+  DEVICE_CONFIGURED,
 }
 
-export interface HTTPTransaction {
-  status: number;
+export interface DeviceTransaction {
+  success: boolean;
   interaction_time: number;
   consecutiveFailedRequests?: number;
 }
@@ -59,6 +62,10 @@ export interface WebStatisticsResponse {
       has_battery: boolean;
       has_usb: boolean;
       is_charging: boolean;
+      radio: {
+        frequecy: number;
+        lora_channel: number;
+      };
     };
   };
   status: string;

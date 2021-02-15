@@ -9,11 +9,10 @@ import {
   ToRadio,
   PortNumEnum,
   User,
-  UserPreferences,
   LogLevelEnum,
   NodeInfo,
 } from "./protobuf";
-import { ConnectionEventEnum } from "./types";
+import { DeviceStatusEnum, DeviceTransaction } from "./types";
 import { log } from "./utils";
 import { BROADCAST_NUM, MY_CONFIG_ID } from "./constants";
 import { Subject } from "rxjs";
@@ -23,48 +22,24 @@ import { Subject } from "rxjs";
  */
 export abstract class IMeshDevice {
   /**
-   * States if the current device is currently connected or not
+   * @todo doccument
    */
-  isConnected: boolean;
+  deviceStatus: DeviceStatusEnum;
 
   /**
-   * States if the current device is in a reconnecting state
+   * Timestamp of last time device was interacted with
    */
-  isReconnecting: boolean;
+  lastInteractionTime: number;
 
   /**
-   * States if the device has been configured
+   * Current number of consecutive failed requests
    */
-  isConfigDone: boolean;
-
-  /**
-   * States if device configure process has been started
-   */
-  isConfigStarted: boolean;
-
-  /**
-   * Configuration of current device
-   */
-  radioConfig: RadioConfig;
-
-  /**
-   * Packet identifier of last message sent, gets increased by one on every sent message
-   */
-  currentPacketId: number;
-
-  /**
-   * Node info of current device
-   */
-  myInfo: MyNodeInfo;
+  consecutiveFailedRequests: number;
 
   constructor() {
-    this.isConnected = false;
-    this.isReconnecting = false;
-    this.isConfigDone = false;
-    this.isConfigStarted = false;
-    this.radioConfig = undefined;
-    this.currentPacketId = undefined;
-    this.myInfo = undefined;
+    this.onDeviceStatusEvent.subscribe((status) => {
+      this.deviceStatus = status;
+    });
   }
 
   /**
@@ -94,16 +69,32 @@ export abstract class IMeshDevice {
   abstract ping(): boolean;
 
   /**
-   * Fires when a new FromRadio message has been received from device
+   * Fires when a new FromRadio message has been received from the device
    * @event
    */
   readonly onFromRadioEvent: Subject<FromRadio> = new Subject();
 
   /**
-   * Fires when a new FromRadio message containing a Data packet has been received from device
+   * Fires when a new FromRadio message containing a Data packet has been received from the device
    * @event
    */
   readonly onDataPacketEvent: Subject<MeshPacket> = new Subject();
+
+  /**
+   * Fires when a new MyNodeInfo message has been received from the device
+   */
+  readonly onMyNodeInfoEvent: Subject<MyNodeInfo> = new Subject();
+
+  /**
+   * Fires when a new RadioConfig message has been received from the device
+   */
+  readonly onRadioConfigEvent: Subject<RadioConfig> = new Subject();
+
+  /**
+   * Fires whenever a transaction is completed with the radio
+   * @event
+   */
+  readonly onDeviceTransactionEvent: Subject<DeviceTransaction> = new Subject();
 
   /**
    * Fires when a new FromRadio message containing a NodeInfo packet has been received from device
@@ -124,7 +115,7 @@ export abstract class IMeshDevice {
   }> = new Subject();
 
   /**
-   * Fires when a new FromRadio message containing a Position packet has been received from device
+   * Fires when a new FromRadio message containing a Text packet has been received from device
    * @event
    */
   readonly onTextPacketEvent: Subject<{
@@ -133,17 +124,10 @@ export abstract class IMeshDevice {
   }> = new Subject();
 
   /**
-   * Fires when the device configuration was successful. The device can then be used
-   * @todo strongly type this, likely multiple events for different config items, i.e. (radioConfig), ChannelSettings and UserPreferences
+   * Fires when the devices connection or configuration status changes
    * @event
    */
-  readonly onConfigEvent: Subject<any> = new Subject();
-
-  /**
-   * Fires when the node database has changed
-   * @event
-   */
-  readonly onConnectionEvent: Subject<ConnectionEventEnum> = new Subject();
+  readonly onDeviceStatusEvent: Subject<DeviceStatusEnum> = new Subject();
 
   /**
    * Sends a text over the radio
@@ -213,7 +197,7 @@ export abstract class IMeshDevice {
     destinationNum?: number,
     wantAck = false
   ) {
-    if (!this.isDeviceReady()) {
+    if (this.deviceStatus < DeviceStatusEnum.DEVICE_CONFIGURED) {
       log(
         `IMeshDevice.sendPacket`,
         `Device is not ready`,
@@ -239,26 +223,16 @@ export abstract class IMeshDevice {
    * @param configOptions
    */
   async setRadioConfig(configOptions: RadioConfig) {
-    if (!this.radioConfig || !this.isDeviceReady()) {
-      log(
-        `IMeshDevice.setRadioConfig`,
-        `Radio config has not been read from device, can't set new one.`,
-        LogLevelEnum.WARNING
-      );
-    }
-
-    if (this.radioConfig?.preferences) {
-      Object.assign(this.radioConfig.preferences, configOptions.preferences);
-    } else {
-      this.radioConfig.preferences = new UserPreferences(
-        configOptions.preferences
-      );
-    }
+    /**
+     * @todo used to check if the radioConfig had bean read, should be verified by whatever clalls this function
+     */
 
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
-          setRadio: this.radioConfig,
+          setRadio: new RadioConfig({
+            preferences: configOptions.preferences,
+          }),
         })
       ).finish()
     );
@@ -269,7 +243,7 @@ export abstract class IMeshDevice {
    * @param ownerData
    */
   async setOwner(ownerData: User) {
-    if (!this.isDeviceReady()) {
+    if (this.deviceStatus < DeviceStatusEnum.DEVICE_CONFIGURED) {
       /**
        * @todo used to check if user had been read from radio, change this
        */
@@ -293,15 +267,24 @@ export abstract class IMeshDevice {
    * Manually triggers the device configure process
    */
   async configure() {
-    if (!this.isConnected) {
-      console.log(
+    /**
+     * @todo, chech if this works correctly
+     */
+    if (this.deviceStatus < DeviceStatusEnum.DEVICE_CONNECTED) {
+      log(
         `IMeshDevice.configure`,
         `Interface is not connected`,
         LogLevelEnum.ERROR
       );
     }
 
-    this.isConfigStarted = true;
+    log(
+      `IMeshDevice.configure`,
+      "Sending onDeviceStatusEvent",
+      LogLevelEnum.DEBUG,
+      "DEVICE_CONFIGURING"
+    );
+    this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONFIGURING);
 
     log(
       `IMeshDevice.configure`,
@@ -331,26 +314,11 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Checks if device is ready
-   */
-  isDeviceReady() {
-    return this.isConnected && this.isConfigDone;
-  }
-
-  /**
    * Generates packet identifier for new message by increasing previous packet id by one
+   * @todo hopefuly replace with cuid
    */
   private generatePacketId() {
-    if (!this.currentPacketId) {
-      log(
-        `IMeshDevice.generatePacketId`,
-        `Failed to generate packet id.`,
-        LogLevelEnum.ERROR
-      );
-      return 0;
-    } else {
-      return this.currentPacketId++;
-    }
+    return Math.floor(Math.random() * 1e9);
   }
 
   /**
@@ -374,71 +342,127 @@ export abstract class IMeshDevice {
     } catch (e) {
       log(`IMeshDevice.handleFromRadio`, e.message, LogLevelEnum.ERROR);
     }
-    /**
-     * @todo
-     * ? Why do we need to check if isConfigDone, as the rest of the code executes regardless
-     */
-    if (this.isConfigDone) {
-      log(
-        `IMeshDevice.handleFromRadio`,
-        "Sending onFromRadioEvent",
-        LogLevelEnum.DEBUG
-      );
-      this.onFromRadioEvent.next(fromRadioObj);
-    }
 
-    if (fromRadioObj?.myInfo) {
-      this.myInfo = fromRadioObj.myInfo;
-      this.currentPacketId = fromRadioObj.myInfo.currentPacketId;
-    } else if (fromRadioObj?.radio) {
-      this.radioConfig = fromRadioObj.radio;
-    } else if (fromRadioObj?.nodeInfo) {
-      log(
-        `IMeshDevice.handleFromRadio`,
-        "Sending onNodeInfoPacketEvent",
-        LogLevelEnum.DEBUG
-      );
-      this.onNodeInfoPacketEvent.next({
-        packet: fromRadioObj.packet,
-        data: fromRadioObj.nodeInfo,
-      });
-    } else if (fromRadioObj?.configCompleteId) {
-      if (fromRadioObj.configCompleteId === MY_CONFIG_ID) {
-        if (this.myInfo && this.radioConfig && this.currentPacketId) {
-          this.isConfigDone = true;
+    /**
+     * Send generic fromRadio Event
+     */
+    log(
+      `IMeshDevice.handleFromRadio`,
+      "Sending onFromRadioEvent",
+      LogLevelEnum.DEBUG
+    );
+    this.onFromRadioEvent.next(fromRadioObj);
+
+    switch (fromRadioObj.payloadVariant) {
+      case "packet":
+        this.handleMeshPacket(fromRadioObj.packet);
+
+        break;
+
+      case "myInfo":
+        this.onMyNodeInfoEvent.next(fromRadioObj.myInfo);
+        log(
+          `IMeshDevice.handleFromRadio`,
+          "Sending onMyNodeInfoEvent",
+          LogLevelEnum.DEBUG
+        );
+
+        break;
+
+      case "nodeInfo":
+        log(
+          `IMeshDevice.handleFromRadio`,
+          "Sending onNodeInfoPacketEvent",
+          LogLevelEnum.DEBUG
+        );
+        /**
+         * Unifi this, fromRadioObj.packet should always be preasent? so you can tell who sent it etc?
+         * or maybe not, as meshpacket and mynodeinfo are oneofs
+         */
+        this.onNodeInfoPacketEvent.next({
+          packet: fromRadioObj.packet,
+          data: fromRadioObj.nodeInfo,
+        });
+
+        break;
+
+      case "radio":
+        /**
+         * Send RadioConfig Event
+         */
+        log(
+          `IMeshDevice.handleFromRadio`,
+          "Sending onRadioConfigEvent",
+          LogLevelEnum.DEBUG
+        );
+        this.onRadioConfigEvent.next(fromRadioObj.radio);
+
+        break;
+
+      case "logRecord":
+        break;
+
+      case "configCompleteId":
+        if (fromRadioObj.configCompleteId === MY_CONFIG_ID) {
+          /**
+           * @todo check that config is fully sent
+           */
           log(
-            `IMeshDevice.handleFromRadio`,
-            "Sending onConfigEvent",
-            LogLevelEnum.DEBUG
+            `IHTTPConnection.handleFromRadio`,
+            "Sending onDeviceStatusEvent",
+            LogLevelEnum.DEBUG,
+            "DEVICE_CONFIGURED"
           );
-          this.onConfigEvent.next(this);
-          log(
-            `IMeshDevice.handleFromRadio`,
-            `Configured device with node number ${this.myInfo.myNodeNum}`,
-            LogLevelEnum.DEBUG
-          );
+          this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONFIGURED);
+          // if (this.currentPacketId) {
+          //   /**
+          //    * @todo check that config has fully been received
+          //    */
+          //   log(
+          //     `IMeshDevice.handleFromRadio`,
+          //     `Device successfully configured`,
+          //     LogLevelEnum.DEBUG
+          //   );
+          // } else {
+          //   log(
+          //     `IMeshDevice.handleFromRadio`,
+          //     `Incomplete config reveived from device`,
+          //     LogLevelEnum.WARNING
+          //   );
+          // }
         } else {
           log(
             `IMeshDevice.handleFromRadio`,
-            `Incomplete config reveived from device`,
+            `Invalid config id reveived from device`,
             LogLevelEnum.WARNING
           );
         }
-      }
-    } else if (fromRadioObj?.packet) {
-      this.handleMeshPacket(fromRadioObj.packet);
-    } else if (fromRadioObj?.rebooted) {
-      /**
-       * @todo check if we should move the device ping here, or move it to a seperate method (abstract?) to allow us to ping ble, http, serial devices whenever...
-       */
 
-      await this.configure();
-    } else {
-      log(
-        `MeshInterface.handleFromRadio`,
-        `Invalid data received`,
-        LogLevelEnum.ERROR
-      );
+        break;
+
+      case "rebooted":
+        /**
+         * @todo check if we should move the device ping here, or move it to a seperate method (abstract?) to allow us to ping ble, http, serial devices whenever...
+         */
+
+        await this.configure();
+
+        break;
+
+      case "channel":
+        /**
+         * @todo create ChannelSettings event
+         */
+
+        break;
+
+      default:
+        log(
+          `MeshInterface.handleFromRadio`,
+          `Invalid data received`,
+          LogLevelEnum.ERROR
+        );
+        break;
     }
   }
 
@@ -450,55 +474,60 @@ export abstract class IMeshDevice {
     /**
      * Text messages
      */
-    if (meshPacket.decoded.data.portnum === PortNumEnum.TEXT_MESSAGE_APP) {
-      const text = new TextDecoder().decode(meshPacket.decoded.data.payload);
-      log(
-        `IMeshDevice.handleMeshPacket`,
-        "Sending onTextPacketEvent",
-        LogLevelEnum.DEBUG
-      );
-      this.onTextPacketEvent.next({
-        packet: meshPacket,
-        data: text,
-      });
-    } else if (meshPacket.decoded.data.portnum === PortNumEnum.NODEINFO_APP) {
-      /**
-       * Node Info
-       */
-      const nodeInfo = NodeInfo.decode(meshPacket.decoded.data.payload);
-      log(
-        `IMeshDevice.handleMeshPacket`,
-        "Sending onNodeInfoPacketEvent",
-        LogLevelEnum.DEBUG
-      );
-      this.onNodeInfoPacketEvent.next({
-        packet: meshPacket,
-        data: nodeInfo,
-      });
-    } else if (meshPacket.decoded.data.portnum === PortNumEnum.POSITION_APP) {
-      /**
-       * Position
-       */
-      log(
-        `IMeshDevice.handleMeshPacket`,
-        "Sending onPositionPacketEvent",
-        LogLevelEnum.DEBUG
-      );
-      const position = Position.decode(meshPacket.decoded.data.payload);
-      this.onPositionPacketEvent.next({
-        packet: meshPacket,
-        data: position,
-      });
-    } else {
-      /**
-       * All other portnums
-       */
-      log(
-        `IMeshDevice.handleMeshPacket`,
-        "Sending onDataPacketEvent",
-        LogLevelEnum.DEBUG
-      );
-      this.onDataPacketEvent.next(meshPacket);
+    switch (meshPacket.decoded.data.portnum) {
+      case PortNumEnum.TEXT_MESSAGE_APP:
+        const text = new TextDecoder().decode(meshPacket.decoded.data.payload);
+        log(
+          `IMeshDevice.handleMeshPacket`,
+          "Sending onTextPacketEvent",
+          LogLevelEnum.DEBUG
+        );
+        this.onTextPacketEvent.next({
+          packet: meshPacket,
+          data: text,
+        });
+        break;
+      case PortNumEnum.NODEINFO_APP:
+        /**
+         * Node Info
+         */
+        const nodeInfo = NodeInfo.decode(meshPacket.decoded.data.payload);
+
+        log(
+          `IMeshDevice.handleMeshPacket`,
+          "Sending onNodeInfoPacketEvent",
+          LogLevelEnum.DEBUG
+        );
+        this.onNodeInfoPacketEvent.next({
+          packet: meshPacket,
+          data: nodeInfo,
+        });
+      case PortNumEnum.POSITION_APP:
+        /**
+         * Position
+         */
+        log(
+          `IMeshDevice.handleMeshPacket`,
+          "Sending onPositionPacketEvent",
+          LogLevelEnum.DEBUG
+        );
+        const position = Position.decode(meshPacket.decoded.data.payload);
+        this.onPositionPacketEvent.next({
+          packet: meshPacket,
+          data: position,
+        });
+
+      default:
+        /**
+         * All other portnums
+         */
+        log(
+          `IMeshDevice.handleMeshPacket`,
+          "Sending onDataPacketEvent",
+          LogLevelEnum.DEBUG
+        );
+        this.onDataPacketEvent.next(meshPacket);
+        break;
     }
   }
 
@@ -507,14 +536,13 @@ export abstract class IMeshDevice {
    * @param noAutoConfig Disables autoconfiguration
    */
   protected async onConnected(noAutoConfig: boolean) {
-    this.isConnected = true;
-    this.isReconnecting = false;
     log(
       `IMeshDevice.onConnected`,
-      "Sending onConnectionEvent",
-      LogLevelEnum.DEBUG
+      "Sending onDeviceStatusEvent",
+      LogLevelEnum.DEBUG,
+      "DEVICE_CONNECTED"
     );
-    this.onConnectionEvent.next(ConnectionEventEnum.DEVICE_CONNECTED);
+    this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONNECTED);
 
     if (!noAutoConfig) {
       await this.configure().catch((e) => {
@@ -529,10 +557,10 @@ export abstract class IMeshDevice {
   protected onDisconnected() {
     log(
       `IMeshDevice.onDisconnected`,
-      "Sending onConnectionEvent",
-      LogLevelEnum.DEBUG
+      "Sending onDeviceStatusEvent",
+      LogLevelEnum.DEBUG,
+      "DEVICE_DISCONNECTED"
     );
-    this.onConnectionEvent.next(ConnectionEventEnum.DEVICE_DISCONNECTED);
-    this.isConnected = false;
+    this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_DISCONNECTED);
   }
 }

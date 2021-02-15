@@ -457,6 +457,12 @@ export class UserPreferences extends Message<UserPreferences> {
 export class RadioConfig extends Message<RadioConfig> {
   @Field.d(1, UserPreferences)
   preferences: UserPreferences;
+
+  /**
+   * @deprecated
+   */
+  @Field.d(2, ChannelSettings)
+  channelSettings: ChannelSettings;
 }
 
 /**

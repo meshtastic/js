@@ -2,8 +2,7 @@ import { Subject } from "rxjs";
 import { IMeshDevice } from "./imeshdevice";
 import { LogLevelEnum } from "./protobuf";
 import {
-  ConnectionEventEnum,
-  HTTPTransaction,
+  DeviceStatusEnum,
   WebNetworkResponse,
   WebSPIFFSResponse,
   WebStatisticsResponse,
@@ -15,43 +14,14 @@ import { log, typedArrayToBuffer } from "./utils";
  */
 export class IHTTPConnection extends IMeshDevice {
   /**
-   * Short Description
+   * URL of the device that is to be connected to.
    */
   url: string;
-
-  /**
-   * Whether or not tls (https) should be used for communtication to device
-   */
-  tls: boolean;
-
-  /**
-   * Short Description
-   * @todo possibly remove fetchMode and `all=1` and instead add connection parameter `batchRequests: boolean` and set `all=1` based on that
-   */
-  fetchMode: "slow" | "balanced" | "fast" | "stream";
-
-  /**
-   * Timestamp of last time device was interacted with
-   * @todo make global (include ble)
-   */
-  lastInteractionTime: number;
-
-  /**
-   * Current number of consecutive failed requests
-   * @todo make global (include ble)
-   */
-  consecutiveFailedRequests: number;
 
   /**
    * Enables receiving messages all at once, versus one per request
    */
   receiveBatchRequests: boolean;
-
-  /**
-   * Fires whenever a HTTP transaction is completed with the radio
-   * @event
-   */
-  readonly onHTTPTransactionEvent: Subject<HTTPTransaction> = new Subject();
 
   /**
    * Fires whenever a Fires at timed intervals
@@ -64,8 +34,6 @@ export class IHTTPConnection extends IMeshDevice {
     super();
 
     this.url = undefined;
-    this.tls = undefined;
-    this.fetchMode = undefined;
     this.lastInteractionTime = undefined;
     this.consecutiveFailedRequests = 0;
   }
@@ -74,33 +42,34 @@ export class IHTTPConnection extends IMeshDevice {
    * Initiates the connect process to a meshtastic device via HTTP(S)
    * @param address The IP Address/Domain to connect to, without protocol
    * @param tls Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
-   * @param fetchMode Defines how new messages are fetched, takes 'slow', 'balanced', 'fast', 'stream'
-   * @param fetchInterval Sets a fixed interval in that the device is fetched for new messages
-   * @param fetchInterval [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
+   * @param noAutoConfig @todo rename this to make it clearer what it does, or maybe get rid of it. // [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
    * @param receiveBatchRequests Enables receiving messages all at once, versus one per request
+   * @param fetchInterval Sets a fixed interval in that the device is fetched for new messages
    */
   async connect(
     address: string,
     tls?: boolean,
     noAutoConfig = false,
     receiveBatchRequests = false,
-    fetchMode?: "slow" | "balanced" | "fast" | "stream",
     fetchInterval?: number
   ) {
+    log(
+      `IHTTPConnection.connect`,
+      "Sending onDeviceStatusEvent",
+      LogLevelEnum.DEBUG,
+      "DEVICE_CONNECTING"
+    );
+    this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONNECTING);
+
     this.receiveBatchRequests = receiveBatchRequests;
 
     this.consecutiveFailedRequests = 0;
 
     if (!this.url) {
       /**
-       * set the protocol
-       */
-      this.tls = !!tls;
-
-      /**
        * assemble url
        */
-      this.url = !!this.tls ? `https://${address}` : `http://${address}`;
+      this.url = tls ? `https://${address}` : `http://${address}`;
     }
 
     log(
@@ -113,11 +82,15 @@ export class IHTTPConnection extends IMeshDevice {
       .then((response) => {
         log(
           `IHTTPConnection.connect`,
-          "Sending onHTTPTransactionEvent",
-          LogLevelEnum.DEBUG
+          "Sending onDeviceTransactionEvent",
+          LogLevelEnum.TRACE,
+          "success"
         );
-        this.onHTTPTransactionEvent.next({
-          status: response.status,
+        /**
+         * @todo this isn't neccesairly a success, maybe change log to reflect this
+         */
+        this.onDeviceTransactionEvent.next({
+          success: response.status === 200,
           interaction_time: Date.now(),
           consecutiveFailedRequests: this.consecutiveFailedRequests,
         });
@@ -131,27 +104,31 @@ export class IHTTPConnection extends IMeshDevice {
             LogLevelEnum.WARNING
           );
         }
+        log(
+          `IHTTPConnection.connect`,
+          `Starting new connection timer.`,
+          LogLevelEnum.TRACE
+        );
+        setTimeout(() => {
+          this.fetchTimer(fetchInterval);
+        }, 5000);
       })
       .catch((e) => {
         this.consecutiveFailedRequests++;
         log(`IHTTPConnection.connect`, e.message, LogLevelEnum.ERROR);
+        log(
+          `IHTTPConnection.connect`,
+          "Sending onDeviceTransactionEvent",
+          LogLevelEnum.TRACE,
+          "fail"
+        );
+        this.onDeviceTransactionEvent.next({
+          success: false,
+          interaction_time: Date.now(),
+          consecutiveFailedRequests: this.consecutiveFailedRequests,
+        });
       });
-
-    /**
-     * Implement reading from device config here: fetchMode and Interval
-     */
-
-    this.fetchMode = fetchMode;
-
     this.lastInteractionTime = Date.now();
-    log(
-      `IHTTPConnection.connect`,
-      `Starting new connection timer.`,
-      LogLevelEnum.TRACE
-    );
-    setTimeout(() => {
-      this.fetchTimer(fetchInterval);
-    }, 5000);
   }
 
   /**
@@ -177,11 +154,10 @@ export class IHTTPConnection extends IMeshDevice {
 
     /**
      * read as long as the previous read buffer is bigger 0
-     * @todo, if `all=1` is set, don't do this
      */
     while (readBuffer.byteLength > 0) {
       await fetch(
-        this.url + `/api/v1/fromradio?all=${this.receiveBatchRequests}`,
+        this.url + `/api/v1/fromradio?all=${this.receiveBatchRequests ? 1 : 0}`,
         {
           method: "GET",
           headers: {
@@ -192,14 +168,25 @@ export class IHTTPConnection extends IMeshDevice {
         .then(async (response) => {
           log(
             `IHTTPConnection.readFromRadio`,
-            "Sending onHTTPTransactionEvent",
-            LogLevelEnum.DEBUG
+            "Sending onDeviceTransactionEvent",
+            LogLevelEnum.TRACE,
+            "success"
           );
-          this.onHTTPTransactionEvent.next({
-            status: response.status,
+          this.onDeviceTransactionEvent.next({
+            success: response.status === 200,
             interaction_time: Date.now(),
             consecutiveFailedRequests: this.consecutiveFailedRequests,
           });
+
+          if (this.deviceStatus < DeviceStatusEnum.DEVICE_CONNECTED) {
+            log(
+              `IHTTPConnection.readFromRadio`,
+              "Sending onDeviceStatusEvent",
+              LogLevelEnum.DEBUG,
+              "DEVICE_CONNECTED"
+            );
+            this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONNECTED);
+          }
 
           readBuffer = await response.arrayBuffer();
 
@@ -215,8 +202,28 @@ export class IHTTPConnection extends IMeshDevice {
           }
         })
         .catch((e) => {
+          /**
+           * @todo does onDeviceTransationEvent need to be dispatched here too?
+           * @todo exponential backoff here?
+           * @todo do we need a failedRequests counter as we are going to broadcast device disconnected events
+           * @todo if device is offline, it spam creates requests
+           */
           this.consecutiveFailedRequests++;
           log(`IHTTPConnection.readFromRadio`, e.message, LogLevelEnum.ERROR);
+
+          /**
+           * @todo broadcast reconnecting event and then after x attempts, broadcast disconnected
+           */
+
+          if (this.deviceStatus !== DeviceStatusEnum.DEVICE_RECONNECTING) {
+            log(
+              `IHTTPConnection.readFromRadio`,
+              "Sending onDeviceStatusEvent",
+              LogLevelEnum.DEBUG,
+              "DEVICE_RECONNECTING"
+            );
+            this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_RECONNECTING);
+          }
         });
     }
   }
@@ -237,11 +244,12 @@ export class IHTTPConnection extends IMeshDevice {
       .then(async (response) => {
         log(
           `IHTTPConnection.writeToRadio`,
-          "Sending onHTTPTransactionEvent",
-          LogLevelEnum.DEBUG
+          "Sending onDeviceTransactionEvent",
+          LogLevelEnum.TRACE,
+          "success"
         );
-        this.onHTTPTransactionEvent.next({
-          status: response.status,
+        this.onDeviceTransactionEvent.next({
+          success: response.status === 200,
           interaction_time: Date.now(),
           consecutiveFailedRequests: this.consecutiveFailedRequests,
         });
@@ -252,6 +260,20 @@ export class IHTTPConnection extends IMeshDevice {
       .catch((e) => {
         this.consecutiveFailedRequests++;
         log(`IHTTPConnection.writeToRadio`, e.message, LogLevelEnum.ERROR);
+        /**
+         * @todo these are not logged, they need to be caught, maybe even raise the log level, or not as devices should be able to go away and reconnect later
+         */
+        log(
+          `IHTTPConnection.writeToRadio`,
+          "Sending onDeviceTransactionEvent",
+          LogLevelEnum.TRACE,
+          "fail"
+        );
+        this.onDeviceTransactionEvent.next({
+          success: false,
+          interaction_time: Date.now(),
+          consecutiveFailedRequests: this.consecutiveFailedRequests,
+        });
       });
   }
 
@@ -259,6 +281,9 @@ export class IHTTPConnection extends IMeshDevice {
    * Short description
    */
   private async fetchTimer(fetchInterval?: number) {
+    /**
+     * @todo change this behaviour, change to a more conservative retry rate
+     */
     if (this.consecutiveFailedRequests > 3) {
       return this.disconnect();
     }
@@ -273,9 +298,6 @@ export class IHTTPConnection extends IMeshDevice {
     let newInterval = 5e3;
 
     if (!fetchInterval) {
-      if (this.tls) {
-        newInterval = 1e4;
-      }
       const timeSinceLastInteraction = Date.now() - this.lastInteractionTime;
       newInterval =
         timeSinceLastInteraction > 12e5
@@ -300,10 +322,20 @@ export class IHTTPConnection extends IMeshDevice {
   async restartDevice() {
     return fetch(`${this.url}/restart`, {
       method: "POST",
-    }).catch((e) => {
-      this.consecutiveFailedRequests++;
-      log(`IHTTPConnection.restartDevice`, e.message, LogLevelEnum.ERROR);
-    });
+    })
+      .then(() => {
+        log(
+          `IHTTPConnection.restartDevice`,
+          "Sending onDeviceStatusEvent",
+          LogLevelEnum.DEBUG,
+          "DEVICE_RESTARTING"
+        );
+        this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_RESTARTING);
+      })
+      .catch((e) => {
+        this.consecutiveFailedRequests++;
+        log(`IHTTPConnection.restartDevice`, e.message, LogLevelEnum.ERROR);
+      });
   }
 
   /**

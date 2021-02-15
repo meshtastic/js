@@ -6,6 +6,7 @@ import {
 } from "./constants";
 import { IMeshDevice } from "./imeshdevice";
 import { LogLevelEnum } from "./protobuf";
+import { DeviceStatusEnum } from "./types";
 import { exponentialBackoff, typedArrayToBuffer, log } from "./utils";
 
 /**
@@ -47,16 +48,6 @@ export class IBLEConnection extends IMeshDevice {
    */
   userInitiatedDisconnect: boolean;
 
-  /**
-   * States if the current device is currently connected or not
-   */
-  isConnected: boolean;
-
-  /**
-   * States if the current device is in a reconnecting state
-   */
-  isReconnecting: boolean;
-
   constructor() {
     super();
 
@@ -78,7 +69,7 @@ export class IBLEConnection extends IMeshDevice {
     requestDeviceFilterParams?: RequestDeviceOptions,
     noAutoConfig = false
   ) {
-    if (this.isConnected) {
+    if (this.deviceStatus >= DeviceStatusEnum.DEVICE_CONNECTED) {
       log(
         `IBLEConnection.connect`,
         `Device is already connected`,
@@ -110,7 +101,7 @@ export class IBLEConnection extends IMeshDevice {
         }
       }
 
-      if (!this.isReconnecting) {
+      if (this.deviceStatus > DeviceStatusEnum.DEVICE_RECONNECTING) {
         this.subscribeToBLEConnectionEvents();
       }
 
@@ -142,8 +133,6 @@ export class IBLEConnection extends IMeshDevice {
 
       await this.subscribeToBLENotification();
 
-      this.isConnected = true;
-
       await this.onConnected(noAutoConfig);
     } catch (e) {
       log(`IBLEConnection.connect`, e.message, LogLevelEnum.ERROR);
@@ -156,13 +145,16 @@ export class IBLEConnection extends IMeshDevice {
   disconnect() {
     this.userInitiatedDisconnect = true;
 
-    if (!this.isConnected && !this.isReconnecting) {
+    /**
+     * @todo Not needed as they are verbose
+     */
+    if (this.deviceStatus === DeviceStatusEnum.DEVICE_DISCONNECTED) {
       log(
         `IBLEConnection.disconnect`,
         `Device already disconnected.`,
         LogLevelEnum.TRACE
       );
-    } else if (!this.isConnected && this.isReconnecting) {
+    } else if (this.deviceStatus === DeviceStatusEnum.DEVICE_RECONNECTING) {
       log(
         `IBLEConnection.disconnect`,
         `Reconnect cancelled.`,
@@ -199,9 +191,35 @@ export class IBLEConnection extends IMeshDevice {
           if (value && value.byteLength > 0) {
             this.handleFromRadio(new Uint8Array(readBuffer, 0));
           }
+          log(
+            `IBLEConnection.readFromRadio`,
+            "Sending onDeviceTransactionEvent",
+            LogLevelEnum.TRACE,
+            "success"
+          );
+          this.onDeviceTransactionEvent.next({
+            success: true,
+            interaction_time: Date.now(),
+            consecutiveFailedRequests: this.consecutiveFailedRequests,
+          });
         })
         .catch((e) => {
+          this.consecutiveFailedRequests++;
+          log(
+            `IBLEConnection.readFromRadio`,
+            "Sending onDeviceTransactionEvent",
+            LogLevelEnum.TRACE,
+            "fail"
+          );
+          this.onDeviceTransactionEvent.next({
+            success: false,
+            interaction_time: Date.now(),
+            consecutiveFailedRequests: this.consecutiveFailedRequests,
+          });
           log(`IBLEConnection.readFromRadio`, e.message, LogLevelEnum.ERROR);
+          /**
+           * @todo exponential backoff here?
+           */
           return new ArrayBuffer(0);
         });
     }
@@ -328,6 +346,7 @@ export class IBLEConnection extends IMeshDevice {
     await this.fromNumCharacteristic.startNotifications();
     /**
      * bind.this makes the object reference to IBLEConnection accessible within the callback
+     * @todo stop using eventListener
      */
     this.fromNumCharacteristic.addEventListener(
       "characteristicvaluechanged",
@@ -374,17 +393,37 @@ export class IBLEConnection extends IMeshDevice {
     this.onDisconnected();
 
     if (!this.userInitiatedDisconnect) {
-      this.isReconnecting = true;
+      if (this.deviceStatus !== DeviceStatusEnum.DEVICE_RECONNECTING) {
+        log(
+          `IBLEConnection.handleBLEDisconnect`,
+          "Sending onDeviceStatusEvent",
+          LogLevelEnum.DEBUG,
+          "DEVICE_RECONNECTING"
+        );
+        this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_RECONNECTING);
+      }
 
       const toTry = async () => {
         await this.connect();
       };
 
       const success = () => {
-        this.isReconnecting = false;
+        /**
+         * @todo, do we need to reconfigure the device
+         */
+        log(
+          `IBLEConnection.handleBLEDisconnect`,
+          "Sending onDeviceStatusEvent",
+          LogLevelEnum.DEBUG,
+          "DEVICE_CONFIGURED"
+        );
+        this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONFIGURED);
       };
 
       const fail = () => {
+        /**
+         * Do we need to set the deviceStatus here or call onDisconnect()?
+         */
         log(
           `IBLEConnection.handleBLEDisconnect`,
           `Automatic reconnect failed.`,
