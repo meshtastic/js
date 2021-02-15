@@ -213,6 +213,18 @@ export class SubPacket extends Message<SubPacket> {
   @Field.d(13, ErrorReasonEnum)
   errorReason: ErrorReasonEnum;
 
+  /**
+   * @deprecated
+   */
+  @Field.d(1, Position)
+  position: Position;
+
+  /**
+   * @deprecated
+   */
+  @Field.d(4, User)
+  user: User;
+
   @Field.d(5, "bool")
   wantResponse: boolean;
 
@@ -522,6 +534,12 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
 
   @Field.d(10, "uint32")
   packetIdBits: number;
+
+  /**
+   * @deprecated
+   */
+  @Field.d(11, "uint32")
+  currentPacketId: number;
 
   @Field.d(12, "uint32")
   nodeNumBits: number;
