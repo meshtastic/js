@@ -471,6 +471,13 @@ export abstract class IMeshDevice {
    * @param meshPacket
    */
   private handleMeshPacket(meshPacket: MeshPacket) {
+    log(
+      `IMeshDevice.handleMeshPacket`,
+      "Sending onDataPacketEvent",
+      LogLevelEnum.DEBUG
+    );
+    this.onDataPacketEvent.next(meshPacket);
+
     if (meshPacket.decoded.data?.payload) {
       /**
        * Text messages
@@ -519,18 +526,6 @@ export abstract class IMeshDevice {
             packet: meshPacket,
             data: position,
           });
-
-        default:
-          /**
-           * All other portnums
-           */
-          log(
-            `IMeshDevice.handleMeshPacket`,
-            "Sending onDataPacketEvent",
-            LogLevelEnum.DEBUG
-          );
-          this.onDataPacketEvent.next(meshPacket);
-          break;
       }
     } else if (meshPacket.decoded.ackVariant) {
       /**
