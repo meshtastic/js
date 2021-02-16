@@ -78,7 +78,7 @@ export class IHTTPConnection extends IMeshDevice {
       LogLevelEnum.DEBUG
     );
 
-    fetch(this.url + `/hotspot-detect.html`, {})
+    await fetch(this.url + `/hotspot-detect.html`, {})
       .then((response) => {
         log(
           `IHTTPConnection.connect`,
@@ -234,7 +234,7 @@ export class IHTTPConnection extends IMeshDevice {
   async writeToRadio(ToRadioUInt8Array: Uint8Array) {
     this.lastInteractionTime = Date.now();
 
-    fetch(`${this.url}/api/v1/toradio`, {
+    await fetch(`${this.url}/api/v1/toradio`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/x-protobuf",
