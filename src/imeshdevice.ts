@@ -11,6 +11,7 @@ import {
   User,
   LogLevelEnum,
   NodeInfo,
+  ChannelSettings,
 } from "./protobuf";
 import { DeviceStatusEnum, DeviceTransaction } from "./types";
 import { log } from "./utils";
@@ -258,6 +259,31 @@ export abstract class IMeshDevice {
       ToRadio.encode(
         new ToRadio({
           setOwner: ownerData,
+        })
+      ).finish()
+    );
+  }
+
+  /**
+   * Sets devices ChannelSettings
+   * @param channel
+   */
+  async setChannelSettings(channel: ChannelSettings) {
+    if (this.deviceStatus < DeviceStatusEnum.DEVICE_CONFIGURED) {
+      /**
+       * @todo used to check if user had been read from radio, change this
+       */
+      log(
+        `IMeshDevice.setChannelSettings`,
+        `ChannelSettings have been read from device, can't set new ones.`,
+        LogLevelEnum.WARNING
+      );
+    }
+
+    await this.writeToRadio(
+      ToRadio.encode(
+        new ToRadio({
+          setChannel: channel,
         })
       ).finish()
     );
