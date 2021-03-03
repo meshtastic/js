@@ -1,4 +1,4 @@
-import { LogLevelEnum } from "./protobuf";
+import { LogLevelEnum } from "./protobufs";
 import { log } from "./utils";
 
 /**

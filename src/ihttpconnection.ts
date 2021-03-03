@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { IMeshDevice } from "./imeshdevice";
-import { LogLevelEnum } from "./protobuf";
+import { LogLevelEnum } from "./protobufs";
 import {
   DeviceStatusEnum,
   WebNetworkResponse,
@@ -56,7 +56,7 @@ export class IHTTPConnection extends IMeshDevice {
     log(
       `IHTTPConnection.connect`,
       "Sending onDeviceStatusEvent",
-      LogLevelEnum.DEBUG,
+      LogLevelEnum.TRACE,
       "DEVICE_CONNECTING"
     );
     this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONNECTING);
@@ -71,7 +71,25 @@ export class IHTTPConnection extends IMeshDevice {
        */
       this.url = tls ? `https://${address}` : `http://${address}`;
     }
+    if (await this.ping()) {
+      setTimeout(() => {
+        this.fetchTimer(fetchInterval);
+      }, 5000);
+    }
+  }
 
+  /**
+   * Disconnects from the meshtastic device
+   */
+  disconnect() {
+    this.onDisconnected();
+  }
+
+  /**
+   * Pings device to check if it is avaliable
+   * @todo implement
+   */
+  async ping() {
     log(
       `IHTTPConnection.connect`,
       `Attempting device ping.`,
@@ -83,8 +101,7 @@ export class IHTTPConnection extends IMeshDevice {
         log(
           `IHTTPConnection.connect`,
           "Sending onDeviceTransactionEvent",
-          LogLevelEnum.TRACE,
-          "success"
+          LogLevelEnum.TRACE
         );
         /**
          * @todo this isn't neccesairly a success, maybe change log to reflect this
@@ -95,7 +112,8 @@ export class IHTTPConnection extends IMeshDevice {
           consecutiveFailedRequests: this.consecutiveFailedRequests,
         });
         if (response.status === 200) {
-          this.onConnected(noAutoConfig);
+          // @todo remove autoconfig shit
+          this.onConnected(false);
         } else {
           this.consecutiveFailedRequests++;
           log(
@@ -109,9 +127,7 @@ export class IHTTPConnection extends IMeshDevice {
           `Starting new connection timer.`,
           LogLevelEnum.TRACE
         );
-        setTimeout(() => {
-          this.fetchTimer(fetchInterval);
-        }, 5000);
+        return true;
       })
       .catch((e) => {
         this.consecutiveFailedRequests++;
@@ -129,21 +145,8 @@ export class IHTTPConnection extends IMeshDevice {
         });
       });
     this.lastInteractionTime = Date.now();
-  }
 
-  /**
-   * Disconnects from the meshtastic device
-   */
-  disconnect() {
-    this.onDisconnected();
-  }
-
-  /**
-   * Pings device to check if it is avaliable
-   * @todo implement
-   */
-  ping() {
-    return true;
+    return false;
   }
 
   /**
@@ -182,7 +185,7 @@ export class IHTTPConnection extends IMeshDevice {
             log(
               `IHTTPConnection.readFromRadio`,
               "Sending onDeviceStatusEvent",
-              LogLevelEnum.DEBUG,
+              LogLevelEnum.TRACE,
               "DEVICE_CONNECTED"
             );
             this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONNECTED);
@@ -219,7 +222,7 @@ export class IHTTPConnection extends IMeshDevice {
             log(
               `IHTTPConnection.readFromRadio`,
               "Sending onDeviceStatusEvent",
-              LogLevelEnum.DEBUG,
+              LogLevelEnum.TRACE,
               "DEVICE_RECONNECTING"
             );
             this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_RECONNECTING);
@@ -327,7 +330,7 @@ export class IHTTPConnection extends IMeshDevice {
         log(
           `IHTTPConnection.restartDevice`,
           "Sending onDeviceStatusEvent",
-          LogLevelEnum.DEBUG,
+          LogLevelEnum.TRACE,
           "DEVICE_RESTARTING"
         );
         this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_RESTARTING);

@@ -2,7 +2,7 @@ import { SettingsManager } from "./settingsmanager";
 import { Client } from "./client";
 import { IBLEConnection } from "./ibleconnection";
 import { IHTTPConnection } from "./ihttpconnection";
-import * as Protobuf from "./protobuf";
+import * as Protobuf from "./protobufs";
 import * as Types from "./types";
 
 export {

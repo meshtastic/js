@@ -1,4 +1,4 @@
-import { LogLevelEnum } from "./protobuf";
+import { LogLevelEnum } from "./protobufs";
 import { SettingsManager } from "./settingsmanager";
 
 /**
@@ -68,62 +68,53 @@ const log = (
     switch (logLevel) {
       case LogLevelEnum.TRACE:
         console.info(
-          `%c[TRACE]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
+          `%c[TRACE]%c ${emitter}\n%c${message}`,
           "color:grey",
           "color:darkgrey",
-          "color:white",
-          "color:lightgreen"
+          "color:white"
         );
         break;
 
       case LogLevelEnum.DEBUG:
         console.info(
-          `%c[DEBUG]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
+          `%c[DEBUG]%c ${emitter}\n%c${message}`,
           "color:lightcyan",
           "color:darkgrey",
-          "color:white",
-          "color:lightgreen"
+          "color:white"
         );
         break;
 
       case LogLevelEnum.INFO:
         console.info(
-          `%c[INFO]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
-          "color:lightgreen",
+          `%c[INFO]%c ${emitter}\n%c${message}`,
           "color:darkgrey",
-          "color:white",
-          "color:lightgreen"
+          "color:white"
         );
         break;
       case LogLevelEnum.WARNING:
         console.warn(
-          `%c[WARNING]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
+          `%c[WARNING]%c ${emitter}\n%c${message}`,
           "color:yellow",
           "color:darkgrey",
-          "color:white",
-          "color:lightgreen"
+          "color:white"
         );
         break;
 
       case LogLevelEnum.ERROR:
         console.error(
-          `%c[ERROR]%c ${emitter}\n%c${message} %c${data ? `(${data})` : ""}`,
+          `%c[ERROR]%c ${emitter}\n%c${message}`,
           "color:orangered",
           "color:darkgrey",
-          "color:white",
-          "color:lightgreen"
+          "color:white"
         );
         break;
 
       case LogLevelEnum.CRITICAL:
         console.error(
-          `%c[CRITICAL]%c ${emitter}\n%c${message} %c${
-            data ? `(${data})` : ""
-          }`,
+          `%c[CRITICAL]%c ${emitter}\n%c${message}`,
           "color:red",
           "color:darkgrey",
-          "color:white",
-          "color:lightgreen"
+          "color:white"
         );
         break;
       default:

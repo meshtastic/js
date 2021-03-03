@@ -5,14 +5,15 @@ import {
   MyNodeInfo,
   Position,
   RadioConfig,
-  SubPacket,
   ToRadio,
   PortNumEnum,
   User,
   LogLevelEnum,
   NodeInfo,
   ChannelSettings,
-} from "./protobuf";
+  AdminMessage,
+  Channel,
+} from "./protobufs";
 import { DeviceStatusEnum, DeviceTransaction } from "./types";
 import { log } from "./utils";
 import { BROADCAST_NUM, MY_CONFIG_ID } from "./constants";
@@ -67,7 +68,7 @@ export abstract class IMeshDevice {
    * Ping abstract class
    * @todo
    */
-  abstract ping(): boolean;
+  abstract ping(): Promise<boolean>;
 
   /**
    * Fires when a new FromRadio message has been received from the device
@@ -174,11 +175,9 @@ export abstract class IMeshDevice {
   ) {
     return this.sendPacket(
       new MeshPacket({
-        decoded: new SubPacket({
-          data: new Data({
-            payload: byteData,
-            portnum: dataType,
-          }),
+        decoded: new Data({
+          payload: byteData,
+          portnum: dataType,
           wantResponse,
         }),
       }),
@@ -226,14 +225,19 @@ export abstract class IMeshDevice {
   async setRadioConfig(configOptions: RadioConfig) {
     /**
      * @todo used to check if the radioConfig had bean read, should be verified by whatever clalls this function
+     * ! @todo fix
      */
 
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
-          setRadio: new RadioConfig({
-            preferences: configOptions.preferences,
-          }),
+          packet: new MeshPacket(
+            new AdminMessage({
+              setRadio: new RadioConfig({
+                preferences: configOptions.preferences,
+              }),
+            })
+          ),
         })
       ).finish()
     );
@@ -258,7 +262,11 @@ export abstract class IMeshDevice {
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
-          setOwner: ownerData,
+          packet: new MeshPacket(
+            new AdminMessage({
+              setOwner: ownerData,
+            })
+          ),
         })
       ).finish()
     );
@@ -268,7 +276,7 @@ export abstract class IMeshDevice {
    * Sets devices ChannelSettings
    * @param channel
    */
-  async setChannelSettings(channel: ChannelSettings) {
+  async setChannelSettings(channel: Channel) {
     if (this.deviceStatus < DeviceStatusEnum.DEVICE_CONFIGURED) {
       /**
        * @todo used to check if user had been read from radio, change this
@@ -283,7 +291,11 @@ export abstract class IMeshDevice {
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
-          setChannel: channel,
+          packet: new MeshPacket(
+            new AdminMessage({
+              setChannel: channel,
+            })
+          ),
         })
       ).finish()
     );
@@ -307,7 +319,7 @@ export abstract class IMeshDevice {
     log(
       `IMeshDevice.configure`,
       "Sending onDeviceStatusEvent",
-      LogLevelEnum.DEBUG,
+      LogLevelEnum.TRACE,
       "DEVICE_CONFIGURING"
     );
     this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONFIGURING);
@@ -341,7 +353,6 @@ export abstract class IMeshDevice {
 
   /**
    * Generates packet identifier for new message by increasing previous packet id by one
-   * @todo hopefuly replace with cuid
    */
   private generatePacketId() {
     return Math.floor(Math.random() * 1e9);
@@ -375,7 +386,7 @@ export abstract class IMeshDevice {
     log(
       `IMeshDevice.handleFromRadio`,
       "Sending onFromRadioEvent",
-      LogLevelEnum.DEBUG
+      LogLevelEnum.TRACE
     );
     this.onFromRadioEvent.next(fromRadioObj);
 
@@ -390,7 +401,7 @@ export abstract class IMeshDevice {
         log(
           `IMeshDevice.handleFromRadio`,
           "Sending onMyNodeInfoEvent",
-          LogLevelEnum.DEBUG
+          LogLevelEnum.TRACE
         );
 
         break;
@@ -399,7 +410,7 @@ export abstract class IMeshDevice {
         log(
           `IMeshDevice.handleFromRadio`,
           "Sending onNodeInfoPacketEvent",
-          LogLevelEnum.DEBUG
+          LogLevelEnum.TRACE
         );
         /**
          * Unifi this, fromRadioObj.packet should always be preasent? so you can tell who sent it etc?
@@ -412,18 +423,18 @@ export abstract class IMeshDevice {
 
         break;
 
-      case "radio":
-        /**
-         * Send RadioConfig Event
-         */
-        log(
-          `IMeshDevice.handleFromRadio`,
-          "Sending onRadioConfigEvent",
-          LogLevelEnum.DEBUG
-        );
-        this.onRadioConfigEvent.next(fromRadioObj.radio);
+      // case "radio":
+      //   /**
+      //    * Send RadioConfig Event
+      //    */
+      //   log(
+      //     `IMeshDevice.handleFromRadio`,
+      //     "Sending onRadioConfigEvent",
+      //     LogLevelEnum.DEBUG
+      //   );
+      //   this.onRadioConfigEvent.next(fromRadioObj.radio);
 
-        break;
+      //   break;
 
       case "logRecord":
         break;
@@ -436,7 +447,7 @@ export abstract class IMeshDevice {
           log(
             `IHTTPConnection.handleFromRadio`,
             "Sending onDeviceStatusEvent",
-            LogLevelEnum.DEBUG,
+            LogLevelEnum.TRACE,
             "DEVICE_CONFIGURED"
           );
           this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONFIGURED);
@@ -475,12 +486,12 @@ export abstract class IMeshDevice {
 
         break;
 
-      case "channel":
-        /**
-         * @todo create ChannelSettings event
-         */
+      // case "channel":
+      //   /**
+      //    * @todo create ChannelSettings event
+      //    */
 
-        break;
+      //   break;
 
       default:
         log(
@@ -500,23 +511,21 @@ export abstract class IMeshDevice {
     log(
       `IMeshDevice.handleMeshPacket`,
       "Sending onDataPacketEvent",
-      LogLevelEnum.DEBUG
+      LogLevelEnum.TRACE
     );
     this.onDataPacketEvent.next(meshPacket);
 
-    if (meshPacket.decoded.data?.payload) {
+    if (meshPacket.decoded.payload) {
       /**
        * Text messages
        */
-      switch (meshPacket.decoded.data.portnum) {
+      switch (meshPacket.decoded.portnum) {
         case PortNumEnum.TEXT_MESSAGE_APP:
-          const text = new TextDecoder().decode(
-            meshPacket.decoded.data.payload
-          );
+          const text = new TextDecoder().decode(meshPacket.decoded.payload);
           log(
             `IMeshDevice.handleMeshPacket`,
             "Sending onTextPacketEvent",
-            LogLevelEnum.DEBUG
+            LogLevelEnum.TRACE
           );
           this.onTextPacketEvent.next({
             packet: meshPacket,
@@ -527,12 +536,12 @@ export abstract class IMeshDevice {
           /**
            * Node Info
            */
-          const nodeInfo = NodeInfo.decode(meshPacket.decoded.data.payload);
+          const nodeInfo = NodeInfo.decode(meshPacket.decoded.payload);
 
           log(
             `IMeshDevice.handleMeshPacket`,
             "Sending onNodeInfoPacketEvent",
-            LogLevelEnum.DEBUG
+            LogLevelEnum.TRACE
           );
           this.onNodeInfoPacketEvent.next({
             packet: meshPacket,
@@ -545,21 +554,23 @@ export abstract class IMeshDevice {
           log(
             `IMeshDevice.handleMeshPacket`,
             "Sending onPositionPacketEvent",
-            LogLevelEnum.DEBUG
+            LogLevelEnum.TRACE
           );
-          const position = Position.decode(meshPacket.decoded.data.payload);
+          const position = Position.decode(meshPacket.decoded.payload);
           this.onPositionPacketEvent.next({
             packet: meshPacket,
             data: position,
           });
       }
-    } else if (meshPacket.decoded.ackVariant) {
-      /**
-       * @todo implement
-       * We have just received an ack from the network, either a success or fail
-       */
-      console.log("ack received");
-    } else {
+    }
+    // else if (meshPacket.decoded.ackVariant) {
+    //   /**
+    //    * @todo implement
+    //    * We have just received an ack from the network, either a success or fail
+    //    */
+    //   console.log("ack received");
+    // }
+    else {
       log(
         `IMeshDevice.handleMeshPacket`,
         "Device received empty data packet, ignoring.",
@@ -576,7 +587,7 @@ export abstract class IMeshDevice {
     log(
       `IMeshDevice.onConnected`,
       "Sending onDeviceStatusEvent",
-      LogLevelEnum.DEBUG,
+      LogLevelEnum.TRACE,
       "DEVICE_CONNECTED"
     );
     this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONNECTED);
@@ -595,7 +606,7 @@ export abstract class IMeshDevice {
     log(
       `IMeshDevice.onDisconnected`,
       "Sending onDeviceStatusEvent",
-      LogLevelEnum.DEBUG,
+      LogLevelEnum.TRACE,
       "DEVICE_DISCONNECTED"
     );
     this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_DISCONNECTED);

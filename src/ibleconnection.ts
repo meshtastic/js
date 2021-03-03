@@ -5,7 +5,7 @@ import {
   TORADIO_UUID,
 } from "./constants";
 import { IMeshDevice } from "./imeshdevice";
-import { LogLevelEnum } from "./protobuf";
+import { LogLevelEnum } from "./protobufs";
 import { DeviceStatusEnum } from "./types";
 import { exponentialBackoff, typedArrayToBuffer, log } from "./utils";
 
@@ -172,7 +172,7 @@ export class IBLEConnection extends IMeshDevice {
    * Pings device to check if it is avaliable
    * @todo implement
    */
-  ping() {
+  async ping() {
     return true;
   }
 
@@ -397,7 +397,7 @@ export class IBLEConnection extends IMeshDevice {
         log(
           `IBLEConnection.handleBLEDisconnect`,
           "Sending onDeviceStatusEvent",
-          LogLevelEnum.DEBUG,
+          LogLevelEnum.TRACE,
           "DEVICE_RECONNECTING"
         );
         this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_RECONNECTING);
@@ -414,7 +414,7 @@ export class IBLEConnection extends IMeshDevice {
         log(
           `IBLEConnection.handleBLEDisconnect`,
           "Sending onDeviceStatusEvent",
-          LogLevelEnum.DEBUG,
+          LogLevelEnum.TRACE,
           "DEVICE_CONFIGURED"
         );
         this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONFIGURED);
