@@ -123,4 +123,4 @@ const log = (
   }
 };
 
-export { bufferToHex, typedArrayToBuffer, exponentialBackoff, log };
+export { bufferToHex, exponentialBackoff, log, typedArrayToBuffer };

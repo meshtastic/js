@@ -2,12 +2,12 @@ import {
   FROMNUM_UUID,
   FROMRADIO_UUID,
   SERVICE_UUID,
-  TORADIO_UUID,
+  TORADIO_UUID
 } from "./constants";
 import { IMeshDevice } from "./imeshdevice";
 import { LogLevelEnum } from "./protobufs";
 import { DeviceStatusEnum } from "./types";
-import { exponentialBackoff, typedArrayToBuffer, log } from "./utils";
+import { exponentialBackoff, log, typedArrayToBuffer } from "./utils";
 
 /**
  * Allows to connect to a meshtastic device via bluetooth
@@ -63,12 +63,8 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Initiates the connect process to a meshtastic device via bluetooth
    * @param requestDeviceFilterParams Optional filter options for the web bluetooth api requestDevice() method
-   * @param noAutoConfig Connect to the device without configuring it. Requires to call configure() manually
    */
-  async connect(
-    requestDeviceFilterParams?: RequestDeviceOptions,
-    noAutoConfig = false
-  ) {
+  async connect(requestDeviceFilterParams?: RequestDeviceOptions) {
     if (this.deviceStatus >= DeviceStatusEnum.DEVICE_CONNECTED) {
       log(
         `IBLEConnection.connect`,
@@ -133,7 +129,7 @@ export class IBLEConnection extends IMeshDevice {
 
       await this.subscribeToBLENotification();
 
-      await this.onConnected(noAutoConfig);
+      await this.onConnected();
     } catch (e) {
       log(`IBLEConnection.connect`, e.message, LogLevelEnum.ERROR);
     }
@@ -200,7 +196,7 @@ export class IBLEConnection extends IMeshDevice {
           this.onDeviceTransactionEvent.next({
             success: true,
             interaction_time: Date.now(),
-            consecutiveFailedRequests: this.consecutiveFailedRequests,
+            consecutiveFailedRequests: this.consecutiveFailedRequests
           });
         })
         .catch((e) => {
@@ -214,7 +210,7 @@ export class IBLEConnection extends IMeshDevice {
           this.onDeviceTransactionEvent.next({
             success: false,
             interaction_time: Date.now(),
-            consecutiveFailedRequests: this.consecutiveFailedRequests,
+            consecutiveFailedRequests: this.consecutiveFailedRequests
           });
           log(`IBLEConnection.readFromRadio`, e.message, LogLevelEnum.ERROR);
           /**
@@ -268,7 +264,7 @@ export class IBLEConnection extends IMeshDevice {
      */
     if (!requestDeviceFilterParams?.hasOwnProperty("filters")) {
       requestDeviceFilterParams = {
-        filters: [{ services: [SERVICE_UUID] }],
+        filters: [{ services: [SERVICE_UUID] }]
       };
     }
     return navigator.bluetooth

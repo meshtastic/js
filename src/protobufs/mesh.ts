@@ -1,4 +1,5 @@
-import { Message, Field, OneOf, Type } from "protobufjs/light";
+import { Field, Message, OneOf, Type } from "protobufjs";
+
 import { PortNumEnum } from "./portnums";
 
 /**
@@ -56,6 +57,9 @@ export enum ErrorEnum {
   TIMEOUT = 3,
   NO_INTERFACE = 4,
   MAX_RETRANSMIT = 5,
+  NO_CHANNEL = 6,
+  TOO_LARGE = 7,
+  NO_RESPONSE = 8
 }
 
 /**
@@ -108,7 +112,7 @@ export enum PriorityEnum {
   DEFAULT = 64,
   RELIABLE = 70,
   ACK = 120,
-  MAX = 127,
+  MAX = 127
 }
 
 /**
@@ -157,7 +161,7 @@ export class MeshPacket extends Message<MeshPacket> {
 
 export enum ConstantsEnum {
   Unused = 0,
-  DATA_PAYLOAD_LEN = 240,
+  DATA_PAYLOAD_LEN = 240
 }
 
 /**
@@ -191,6 +195,7 @@ export enum CriticalErrorCodeEnum {
   NoAXP192 = 6,
   InvalidRadioSetting = 7,
   TransmitFailed = 8,
+  Brownout = 9
 }
 
 /**
@@ -247,7 +252,7 @@ export enum LogLevelEnum {
   WARNING = 30,
   INFO = 20,
   DEBUG = 10,
-  TRACE = 5,
+  TRACE = 5
 }
 
 /**

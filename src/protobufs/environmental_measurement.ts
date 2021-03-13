@@ -1,4 +1,4 @@
-import { Message, Field, Type } from "protobufjs";
+import { Field, Message, Type } from "protobufjs";
 
 /**
  * Used for the environmental measurement plugin

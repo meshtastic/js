@@ -1,4 +1,4 @@
-import { Message, Field, Type } from "protobufjs";
+import { Field, Message, Type } from "protobufjs";
 
 export enum RegionCodeEnum {
   Unset = 0,
@@ -9,7 +9,7 @@ export enum RegionCodeEnum {
   JP = 5,
   ANZ = 6,
   KR = 7,
-  TW = 8,
+  TW = 8
 }
 
 export enum ChargeCurrentEnum {
@@ -29,20 +29,20 @@ export enum ChargeCurrentEnum {
   MA1080 = 13,
   MA1160 = 14,
   MA1240 = 15,
-  MA1320 = 16,
+  MA1320 = 16
 }
 
 export enum GpsOperationEnum {
   GpsOpUnset = 0,
   GpsOpMobile = 2,
   GpsOpTimeOnly = 3,
-  GpsOpDisabled = 4,
+  GpsOpDisabled = 4
 }
 
 export enum LocationSharingEnum {
   LocUnset = 0,
   LocEnabled = 1,
-  LocDisabled = 2,
+  LocDisabled = 2
 }
 
 /**
@@ -170,7 +170,7 @@ export class UserPreferences extends Message<UserPreferences> {
   @Field.d(134, "bool")
   rangeTestPluginSave: boolean;
 
-  @Field.d(136, "bool")
+  @Field.d(148, "bool")
   storeForwardPluginEnabled: boolean;
 
   @Field.d(137, "uint32")

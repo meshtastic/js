@@ -1,23 +1,23 @@
+import { Subject } from "rxjs";
+
+import { BROADCAST_NUM, MIN_FW_VERSION, MY_CONFIG_ID } from "./constants";
 import {
+  AdminMessage,
+  Channel,
   Data,
   FromRadio,
+  LogLevelEnum,
   MeshPacket,
   MyNodeInfo,
+  NodeInfo,
+  PortNumEnum,
   Position,
   RadioConfig,
   ToRadio,
-  PortNumEnum,
-  User,
-  LogLevelEnum,
-  NodeInfo,
-  ChannelSettings,
-  AdminMessage,
-  Channel,
+  User
 } from "./protobufs";
 import { DeviceStatusEnum, DeviceTransaction } from "./types";
 import { log } from "./utils";
-import { BROADCAST_NUM, MY_CONFIG_ID } from "./constants";
-import { Subject } from "rxjs";
 
 /**
  * Base class for connection methods to extend
@@ -178,8 +178,8 @@ export abstract class IMeshDevice {
         decoded: new Data({
           payload: byteData,
           portnum: dataType,
-          wantResponse,
-        }),
+          wantResponse
+        })
       }),
       destinationNum,
       wantAck
@@ -212,7 +212,7 @@ export abstract class IMeshDevice {
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
-          packet: meshPacket,
+          packet: meshPacket
         })
       ).finish()
     );
@@ -234,10 +234,10 @@ export abstract class IMeshDevice {
           packet: new MeshPacket(
             new AdminMessage({
               setRadio: new RadioConfig({
-                preferences: configOptions.preferences,
-              }),
+                preferences: configOptions.preferences
+              })
             })
-          ),
+          )
         })
       ).finish()
     );
@@ -264,9 +264,9 @@ export abstract class IMeshDevice {
         new ToRadio({
           packet: new MeshPacket(
             new AdminMessage({
-              setOwner: ownerData,
+              setOwner: ownerData
             })
-          ),
+          )
         })
       ).finish()
     );
@@ -293,13 +293,18 @@ export abstract class IMeshDevice {
         new ToRadio({
           packet: new MeshPacket(
             new AdminMessage({
-              setChannel: channel,
+              setChannel: channel
             })
-          ),
+          )
         })
       ).finish()
     );
   }
+
+  /**
+   * @todo implement getRadioRequest, getRadioResponse, getChannelRequest, getChannelResponse
+   * @todo update naming to match new terms such as `channel`, `Radio`vs`RadioConfig` etc.
+   */
 
   /**
    * Manually triggers the device configure process
@@ -332,7 +337,7 @@ export abstract class IMeshDevice {
     await this.writeToRadio(
       ToRadio.encode(
         new ToRadio({
-          wantConfigId: MY_CONFIG_ID,
+          wantConfigId: MY_CONFIG_ID
         })
       ).finish()
     );
@@ -397,6 +402,13 @@ export abstract class IMeshDevice {
         break;
 
       case "myInfo":
+        if (parseFloat(fromRadioObj.myInfo.firmwareVersion) < MIN_FW_VERSION) {
+          log(
+            `IMeshDevice.handleFromRadio`,
+            `Device firmware outdated. Min supported: ${MIN_FW_VERSION} got : ${fromRadioObj.myInfo.firmwareVersion}`,
+            LogLevelEnum.CRITICAL
+          );
+        }
         this.onMyNodeInfoEvent.next(fromRadioObj.myInfo);
         log(
           `IMeshDevice.handleFromRadio`,
@@ -418,7 +430,7 @@ export abstract class IMeshDevice {
          */
         this.onNodeInfoPacketEvent.next({
           packet: fromRadioObj.packet,
-          data: fromRadioObj.nodeInfo,
+          data: fromRadioObj.nodeInfo
         });
 
         break;
@@ -529,7 +541,7 @@ export abstract class IMeshDevice {
           );
           this.onTextPacketEvent.next({
             packet: meshPacket,
-            data: text,
+            data: text
           });
           break;
         case PortNumEnum.NODEINFO_APP:
@@ -545,7 +557,7 @@ export abstract class IMeshDevice {
           );
           this.onNodeInfoPacketEvent.next({
             packet: meshPacket,
-            data: nodeInfo,
+            data: nodeInfo
           });
         case PortNumEnum.POSITION_APP:
           /**
@@ -559,7 +571,7 @@ export abstract class IMeshDevice {
           const position = Position.decode(meshPacket.decoded.payload);
           this.onPositionPacketEvent.next({
             packet: meshPacket,
-            data: position,
+            data: position
           });
       }
     }
@@ -581,9 +593,8 @@ export abstract class IMeshDevice {
 
   /**
    * Gets called when a link to the device has been established
-   * @param noAutoConfig Disables autoconfiguration
    */
-  protected async onConnected(noAutoConfig: boolean) {
+  protected async onConnected() {
     log(
       `IMeshDevice.onConnected`,
       "Sending onDeviceStatusEvent",
@@ -592,11 +603,9 @@ export abstract class IMeshDevice {
     );
     this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONNECTED);
 
-    if (!noAutoConfig) {
-      await this.configure().catch((e) => {
-        log(`IMeshDevice.onConnected`, e.message, LogLevelEnum.ERROR);
-      });
-    }
+    await this.configure().catch((e) => {
+      log(`IMeshDevice.onConnected`, e.message, LogLevelEnum.ERROR);
+    });
   }
 
   /**

@@ -1,4 +1,4 @@
-import { Message, Field, Type } from "protobufjs";
+import { Field, Message, Type } from "protobufjs";
 
 export enum GPIOTypeEnum {
   UNSET = 0,
@@ -6,7 +6,7 @@ export enum GPIOTypeEnum {
   WATCH_GPIOS = 2,
   GPIOS_CHANGED = 3,
   READ_GPIOS = 4,
-  READ_GPIOS_REPLY = 5,
+  READ_GPIOS_REPLY = 5
 }
 
 /**

@@ -5,7 +5,7 @@ export enum DeviceStatusEnum {
   DEVICE_RECONNECTING,
   DEVICE_CONNECTED,
   DEVICE_CONFIGURING,
-  DEVICE_CONFIGURED,
+  DEVICE_CONFIGURED
 }
 
 export interface DeviceTransaction {

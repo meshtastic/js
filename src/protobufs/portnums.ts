@@ -14,5 +14,5 @@ export enum PortNumEnum {
   RANGE_TEST_APP = 66,
   PRIVATE_APP = 256,
   ATAK_FORWARDER = 257,
-  MAX = 511,
+  MAX = 511
 }

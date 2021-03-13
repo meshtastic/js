@@ -19,7 +19,7 @@ import {
   RouteDiscovery,
   Routing,
   ToRadio,
-  User,
+  User
 } from "./mesh";
 import { PortNumEnum } from "./portnums";
 import {
@@ -28,46 +28,45 @@ import {
   LocationSharingEnum,
   RadioConfig,
   RegionCodeEnum,
-  UserPreferences,
+  UserPreferences
 } from "./radioconfig";
 import { GPIOTypeEnum, HardwareMessage } from "./remote_hardware";
 
 /**
- * Current as of Meshtastic-protobufs #94bd0aae44e2c16c7776289225c804100c856cd4
+ * Current as of Meshtastic-protobufs #5c1062ea839f97cfc6d33d428a89d1702c39bd93
  */
-
 export {
   AdminMessage,
-  ServiceEnvelope,
   Channel,
   ChannelSettings,
-  ModemConfigEnum,
-  RoleEnum,
-  DeviceState,
-  EnvironmentalMeasurement,
+  ChargeCurrentEnum,
   ConstantsEnum,
   CriticalErrorCodeEnum,
   Data,
+  DeviceState,
+  EnvironmentalMeasurement,
   ErrorEnum,
   FromRadio,
+  GPIOTypeEnum,
+  GpsOperationEnum,
+  HardwareMessage,
+  LocationSharingEnum,
   LogLevelEnum,
   LogRecord,
   MeshPacket,
+  ModemConfigEnum,
   MyNodeInfo,
   NodeInfo,
+  PortNumEnum,
   Position,
   PriorityEnum,
-  RouteDiscovery,
-  Routing,
-  ToRadio,
-  User,
-  PortNumEnum,
-  ChargeCurrentEnum,
-  GpsOperationEnum,
-  LocationSharingEnum,
   RadioConfig,
   RegionCodeEnum,
-  UserPreferences,
-  GPIOTypeEnum,
-  HardwareMessage,
+  RoleEnum,
+  RouteDiscovery,
+  Routing,
+  ServiceEnvelope,
+  ToRadio,
+  User,
+  UserPreferences
 };

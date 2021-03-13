@@ -1,4 +1,5 @@
-import { Message, Field, OneOf, Type } from "protobufjs";
+import { Field, Message, OneOf, Type } from "protobufjs";
+
 import { Channel } from "./channel";
 import { User } from "./mesh";
 import { RadioConfig } from "./radioconfig";
@@ -48,4 +49,10 @@ export class AdminMessage extends Message<AdminMessage> {
 
   @Field.d(7, Channel)
   getChannelResponse: Channel;
+
+  @Field.d(32, "bool")
+  confirmSetChannel: boolean;
+
+  @Field.d(33, "bool")
+  confirmSetRadio: boolean;
 }

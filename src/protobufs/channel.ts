@@ -1,10 +1,10 @@
-import { Message, Field, Type } from "protobufjs";
+import { Field, Message, Type } from "protobufjs";
 
 export enum ModemConfigEnum {
   Bw125Cr45Sf128 = 0,
   Bw500Cr45Sf128 = 1,
   Bw31_25Cr48Sf512 = 2,
-  Bw125Cr48Sf4096 = 3,
+  Bw125Cr48Sf4096 = 3
 }
 
 /**
@@ -49,7 +49,7 @@ export class ChannelSettings extends Message<ChannelSettings> {
 export enum RoleEnum {
   DISABLED = 0,
   PRIMARY = 1,
-  SECONDARY = 2,
+  SECONDARY = 2
 }
 
 /**
@@ -57,7 +57,7 @@ export enum RoleEnum {
  */
 @Type.d("Channel")
 export class Channel extends Message<Channel> {
-  @Field.d(1, "uint32")
+  @Field.d(1, "int32")
   index: number;
 
   @Field.d(2, ChannelSettings)

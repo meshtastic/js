@@ -1,4 +1,5 @@
-import { Message, Field, Type } from "protobufjs";
+import { Field, Message, Type } from "protobufjs";
+
 import { ChannelSettings } from "./channel";
 import { MeshPacket } from "./mesh";
 

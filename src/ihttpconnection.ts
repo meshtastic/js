@@ -1,11 +1,12 @@
 import { Subject } from "rxjs";
+
 import { IMeshDevice } from "./imeshdevice";
 import { LogLevelEnum } from "./protobufs";
 import {
   DeviceStatusEnum,
   WebNetworkResponse,
   WebSPIFFSResponse,
-  WebStatisticsResponse,
+  WebStatisticsResponse
 } from "./types";
 import { log, typedArrayToBuffer } from "./utils";
 
@@ -42,14 +43,12 @@ export class IHTTPConnection extends IMeshDevice {
    * Initiates the connect process to a meshtastic device via HTTP(S)
    * @param address The IP Address/Domain to connect to, without protocol
    * @param tls Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
-   * @param noAutoConfig @todo rename this to make it clearer what it does, or maybe get rid of it. // [noAutoConfig=false] connect to the device without configuring it. Requires to call configure() manually
    * @param receiveBatchRequests Enables receiving messages all at once, versus one per request
    * @param fetchInterval Sets a fixed interval in that the device is fetched for new messages
    */
   async connect(
     address: string,
     tls?: boolean,
-    noAutoConfig = false,
     receiveBatchRequests = false,
     fetchInterval?: number
   ) {
@@ -109,11 +108,10 @@ export class IHTTPConnection extends IMeshDevice {
         this.onDeviceTransactionEvent.next({
           success: response.status === 200,
           interaction_time: Date.now(),
-          consecutiveFailedRequests: this.consecutiveFailedRequests,
+          consecutiveFailedRequests: this.consecutiveFailedRequests
         });
         if (response.status === 200) {
-          // @todo remove autoconfig shit
-          this.onConnected(false);
+          this.onConnected();
         } else {
           this.consecutiveFailedRequests++;
           log(
@@ -141,7 +139,7 @@ export class IHTTPConnection extends IMeshDevice {
         this.onDeviceTransactionEvent.next({
           success: false,
           interaction_time: Date.now(),
-          consecutiveFailedRequests: this.consecutiveFailedRequests,
+          consecutiveFailedRequests: this.consecutiveFailedRequests
         });
       });
     this.lastInteractionTime = Date.now();
@@ -164,8 +162,8 @@ export class IHTTPConnection extends IMeshDevice {
         {
           method: "GET",
           headers: {
-            Accept: "application/x-protobuf",
-          },
+            Accept: "application/x-protobuf"
+          }
         }
       )
         .then(async (response) => {
@@ -178,7 +176,7 @@ export class IHTTPConnection extends IMeshDevice {
           this.onDeviceTransactionEvent.next({
             success: response.status === 200,
             interaction_time: Date.now(),
-            consecutiveFailedRequests: this.consecutiveFailedRequests,
+            consecutiveFailedRequests: this.consecutiveFailedRequests
           });
 
           if (this.deviceStatus < DeviceStatusEnum.DEVICE_CONNECTED) {
@@ -240,9 +238,9 @@ export class IHTTPConnection extends IMeshDevice {
     await fetch(`${this.url}/api/v1/toradio`, {
       method: "PUT",
       headers: {
-        "Content-Type": "application/x-protobuf",
+        "Content-Type": "application/x-protobuf"
       },
-      body: typedArrayToBuffer(ToRadioUInt8Array),
+      body: typedArrayToBuffer(ToRadioUInt8Array)
     })
       .then(async (response) => {
         log(
@@ -254,7 +252,7 @@ export class IHTTPConnection extends IMeshDevice {
         this.onDeviceTransactionEvent.next({
           success: response.status === 200,
           interaction_time: Date.now(),
-          consecutiveFailedRequests: this.consecutiveFailedRequests,
+          consecutiveFailedRequests: this.consecutiveFailedRequests
         });
         await this.readFromRadio().catch((e) => {
           log(`IHTTPConnection`, e, LogLevelEnum.ERROR);
@@ -275,7 +273,7 @@ export class IHTTPConnection extends IMeshDevice {
         this.onDeviceTransactionEvent.next({
           success: false,
           interaction_time: Date.now(),
-          consecutiveFailedRequests: this.consecutiveFailedRequests,
+          consecutiveFailedRequests: this.consecutiveFailedRequests
         });
       });
   }
@@ -324,7 +322,7 @@ export class IHTTPConnection extends IMeshDevice {
    */
   async restartDevice() {
     return fetch(`${this.url}/restart`, {
-      method: "POST",
+      method: "POST"
     })
       .then(() => {
         log(
@@ -346,7 +344,7 @@ export class IHTTPConnection extends IMeshDevice {
    */
   async getStatistics() {
     return fetch(`${this.url}/json/report`, {
-      method: "GET",
+      method: "GET"
     })
       .then(async (response) => {
         return (await response.json()) as WebStatisticsResponse;
@@ -362,7 +360,7 @@ export class IHTTPConnection extends IMeshDevice {
    */
   async getNetworks() {
     return fetch(`${this.url}/json/scanNetworks`, {
-      method: "GET",
+      method: "GET"
     })
       .then(async (response) => {
         return (await response.json()) as WebNetworkResponse;
@@ -378,7 +376,7 @@ export class IHTTPConnection extends IMeshDevice {
    */
   async getSPIFFS() {
     return fetch(`${this.url}/json/spiffs/browse/static`, {
-      method: "GET",
+      method: "GET"
     })
       .then(async (response) => {
         return (await response.json()) as WebSPIFFSResponse;
@@ -395,10 +393,10 @@ export class IHTTPConnection extends IMeshDevice {
   async deleteSPIFFS(file: string) {
     return fetch(
       `${this.url}/json/spiffs/delete/static?${new URLSearchParams({
-        delete: file,
+        delete: file
       })}`,
       {
-        method: "DELETE",
+        method: "DELETE"
       }
     )
       .then(async (response) => {
@@ -412,10 +410,11 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Web API method: Make device LED blink
+   * @todo, strongly type response
    */
   async blinkLED() {
     return fetch(`${this.url}/json/blink`, {
-      method: "POST",
+      method: "POST"
     }).catch((e) => {
       this.consecutiveFailedRequests++;
       log(`IHTTPConnection.blinkLED`, e.message, LogLevelEnum.ERROR);
