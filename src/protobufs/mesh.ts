@@ -165,6 +165,30 @@ export enum ConstantsEnum {
 }
 
 /**
+ * Note: these enum names must EXACTLY match the string used in the device
+ * bin/build-all.sh script.  Because they will be used to find firmware filenames
+ * in the android app for OTA updates.
+ * To match the old style filenames, _ is converted to -, p is converted to .
+ */
+export enum HardwareModel {
+  UNSET = 0,
+  TLORA_V2 = 1,
+  TLORA_V1 = 2,
+  TLORA_V2_1_1p6 = 3,
+  TBEAM = 4,
+  HELTEC = 5,
+  TBEAM0p7 = 6,
+  T_ECHO = 7,
+  TLORA_V1_1p3 = 8,
+  LORA_RELAY_V1 = 32,
+  NRF52840DK = 33,
+  PPR = 34,
+  GENIEBLOCKS = 35,
+  NRF52_UNKNOWN = 36,
+  PORTDUINO = 37
+}
+
+/**
  * Full information about a node on the mesh
  */
 @Type.d("NodeInfo")
@@ -181,8 +205,8 @@ export class NodeInfo extends Message<NodeInfo> {
   @Field.d(7, "float")
   snr: number;
 
-  @Field.d(5, "uint32")
-  nextHop: number;
+  @Field.d(6, HardwareModel)
+  hwModel: HardwareModel;
 }
 
 export enum CriticalErrorCodeEnum {
