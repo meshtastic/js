@@ -33,7 +33,7 @@ import {
 import { GPIOTypeEnum, HardwareMessage } from "./remote_hardware";
 
 /**
- * Current as of Meshtastic-protobufs #b6fdb78c0738d0f348ae45f76de4e6360c7e479e
+ * Current as of Meshtastic-protobufs #ac26ffdc71dad5765124186df5ec38771a0e5240
  */
 export {
   AdminMessage,
