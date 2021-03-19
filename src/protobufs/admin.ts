@@ -55,4 +55,7 @@ export class AdminMessage extends Message<AdminMessage> {
 
   @Field.d(33, "bool")
   confirmSetRadio: boolean;
+
+  @Field.d(34, "bool")
+  exitSimulator: boolean;
 }

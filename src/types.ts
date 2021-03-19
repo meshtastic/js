@@ -1,3 +1,5 @@
+import { Protobuf } from "./";
+
 export enum DeviceStatusEnum {
   DEVICE_RESTARTING,
   DEVICE_DISCONNECTED,
@@ -8,6 +10,29 @@ export enum DeviceStatusEnum {
   DEVICE_CONFIGURED
 }
 
+export interface NodeInfoPacket {
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.NodeInfo;
+}
+
+export interface RoutingInfoPacket {
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Routing;
+}
+
+export interface PositionPacket {
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Position;
+}
+
+export interface TextPacket {
+  packet: Protobuf.MeshPacket;
+  data: string;
+}
+
+/**
+ * @todo deprecate
+ */
 export interface DeviceTransaction {
   success: boolean;
   interaction_time: number;

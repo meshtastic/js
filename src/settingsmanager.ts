@@ -1,3 +1,4 @@
+import { Protobuf } from "./";
 import { LogLevelEnum } from "./protobufs";
 import { log } from "./utils";
 
@@ -7,8 +8,9 @@ import { log } from "./utils";
 export class SettingsManager {
   /**
    * Logging level for the application
+   * @todo setting value to Protobuf.LogLevelEnum.WARNING errors `undefined`
    */
-  static debugMode: LogLevelEnum;
+  static debugMode: Protobuf.LogLevelEnum = LogLevelEnum.WARNING;
 
   constructor() {}
 
@@ -16,17 +18,15 @@ export class SettingsManager {
    * Sets the library-wide logging level
    * @param level Desired level of logging
    */
-  static setDebugMode(level: LogLevelEnum) {
-    if (!(level in LogLevelEnum)) {
+  static setDebugMode(level: Protobuf.LogLevelEnum) {
+    if (!(level in Protobuf.LogLevelEnum)) {
       log(
         `SettingsManager.setDebugMode`,
         `Specified log level must be a member of LogLevelEnum.`,
-        LogLevelEnum.WARNING
+        Protobuf.LogLevelEnum.WARNING
       );
     }
 
     SettingsManager.debugMode = level;
   }
 }
-
-SettingsManager.debugMode = LogLevelEnum.WARNING;

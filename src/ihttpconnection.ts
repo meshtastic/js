@@ -1,13 +1,7 @@
 import { Subject } from "rxjs";
 
+import { Protobuf, Types } from "./";
 import { IMeshDevice } from "./imeshdevice";
-import { LogLevelEnum } from "./protobufs";
-import {
-  DeviceStatusEnum,
-  WebNetworkResponse,
-  WebSPIFFSResponse,
-  WebStatisticsResponse
-} from "./types";
 import { log, typedArrayToBuffer } from "./utils";
 
 /**
@@ -35,7 +29,6 @@ export class IHTTPConnection extends IMeshDevice {
     super();
 
     this.url = undefined;
-    this.lastInteractionTime = undefined;
     this.consecutiveFailedRequests = 0;
   }
 
@@ -54,11 +47,10 @@ export class IHTTPConnection extends IMeshDevice {
   ) {
     log(
       `IHTTPConnection.connect`,
-      "Sending onDeviceStatusEvent",
-      LogLevelEnum.TRACE,
-      "DEVICE_CONNECTING"
+      "Sending onDeviceStatusEvent: DEVICE_CONNECTING",
+      Protobuf.LogLevelEnum.TRACE
     );
-    this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONNECTING);
+    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
     this.receiveBatchRequests = receiveBatchRequests;
 
@@ -71,9 +63,12 @@ export class IHTTPConnection extends IMeshDevice {
       this.url = tls ? `https://${address}` : `http://${address}`;
     }
     if (await this.ping()) {
-      setTimeout(() => {
-        this.fetchTimer(fetchInterval);
-      }, 5000);
+      log(
+        `IHTTPConnection.connect`,
+        `Starting new connection timer.`,
+        Protobuf.LogLevelEnum.TRACE
+      );
+      this.fetchTimer(fetchInterval);
     }
   }
 
@@ -86,65 +81,35 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Pings device to check if it is avaliable
-   * @todo implement
    */
   async ping() {
     log(
       `IHTTPConnection.connect`,
       `Attempting device ping.`,
-      LogLevelEnum.DEBUG
+      Protobuf.LogLevelEnum.DEBUG
     );
 
+    let pingSuccessful = false;
+
     await fetch(this.url + `/hotspot-detect.html`, {})
-      .then((response) => {
-        log(
-          `IHTTPConnection.connect`,
-          "Sending onDeviceTransactionEvent",
-          LogLevelEnum.TRACE
-        );
-        /**
-         * @todo this isn't neccesairly a success, maybe change log to reflect this
-         */
-        this.onDeviceTransactionEvent.next({
-          success: response.status === 200,
-          interaction_time: Date.now(),
-          consecutiveFailedRequests: this.consecutiveFailedRequests
-        });
-        if (response.status === 200) {
-          this.onConnected();
-        } else {
-          this.consecutiveFailedRequests++;
-          log(
-            `IHTTPConnection.connect`,
-            `ping returned status: ${response.status}`,
-            LogLevelEnum.WARNING
-          );
-        }
-        log(
-          `IHTTPConnection.connect`,
-          `Starting new connection timer.`,
-          LogLevelEnum.TRACE
-        );
-        return true;
+      .then((_) => {
+        pingSuccessful = true;
+        this.onConnected();
       })
       .catch((e) => {
+        pingSuccessful = false;
         this.consecutiveFailedRequests++;
-        log(`IHTTPConnection.connect`, e.message, LogLevelEnum.ERROR);
+        log(`IHTTPConnection.connect`, e.message, Protobuf.LogLevelEnum.ERROR);
         log(
           `IHTTPConnection.connect`,
-          "Sending onDeviceTransactionEvent",
-          LogLevelEnum.TRACE,
-          "fail"
+          "Sending onDeviceStatusEvent: DEVICE_RECONNECTING",
+          Protobuf.LogLevelEnum.TRACE
         );
-        this.onDeviceTransactionEvent.next({
-          success: false,
-          interaction_time: Date.now(),
-          consecutiveFailedRequests: this.consecutiveFailedRequests
-        });
+        this.onDeviceStatusEvent.next(
+          Types.DeviceStatusEnum.DEVICE_RECONNECTING
+        );
       });
-    this.lastInteractionTime = Date.now();
-
-    return false;
+    return pingSuccessful;
   }
 
   /**
@@ -169,36 +134,32 @@ export class IHTTPConnection extends IMeshDevice {
         .then(async (response) => {
           log(
             `IHTTPConnection.readFromRadio`,
-            "Sending onDeviceTransactionEvent",
-            LogLevelEnum.TRACE,
-            "success"
+            "Request Success, sending onDeviceStatusEvent: DEVICE_CONNECTED",
+            Protobuf.LogLevelEnum.TRACE
           );
-          this.onDeviceTransactionEvent.next({
-            success: response.status === 200,
-            interaction_time: Date.now(),
-            consecutiveFailedRequests: this.consecutiveFailedRequests
-          });
+          this.onDeviceStatusEvent.next(
+            Types.DeviceStatusEnum.DEVICE_CONNECTED
+          );
 
-          if (this.deviceStatus < DeviceStatusEnum.DEVICE_CONNECTED) {
+          if (this.deviceStatus < Types.DeviceStatusEnum.DEVICE_CONNECTED) {
             log(
               `IHTTPConnection.readFromRadio`,
-              "Sending onDeviceStatusEvent",
-              LogLevelEnum.TRACE,
-              "DEVICE_CONNECTED"
+              "Sending onDeviceStatusEvent: DEVICE_CONNECTED",
+              Protobuf.LogLevelEnum.TRACE
             );
-            this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_CONNECTED);
+            this.onDeviceStatusEvent.next(
+              Types.DeviceStatusEnum.DEVICE_CONNECTED
+            );
           }
 
           readBuffer = await response.arrayBuffer();
 
-          log(
-            `IHTTPConnection.readFromRadio`,
-            `Received ${readBuffer.byteLength} bytes from radio.`,
-            LogLevelEnum.TRACE
-          );
-
           if (readBuffer.byteLength > 0) {
-            this.lastInteractionTime = Date.now();
+            log(
+              `IHTTPConnection.readFromRadio`,
+              `Received ${readBuffer.byteLength} bytes from radio.`,
+              Protobuf.LogLevelEnum.TRACE
+            );
             await this.handleFromRadio(new Uint8Array(readBuffer, 0));
           }
         })
@@ -210,20 +171,27 @@ export class IHTTPConnection extends IMeshDevice {
            * @todo if device is offline, it spam creates requests
            */
           this.consecutiveFailedRequests++;
-          log(`IHTTPConnection.readFromRadio`, e.message, LogLevelEnum.ERROR);
+          log(
+            `IHTTPConnection.readFromRadio`,
+            e.message,
+            Protobuf.LogLevelEnum.ERROR
+          );
 
           /**
            * @todo broadcast reconnecting event and then after x attempts, broadcast disconnected
            */
 
-          if (this.deviceStatus !== DeviceStatusEnum.DEVICE_RECONNECTING) {
+          if (
+            this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
+          ) {
             log(
               `IHTTPConnection.readFromRadio`,
-              "Sending onDeviceStatusEvent",
-              LogLevelEnum.TRACE,
-              "DEVICE_RECONNECTING"
+              "Sending onDeviceStatusEvent: DEVICE_RECONNECTING",
+              Protobuf.LogLevelEnum.TRACE
             );
-            this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_RECONNECTING);
+            this.onDeviceStatusEvent.next(
+              Types.DeviceStatusEnum.DEVICE_RECONNECTING
+            );
           }
         });
     }
@@ -233,8 +201,6 @@ export class IHTTPConnection extends IMeshDevice {
    * Short description
    */
   async writeToRadio(ToRadioUInt8Array: Uint8Array) {
-    this.lastInteractionTime = Date.now();
-
     await fetch(`${this.url}/api/v1/toradio`, {
       method: "PUT",
       headers: {
@@ -242,39 +208,33 @@ export class IHTTPConnection extends IMeshDevice {
       },
       body: typedArrayToBuffer(ToRadioUInt8Array)
     })
-      .then(async (response) => {
+      .then(async (_) => {
         log(
           `IHTTPConnection.writeToRadio`,
-          "Sending onDeviceTransactionEvent",
-          LogLevelEnum.TRACE,
-          "success"
+          "Request Success, sending onDeviceStatusEvent: DEVICE_CONNECTED",
+          Protobuf.LogLevelEnum.TRACE
         );
-        this.onDeviceTransactionEvent.next({
-          success: response.status === 200,
-          interaction_time: Date.now(),
-          consecutiveFailedRequests: this.consecutiveFailedRequests
-        });
+        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+
         await this.readFromRadio().catch((e) => {
-          log(`IHTTPConnection`, e, LogLevelEnum.ERROR);
+          log(`IHTTPConnection`, e, Protobuf.LogLevelEnum.ERROR);
         });
       })
       .catch((e) => {
         this.consecutiveFailedRequests++;
-        log(`IHTTPConnection.writeToRadio`, e.message, LogLevelEnum.ERROR);
-        /**
-         * @todo these are not logged, they need to be caught, maybe even raise the log level, or not as devices should be able to go away and reconnect later
-         */
         log(
           `IHTTPConnection.writeToRadio`,
-          "Sending onDeviceTransactionEvent",
-          LogLevelEnum.TRACE,
-          "fail"
+          e.message,
+          Protobuf.LogLevelEnum.ERROR
         );
-        this.onDeviceTransactionEvent.next({
-          success: false,
-          interaction_time: Date.now(),
-          consecutiveFailedRequests: this.consecutiveFailedRequests
-        });
+        log(
+          `IMeshDevice.readFromRadio`,
+          "Sending onDeviceStatusEvent: DEVICE_RECONNECTING",
+          Protobuf.LogLevelEnum.TRACE
+        );
+        this.onDeviceStatusEvent.next(
+          Types.DeviceStatusEnum.DEVICE_RECONNECTING
+        );
       });
   }
 
@@ -290,7 +250,7 @@ export class IHTTPConnection extends IMeshDevice {
     }
 
     await this.readFromRadio().catch((e) => {
-      log(`IHTTPConnection`, e, LogLevelEnum.ERROR);
+      log(`IHTTPConnection`, e, Protobuf.LogLevelEnum.ERROR);
     });
 
     /**
@@ -299,15 +259,14 @@ export class IHTTPConnection extends IMeshDevice {
     let newInterval = 5e3;
 
     if (!fetchInterval) {
-      const timeSinceLastInteraction = Date.now() - this.lastInteractionTime;
       newInterval =
-        timeSinceLastInteraction > 12e5
+        this.consecutiveFailedRequests > 2
           ? 12e4
-          : timeSinceLastInteraction > 6e5
+          : this.consecutiveFailedRequests > 3
           ? 3e4
-          : timeSinceLastInteraction > 18e4
+          : this.consecutiveFailedRequests > 4
           ? 2e4
-          : timeSinceLastInteraction > 3e4
+          : this.consecutiveFailedRequests > 5
           ? 15e3
           : 1e4;
     } else {
@@ -327,15 +286,18 @@ export class IHTTPConnection extends IMeshDevice {
       .then(() => {
         log(
           `IHTTPConnection.restartDevice`,
-          "Sending onDeviceStatusEvent",
-          LogLevelEnum.TRACE,
-          "DEVICE_RESTARTING"
+          "Sending onDeviceStatusEvent: DEVICE_RESTARTING",
+          Protobuf.LogLevelEnum.TRACE
         );
-        this.onDeviceStatusEvent.next(DeviceStatusEnum.DEVICE_RESTARTING);
+        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_RESTARTING);
       })
       .catch((e) => {
         this.consecutiveFailedRequests++;
-        log(`IHTTPConnection.restartDevice`, e.message, LogLevelEnum.ERROR);
+        log(
+          `IHTTPConnection.restartDevice`,
+          e.message,
+          Protobuf.LogLevelEnum.ERROR
+        );
       });
   }
 
@@ -347,11 +309,15 @@ export class IHTTPConnection extends IMeshDevice {
       method: "GET"
     })
       .then(async (response) => {
-        return (await response.json()) as WebStatisticsResponse;
+        return (await response.json()) as Types.WebStatisticsResponse;
       })
       .catch((e) => {
         this.consecutiveFailedRequests++;
-        log(`IHTTPConnection.getStatistics`, e.message, LogLevelEnum.ERROR);
+        log(
+          `IHTTPConnection.getStatistics`,
+          e.message,
+          Protobuf.LogLevelEnum.ERROR
+        );
       });
   }
 
@@ -363,11 +329,15 @@ export class IHTTPConnection extends IMeshDevice {
       method: "GET"
     })
       .then(async (response) => {
-        return (await response.json()) as WebNetworkResponse;
+        return (await response.json()) as Types.WebNetworkResponse;
       })
       .catch((e) => {
         this.consecutiveFailedRequests++;
-        log(`IHTTPConnection.getNetworks`, e.message, LogLevelEnum.ERROR);
+        log(
+          `IHTTPConnection.getNetworks`,
+          e.message,
+          Protobuf.LogLevelEnum.ERROR
+        );
       });
   }
 
@@ -379,11 +349,15 @@ export class IHTTPConnection extends IMeshDevice {
       method: "GET"
     })
       .then(async (response) => {
-        return (await response.json()) as WebSPIFFSResponse;
+        return (await response.json()) as Types.WebSPIFFSResponse;
       })
       .catch((e) => {
         this.consecutiveFailedRequests++;
-        log(`IHTTPConnection.getSPIFFS`, e.message, LogLevelEnum.ERROR);
+        log(
+          `IHTTPConnection.getSPIFFS`,
+          e.message,
+          Protobuf.LogLevelEnum.ERROR
+        );
       });
   }
 
@@ -400,11 +374,15 @@ export class IHTTPConnection extends IMeshDevice {
       }
     )
       .then(async (response) => {
-        return (await response.json()) as WebSPIFFSResponse;
+        return (await response.json()) as Types.WebSPIFFSResponse;
       })
       .catch((e) => {
         this.consecutiveFailedRequests++;
-        log(`IHTTPConnection.deleteSPIFFS`, e.message, LogLevelEnum.ERROR);
+        log(
+          `IHTTPConnection.deleteSPIFFS`,
+          e.message,
+          Protobuf.LogLevelEnum.ERROR
+        );
       });
   }
 
@@ -417,7 +395,7 @@ export class IHTTPConnection extends IMeshDevice {
       method: "POST"
     }).catch((e) => {
       this.consecutiveFailedRequests++;
-      log(`IHTTPConnection.blinkLED`, e.message, LogLevelEnum.ERROR);
+      log(`IHTTPConnection.blinkLED`, e.message, Protobuf.LogLevelEnum.ERROR);
     });
   }
 }
