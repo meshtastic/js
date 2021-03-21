@@ -88,6 +88,7 @@ const log = (
         console.info(
           `%c[INFO]%c ${emitter}\n%c${message}`,
           "color:darkgrey",
+          "color:cyan",
           "color:white"
         );
         break;
