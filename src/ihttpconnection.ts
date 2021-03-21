@@ -87,9 +87,9 @@ export class IHTTPConnection extends IMeshDevice {
     let pingSuccessful = false;
 
     await fetch(this.url + `/hotspot-detect.html`, {})
-      .then((_) => {
+      .then(async (_) => {
         pingSuccessful = true;
-        this.onConnected();
+        await this.onConnected();
       })
       .catch((e) => {
         pingSuccessful = false;
@@ -109,7 +109,7 @@ export class IHTTPConnection extends IMeshDevice {
     let readBuffer = new ArrayBuffer(1);
 
     /**
-     * read as long as the previous read buffer is bigger 0
+     * Keep reading data until we stop receiving any
      */
     while (readBuffer.byteLength > 0) {
       await fetch(

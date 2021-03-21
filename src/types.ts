@@ -15,6 +15,11 @@ export interface NodeInfoPacket {
   data: Protobuf.NodeInfo;
 }
 
+export interface AdminPacket {
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.AdminMessage;
+}
+
 export interface RoutingInfoPacket {
   packet: Protobuf.MeshPacket;
   data: Protobuf.Routing;

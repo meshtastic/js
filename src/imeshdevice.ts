@@ -19,9 +19,16 @@ export abstract class IMeshDevice {
   protected isConfigured: boolean = false;
 
   /**
+   * Device's node number
+   */
+  private myNodeInfo: Protobuf.MyNodeInfo;
+
+  private configId: number;
+
+  /**
    * Current number of consecutive failed requests
    */
-  consecutiveFailedRequests: number;
+  protected consecutiveFailedRequests: number;
 
   constructor() {
     this.onDeviceStatusEvent.subscribe((status) => {
@@ -31,6 +38,12 @@ export abstract class IMeshDevice {
       else if (status === Types.DeviceStatusEnum.DEVICE_CONFIGURING)
         this.isConfigured = false;
     });
+
+    this.onMyNodeInfoEvent.subscribe((myNodeInfo) => {
+      this.myNodeInfo = myNodeInfo;
+    });
+
+    this.configId = this.generateRandId();
   }
 
   /**
@@ -68,7 +81,7 @@ export abstract class IMeshDevice {
    * Fires when a new FromRadio message containing a Data packet has been received from the device
    * @event
    */
-  readonly onDataPacketEvent: Subject<Protobuf.MeshPacket> = new Subject();
+  readonly onMeshPacketEvent: Subject<Protobuf.MeshPacket> = new Subject();
 
   /**
    * Fires when a new MyNodeInfo message has been received from the device
@@ -81,32 +94,31 @@ export abstract class IMeshDevice {
   readonly onRadioConfigEvent: Subject<Protobuf.RadioConfig> = new Subject();
 
   /**
-   * Fires when a new FromRadio message containing a NodeInfo packet has been received from device
+   * Fires when a new MeshPacket message containing a NodeInfo packet has been received from device
    * @event
    */
   readonly onNodeInfoPacketEvent: Subject<Types.NodeInfoPacket> = new Subject();
 
   /**
-   * Fires when a new FromRadio message containing a AndminMessage packet has been received from device
+   * Fires when a new MeshPacket message containing a AndminMessage packet has been received from device
    * @event
    */
-  readonly onAdminPacketEvent: Subject<Protobuf.MeshPacket> = new Subject();
+  readonly onAdminPacketEvent: Subject<Types.AdminPacket> = new Subject();
 
   /**
-   * Fires when a new FromRadio message containing a Routing packet has been received from device
-   * @todo, should this return `Protobuf.MeshPacket` if so, what is `Protobuf.Routing` for?
+   * Fires when a new MeshPacket message containing a Routing packet has been received from device
    * @event
    */
   readonly onRoutingPacketEvent: Subject<Protobuf.MeshPacket> = new Subject();
 
   /**
-   * Fires when a new FromRadio message containing a Position packet has been received from device
+   * Fires when a new MeshPacket message containing a Position packet has been received from device
    * @event
    */
   readonly onPositionPacketEvent: Subject<Types.PositionPacket> = new Subject();
 
   /**
-   * Fires when a new FromRadio message containing a Text packet has been received from device
+   * Fires when a new MeshPacket message containing a Text packet has been received from device
    * @event
    */
   readonly onTextPacketEvent: Subject<Types.TextPacket> = new Subject();
@@ -118,71 +130,68 @@ export abstract class IMeshDevice {
   readonly onDeviceStatusEvent: Subject<Types.DeviceStatusEnum> = new Subject();
 
   /**
+   * Fires when a new FromRadio message containing a Text packet has been received from device
+   * @event
+   */
+  readonly onLogRecordEvent: Subject<Protobuf.LogRecord> = new Subject();
+
+  /**
+   * Fires when the device receives a meshPacket, returns a timestamp
+   * @event
+   */
+  readonly onMeshHeartbeat: Subject<number> = new Subject();
+
+  /**
    * Sends a text over the radio
    * @param text
    * @param destinationNum Node number of the destination node
    * @param wantAck Whether or not acknowledgement is wanted
    */
   sendText(text: string, destinationNum?: number, wantAck = false) {
-    /**
-     * DOMStrings are 16-bit-encoded strings, convert to UInt8Array first
-     */
     const enc = new TextEncoder();
 
-    return this.sendData(
+    return this.sendPacket(
       enc.encode(text),
       Protobuf.PortNumEnum.TEXT_MESSAGE_APP,
       destinationNum,
-      wantAck
-    );
-  }
-
-  /**
-   * Sends arbitrary data over the radio
-   * @param byteData
-   * @param dataType dataType Enum of protobuf data type
-   * @param destinationNum Node number of the destination node
-   * @param wantAck Whether or not acknowledgement is wanted
-   * @param wantResponse Used for testing, requests recpipient to respond in kind with the same type of request
-   */
-  sendData(
-    byteData: Uint8Array,
-    dataType: Protobuf.PortNumEnum,
-    destinationNum?: number,
-    wantAck = false,
-    wantResponse = false
-  ) {
-    return this.sendPacket(
-      new Protobuf.MeshPacket({
-        decoded: new Protobuf.Data({
-          payload: byteData,
-          portnum: dataType,
-          wantResponse
-        })
-      }),
-      destinationNum,
-      wantAck
+      wantAck,
+      undefined,
+      true
     );
   }
 
   /**
    * Sends packet over the radio
-   * @param meshPacket
+   * @param byteData
+   * @param portNum dataType Enum of protobuf data type
    * @param destinationNum Node number of the destination node
-   * @param wantAck
+   * @param wantAck Whether or not acknowledgement is wanted
+   * @param wantResponse Used for testing, requests recpipient to respond in kind with the same type of request
+   * @param echoResponse Sends events back to client, usefull for messaging, as all packets (mesh and local) can be managed centrally
    */
-  async sendPacket(
-    meshPacket: Protobuf.MeshPacket,
+  private async sendPacket(
+    byteData: Uint8Array,
+    portNum: Protobuf.PortNumEnum,
     destinationNum?: number,
-    wantAck = false
+    wantAck = false,
+    wantResponse = false,
+    echoResponse = false
   ) {
-    /**
-     * @todo, does the device need to be configured?
-     */
+    const meshPacket = new Protobuf.MeshPacket({
+      decoded: new Protobuf.Data({
+        payload: byteData,
+        portnum: portNum,
+        wantResponse
+      }),
+      from: this.myNodeInfo.myNodeNum,
+      to: destinationNum ? destinationNum : BROADCAST_NUM,
+      id: this.generateRandId(),
+      wantAck: wantAck
+    });
 
-    meshPacket.to = destinationNum ? destinationNum : BROADCAST_NUM;
-    meshPacket.wantAck = wantAck;
-    meshPacket.id = meshPacket.id ?? this.generatePacketId();
+    if (echoResponse) {
+      this.handleMeshPacket(meshPacket);
+    }
 
     await this.writeToRadio(
       Protobuf.ToRadio.encode(
@@ -223,16 +232,9 @@ export abstract class IMeshDevice {
    * @param ownerData
    */
   async setOwner(ownerData: Protobuf.User) {
-    if (!this.isConfigured) {
-      /**
-       * @todo Do we need to read the config to set a new one, if so, can we handle this elsewhere/aren't we already warning them if they havent read the config?
-       */
-      log(
-        `IMeshDevice.setOwner`,
-        `Owner config has not been read from device, can't set new one.`,
-        Protobuf.LogLevelEnum.WARNING
-      );
-    }
+    /**
+     * @todo, check if packet stucture is correct.
+     */
 
     await this.writeToRadio(
       Protobuf.ToRadio.encode(
@@ -252,16 +254,9 @@ export abstract class IMeshDevice {
    * @param channel
    */
   async setChannelSettings(channel: Protobuf.Channel) {
-    if (this.deviceStatus < Types.DeviceStatusEnum.DEVICE_CONFIGURED) {
-      /**
-       * @todo used to check if user had been read from radio, change this
-       */
-      log(
-        `IMeshDevice.setChannelSettings`,
-        `ChannelSettings have been read from device, can't set new ones.`,
-        Protobuf.LogLevelEnum.WARNING
-      );
-    }
+    /**
+     * @todo, check if packet stucture is correct.
+     */
 
     await this.writeToRadio(
       Protobuf.ToRadio.encode(
@@ -277,7 +272,6 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * @todo implement getRadioRequest, getRadioResponse, getChannelRequest, getChannelResponse
    * @todo update naming to match new terms such as `channel`, `Radio`vs`RadioConfig` etc.
    */
 
@@ -287,11 +281,6 @@ export abstract class IMeshDevice {
   async configure() {
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
-    log(
-      `IMeshDevice.configure`,
-      `Requesting radio configuration.`,
-      Protobuf.LogLevelEnum.DEBUG
-    );
     await this.writeToRadio(
       Protobuf.ToRadio.encode(
         new Protobuf.ToRadio({
@@ -300,29 +289,46 @@ export abstract class IMeshDevice {
       ).finish()
     );
 
-    log(
-      `IMeshDevice.configure`,
-      `Waiting to read radio configuration.`,
-      Protobuf.LogLevelEnum.DEBUG
+    await this.readFromRadio();
+
+    const adminMessage = Protobuf.AdminMessage.encode(
+      new Protobuf.AdminMessage({
+        getRadioRequest: true
+      })
+    ).finish();
+    this.sendPacket(
+      adminMessage,
+      Protobuf.PortNumEnum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      true
     );
-    await this.readFromRadio().then(() => {
-      /**
-       * @todo, sometimes this doesn't broadcast the `configured` status message
-       */
-      if (!this.isConfigured) {
-        log(
-          `IMeshDevice.sendPacket`,
-          `Device failed to read config`,
-          Protobuf.LogLevelEnum.WARNING
-        );
-      }
-    });
+
+    await this.readFromRadio();
+
+    for (let index = 1; index <= this.myNodeInfo.maxChannels; index++) {
+      const channelRequest = Protobuf.AdminMessage.encode(
+        new Protobuf.AdminMessage({
+          getChannelRequest: index
+        })
+      ).finish();
+      this.sendPacket(
+        channelRequest,
+        Protobuf.PortNumEnum.ADMIN_APP,
+        this.myNodeInfo.myNodeNum,
+        true,
+        true
+      );
+      await this.readFromRadio();
+    }
+
+    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
   }
 
   /**
    * Generates random packet identifier
    */
-  private generatePacketId() {
+  private generateRandId() {
     return Math.floor(Math.random() * 1e9);
   }
 
@@ -365,7 +371,7 @@ export abstract class IMeshDevice {
         this.onMyNodeInfoEvent.next(fromRadioObj.myInfo);
         log(
           `IMeshDevice.handleFromRadio`,
-          "Sending onMyNodeInfoEvent",
+          "Received onMyNodeInfoEvent",
           Protobuf.LogLevelEnum.TRACE
         );
 
@@ -374,7 +380,7 @@ export abstract class IMeshDevice {
       case "nodeInfo":
         log(
           `IMeshDevice.handleFromRadio`,
-          "Sending onNodeInfoPacketEvent",
+          "Received onNodeInfoPacketEvent",
           Protobuf.LogLevelEnum.TRACE
         );
         /**
@@ -389,17 +395,16 @@ export abstract class IMeshDevice {
         break;
 
       case "logRecord":
+        log(
+          `IMeshDevice.handleFromRadio`,
+          "Received onLogRecordEvent",
+          Protobuf.LogLevelEnum.TRACE
+        );
+        this.onLogRecordEvent.next(fromRadioObj.logRecord);
         break;
 
-      /**
-       * @todo, what is this used for now?
-       */
       case "configCompleteId":
-        if (fromRadioObj.configCompleteId === MY_CONFIG_ID) {
-          this.onDeviceStatusEvent.next(
-            Types.DeviceStatusEnum.DEVICE_CONFIGURED
-          );
-        } else {
+        if (fromRadioObj.configCompleteId !== this.configId) {
           log(
             `IMeshDevice.handleFromRadio`,
             `Invalid config id reveived from device`,
@@ -410,10 +415,6 @@ export abstract class IMeshDevice {
         break;
 
       case "rebooted":
-        /**
-         * @todo Should we ping the device here, or auto ping in the configure() method?
-         */
-
         await this.configure();
 
         break;
@@ -433,12 +434,13 @@ export abstract class IMeshDevice {
    * @param meshPacket
    */
   private handleMeshPacket(meshPacket: Protobuf.MeshPacket) {
-    log(
-      `IMeshDevice.handleMeshPacket`,
-      "Sending onDataPacketEvent",
-      Protobuf.LogLevelEnum.TRACE
-    );
-    this.onDataPacketEvent.next(meshPacket);
+    this.onMeshPacketEvent.next(meshPacket);
+    if (meshPacket.from !== this.myNodeInfo.myNodeNum) {
+      /**
+       * @todo, this shouldn't be called unless the device interracts with the mesh, currently it does.
+       */
+      this.onMeshHeartbeat.next(Date.now());
+    }
 
     if (meshPacket.decoded.payload) {
       switch (meshPacket.decoded.portnum) {
@@ -449,7 +451,7 @@ export abstract class IMeshDevice {
           const text = new TextDecoder().decode(meshPacket.decoded.payload);
           log(
             `IMeshDevice.handleMeshPacket`,
-            "Sending onTextPacketEvent",
+            "Received onTextPacketEvent",
             Protobuf.LogLevelEnum.TRACE
           );
           this.onTextPacketEvent.next({
@@ -463,7 +465,7 @@ export abstract class IMeshDevice {
            */
           log(
             `IMeshDevice.handleMeshPacket`,
-            "Sending onPositionPacketEvent",
+            "Received onPositionPacketEvent",
             Protobuf.LogLevelEnum.TRACE
           );
           const position = Protobuf.Position.decode(meshPacket.decoded.payload);
@@ -480,7 +482,7 @@ export abstract class IMeshDevice {
 
           log(
             `IMeshDevice.handleMeshPacket`,
-            "Sending onNodeInfoPacketEvent",
+            "Received onNodeInfoPacketEvent",
             Protobuf.LogLevelEnum.TRACE
           );
           this.onNodeInfoPacketEvent.next({
@@ -495,7 +497,7 @@ export abstract class IMeshDevice {
 
           log(
             `IMeshDevice.handleMeshPacket`,
-            "Sending onRoutingPacketEvent",
+            "Received onRoutingPacketEvent",
             Protobuf.LogLevelEnum.TRACE
           );
           this.onRoutingPacketEvent.next(meshPacket);
@@ -504,16 +506,18 @@ export abstract class IMeshDevice {
           /**
            * Admin
            */
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onAdminPacketEvent",
+            Protobuf.LogLevelEnum.TRACE
+          );
           const adminMessage = Protobuf.AdminMessage.decode(
             meshPacket.decoded.payload
           );
-
-          log(
-            `IMeshDevice.handleMeshPacket`,
-            "Sending onAdminPacketEvent",
-            Protobuf.LogLevelEnum.TRACE
-          );
-          this.onAdminPacketEvent.next(meshPacket);
+          this.onAdminPacketEvent.next({
+            packet: meshPacket,
+            data: adminMessage
+          });
           break;
         default:
           log(
@@ -540,9 +544,7 @@ export abstract class IMeshDevice {
   protected async onConnected() {
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
-    await this.configure().catch((e) => {
-      log(`IMeshDevice.onConnected`, e.message, Protobuf.LogLevelEnum.ERROR);
-    });
+    await this.configure();
   }
 
   /**
