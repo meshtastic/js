@@ -1,7 +1,7 @@
 import { Subject } from "rxjs";
 
 import { Protobuf, Types } from "./";
-import { BROADCAST_NUM, MIN_FW_VERSION, MY_CONFIG_ID } from "./constants";
+import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants";
 import { log } from "./utils";
 
 /**
@@ -204,26 +204,23 @@ export abstract class IMeshDevice {
 
   /**
    * Writes radio config to device
-   * @param radioConfig
+   * @param preferences Radio UserPreferences
    */
-  async setRadioConfig(radioConfig: Protobuf.RadioConfig) {
-    /**
-     * @todo used to check if the radioConfig had bean read, should be verified by whatever clalls this function
-     * ! @todo fix
-     */
-
-    await this.writeToRadio(
-      Protobuf.ToRadio.encode(
-        new Protobuf.ToRadio({
-          packet: new Protobuf.MeshPacket(
-            new Protobuf.AdminMessage({
-              setRadio: new Protobuf.RadioConfig({
-                preferences: radioConfig.preferences
-              })
-            })
-          )
+  async setPreferences(preferences: Protobuf.UserPreferences) {
+    const adminMessage = Protobuf.AdminMessage.encode(
+      new Protobuf.AdminMessage({
+        setRadio: new Protobuf.RadioConfig({
+          preferences: preferences
         })
-      ).finish()
+      })
+    ).finish();
+
+    await this.sendPacket(
+      adminMessage,
+      Protobuf.PortNumEnum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      true
     );
   }
 
@@ -279,12 +276,17 @@ export abstract class IMeshDevice {
    * Triggers the device configure process
    */
   async configure() {
+    log(
+      `IMeshDevice.configure`,
+      `Reading device configuration`,
+      Protobuf.LogLevelEnum.DEBUG
+    );
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
     await this.writeToRadio(
       Protobuf.ToRadio.encode(
         new Protobuf.ToRadio({
-          wantConfigId: MY_CONFIG_ID
+          wantConfigId: this.configId
         })
       ).finish()
     );
@@ -296,7 +298,8 @@ export abstract class IMeshDevice {
         getRadioRequest: true
       })
     ).finish();
-    this.sendPacket(
+
+    await this.sendPacket(
       adminMessage,
       Protobuf.PortNumEnum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
@@ -312,13 +315,15 @@ export abstract class IMeshDevice {
           getChannelRequest: index
         })
       ).finish();
-      this.sendPacket(
+
+      await this.sendPacket(
         channelRequest,
         Protobuf.PortNumEnum.ADMIN_APP,
         this.myNodeInfo.myNodeNum,
         true,
         true
       );
+
       await this.readFromRadio();
     }
 
@@ -407,7 +412,7 @@ export abstract class IMeshDevice {
         if (fromRadioObj.configCompleteId !== this.configId) {
           log(
             `IMeshDevice.handleFromRadio`,
-            `Invalid config id reveived from device`,
+            `Invalid config id reveived from device, exptected ${this.configId} but received ${fromRadioObj.configCompleteId}`,
             Protobuf.LogLevelEnum.ERROR
           );
         }

@@ -1,6 +1,6 @@
 # Meshtastic.js
 
-![](https://badgen.net/npm/v/@meshtastic/meshtasticjs) ![](https://badgen.net/npm/dt/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/minzip/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/dependency-count/@meshtastic/meshtasticjs) ![](https://badgen.net/bundlephobia/tree-shaking/@meshtastic/meshtasticjs)
+![NPM](https://badgen.net/npm/v/@meshtastic/meshtasticjs) ![Downloads](https://badgen.net/npm/dt/@meshtastic/meshtasticjs) ![Min Zipped](https://badgen.net/bundlephobia/minzip/@meshtastic/meshtasticjs) ![Dependencies](https://badgen.net/bundlephobia/dependency-count/@meshtastic/meshtasticjs) ![Tree Shakeable](https://badgen.net/bundlephobia/tree-shaking/@meshtastic/meshtasticjs)
 
 ## Overview
 
@@ -20,7 +20,7 @@ yarn add @meshtastic/meshtasticjs
 npm install @meshtastic/meshtasticjs
 ```
 
-#### Usage
+### Usage
 
 The library has a built in connection manager that will handle multiple devices of different connection types.
 
@@ -102,4 +102,4 @@ bleConnection.sendPosition(lat, lng, alt, time);
 
 The Bluetooth connection option relies on the availability of the Web Bluetooth API, which is represented in the compatibility matrix below.
 
-![](https://caniuse.bitsofco.de/image/web-bluetooth.png)
+![Bluetooth compatability matrix](https://caniuse.bitsofco.de/image/web-bluetooth.png)

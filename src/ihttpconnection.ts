@@ -1,5 +1,3 @@
-import { Subject } from "rxjs";
-
 import { Protobuf, Types } from "./";
 import { IMeshDevice } from "./imeshdevice";
 import { log, typedArrayToBuffer } from "./utils";
@@ -17,13 +15,6 @@ export class IHTTPConnection extends IMeshDevice {
    * Enables receiving messages all at once, versus one per request
    */
   receiveBatchRequests: boolean;
-
-  /**
-   * Fires whenever a Fires at timed intervals
-   * ? void or bool? ie. don't fire if device doesn't respond or true/false if it does/doesnt, or status code
-   * @event
-   */
-  readonly onHeartbeatEvent: Subject<void> = new Subject();
 
   constructor() {
     super();
