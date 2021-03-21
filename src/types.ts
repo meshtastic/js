@@ -1,12 +1,45 @@
-export enum ConnectionEventEnum {
-  DEVICE_CONNECTED,
+import { Protobuf } from "./";
+
+export enum DeviceStatusEnum {
+  DEVICE_RESTARTING,
   DEVICE_DISCONNECTED,
-  DEVICE_RECONNECTIONG,
-  DEVICE_RECONNECTED,
+  DEVICE_CONNECTING,
+  DEVICE_RECONNECTING,
+  DEVICE_CONNECTED,
+  DEVICE_CONFIGURING,
+  DEVICE_CONFIGURED
 }
 
-export interface HTTPTransaction {
-  status: number;
+export interface NodeInfoPacket {
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.NodeInfo;
+}
+
+export interface AdminPacket {
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.AdminMessage;
+}
+
+export interface RoutingInfoPacket {
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Routing;
+}
+
+export interface PositionPacket {
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Position;
+}
+
+export interface TextPacket {
+  packet: Protobuf.MeshPacket;
+  data: string;
+}
+
+/**
+ * @todo deprecate
+ */
+export interface DeviceTransaction {
+  success: boolean;
   interaction_time: number;
   consecutiveFailedRequests?: number;
 }
@@ -59,6 +92,10 @@ export interface WebStatisticsResponse {
       has_battery: boolean;
       has_usb: boolean;
       is_charging: boolean;
+      radio: {
+        frequecy: number;
+        lora_channel: number;
+      };
     };
   };
   status: string;

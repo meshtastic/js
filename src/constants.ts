@@ -28,3 +28,8 @@ export const BROADCAST_NUM = 0xffffffff;
  * Is sent with device configuration request and is used for verification of config process
  */
 export const MY_CONFIG_ID = 42;
+
+/**
+ * Minimum device firmware version supported by this version of the library.
+ */
+export const MIN_FW_VERSION = 1.2;

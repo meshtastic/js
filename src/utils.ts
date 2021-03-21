@@ -1,4 +1,4 @@
-import { LogLevelEnum } from "./protobuf";
+import { Protobuf } from "./";
 import { SettingsManager } from "./settingsmanager";
 
 /**
@@ -55,13 +55,18 @@ const exponentialBackoff = async (
 
 /**
  * Global event logger
- * @param data data to be logged
- * @param logLevel loglevel to associate data with
+ * @param emitter Name of calling function
+ * @param message Informative message
+ * @param logLevel Desired logging level
  */
-const log = (emitter: string, message: string, logLevel: LogLevelEnum) => {
+const log = (
+  emitter: string,
+  message: string,
+  logLevel: Protobuf.LogLevelEnum
+) => {
   if (logLevel >= SettingsManager.debugMode) {
     switch (logLevel) {
-      case LogLevelEnum.TRACE:
+      case Protobuf.LogLevelEnum.TRACE:
         console.info(
           `%c[TRACE]%c ${emitter}\n%c${message}`,
           "color:grey",
@@ -70,7 +75,7 @@ const log = (emitter: string, message: string, logLevel: LogLevelEnum) => {
         );
         break;
 
-      case LogLevelEnum.DEBUG:
+      case Protobuf.LogLevelEnum.DEBUG:
         console.info(
           `%c[DEBUG]%c ${emitter}\n%c${message}`,
           "color:lightcyan",
@@ -79,15 +84,14 @@ const log = (emitter: string, message: string, logLevel: LogLevelEnum) => {
         );
         break;
 
-      case LogLevelEnum.INFO:
+      case Protobuf.LogLevelEnum.INFO:
         console.info(
           `%c[INFO]%c ${emitter}\n%c${message}`,
-          "color:lightgreen",
           "color:darkgrey",
           "color:white"
         );
         break;
-      case LogLevelEnum.WARNING:
+      case Protobuf.LogLevelEnum.WARNING:
         console.warn(
           `%c[WARNING]%c ${emitter}\n%c${message}`,
           "color:yellow",
@@ -96,7 +100,7 @@ const log = (emitter: string, message: string, logLevel: LogLevelEnum) => {
         );
         break;
 
-      case LogLevelEnum.ERROR:
+      case Protobuf.LogLevelEnum.ERROR:
         console.error(
           `%c[ERROR]%c ${emitter}\n%c${message}`,
           "color:orangered",
@@ -105,7 +109,7 @@ const log = (emitter: string, message: string, logLevel: LogLevelEnum) => {
         );
         break;
 
-      case LogLevelEnum.CRITICAL:
+      case Protobuf.LogLevelEnum.CRITICAL:
         console.error(
           `%c[CRITICAL]%c ${emitter}\n%c${message}`,
           "color:red",
@@ -119,4 +123,4 @@ const log = (emitter: string, message: string, logLevel: LogLevelEnum) => {
   }
 };
 
-export { bufferToHex, typedArrayToBuffer, exponentialBackoff, log };
+export { bufferToHex, exponentialBackoff, log, typedArrayToBuffer };

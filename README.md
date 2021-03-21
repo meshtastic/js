@@ -20,16 +20,6 @@ yarn add @meshtastic/meshtasticjs
 npm install @meshtastic/meshtasticjs
 ```
 
-If you prefer a pre-bundled version you can generate one with the following command from inside the projects folder:
-
-```bash
-npm run build && npm install --global webpack-cli && webpack-cli --entry ./dist -o dist/bundle.js
-```
-
-```bash
-yarn build && yarn global add webpack-cli && webpack-cli --entry ./dist -o dist/bundle.js
-```
-
 #### Usage
 
 The library has a built in connection manager that will handle multiple devices of different connection types.
@@ -97,7 +87,7 @@ bleConnection.sendText("Message", 1234);
 /**
  * Arbitrary data
  */
-bleConnection.sendData(
+bleConnection.sendPacket(
   new Uint8Array([...data]),
   Protobuf.PortNumEnum.PRIVATE_APP
 );

@@ -1,12 +1,12 @@
+import { Protobuf, Types } from "./";
 import {
   FROMNUM_UUID,
   FROMRADIO_UUID,
   SERVICE_UUID,
-  TORADIO_UUID,
+  TORADIO_UUID
 } from "./constants";
 import { IMeshDevice } from "./imeshdevice";
-import { LogLevelEnum } from "./protobuf";
-import { exponentialBackoff, typedArrayToBuffer, log } from "./utils";
+import { exponentialBackoff, log, typedArrayToBuffer } from "./utils";
 
 /**
  * Allows to connect to a meshtastic device via bluetooth
@@ -47,16 +47,6 @@ export class IBLEConnection extends IMeshDevice {
    */
   userInitiatedDisconnect: boolean;
 
-  /**
-   * States if the current device is currently connected or not
-   */
-  isConnected: boolean;
-
-  /**
-   * States if the current device is in a reconnecting state
-   */
-  isReconnecting: boolean;
-
   constructor() {
     super();
 
@@ -72,24 +62,20 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Initiates the connect process to a meshtastic device via bluetooth
    * @param requestDeviceFilterParams Optional filter options for the web bluetooth api requestDevice() method
-   * @param noAutoConfig Connect to the device without configuring it. Requires to call configure() manually
    */
-  async connect(
-    requestDeviceFilterParams?: RequestDeviceOptions,
-    noAutoConfig = false
-  ) {
-    if (this.isConnected) {
+  async connect(requestDeviceFilterParams?: RequestDeviceOptions) {
+    if (this.deviceStatus >= Types.DeviceStatusEnum.DEVICE_CONNECTED) {
       log(
         `IBLEConnection.connect`,
         `Device is already connected`,
-        LogLevelEnum.WARNING
+        Protobuf.LogLevelEnum.WARNING
       );
       return;
     } else if (!navigator.bluetooth) {
       log(
         `IBLEConnection.connect`,
         `This browser doesn't support the WebBluetooth API`,
-        LogLevelEnum.WARNING
+        Protobuf.LogLevelEnum.WARNING
       );
     }
 
@@ -103,14 +89,14 @@ export class IBLEConnection extends IMeshDevice {
           log(
             `IBLEConnection.connect`,
             `No device selected`,
-            LogLevelEnum.ERROR
+            Protobuf.LogLevelEnum.ERROR
           );
         } else {
           this.device = device;
         }
       }
 
-      if (!this.isReconnecting) {
+      if (this.deviceStatus > Types.DeviceStatusEnum.DEVICE_RECONNECTING) {
         this.subscribeToBLEConnectionEvents();
       }
 
@@ -122,7 +108,7 @@ export class IBLEConnection extends IMeshDevice {
         log(
           `IBLEConnection.connect`,
           `Connection has not been establised`,
-          LogLevelEnum.ERROR
+          Protobuf.LogLevelEnum.ERROR
         );
       }
 
@@ -134,7 +120,7 @@ export class IBLEConnection extends IMeshDevice {
         log(
           `IBLEConnection.connect`,
           `Service has not been establised`,
-          LogLevelEnum.ERROR
+          Protobuf.LogLevelEnum.ERROR
         );
       }
 
@@ -142,11 +128,9 @@ export class IBLEConnection extends IMeshDevice {
 
       await this.subscribeToBLENotification();
 
-      this.isConnected = true;
-
-      await this.onConnected(noAutoConfig);
+      await this.onConnected();
     } catch (e) {
-      log(`IBLEConnection.connect`, e.message, LogLevelEnum.ERROR);
+      log(`IBLEConnection.connect`, e.message, Protobuf.LogLevelEnum.ERROR);
     }
   }
 
@@ -155,20 +139,6 @@ export class IBLEConnection extends IMeshDevice {
    */
   disconnect() {
     this.userInitiatedDisconnect = true;
-
-    if (!this.isConnected && !this.isReconnecting) {
-      log(
-        `IBLEConnection.disconnect`,
-        `Device already disconnected.`,
-        LogLevelEnum.TRACE
-      );
-    } else if (!this.isConnected && this.isReconnecting) {
-      log(
-        `IBLEConnection.disconnect`,
-        `Reconnect cancelled.`,
-        LogLevelEnum.DEBUG
-      );
-    }
 
     /**
      * No need to call parent onDisconnected here, calling disconnect() triggers gatt event
@@ -180,7 +150,7 @@ export class IBLEConnection extends IMeshDevice {
    * Pings device to check if it is avaliable
    * @todo implement
    */
-  ping() {
+  async ping() {
     return true;
   }
 
@@ -199,9 +169,23 @@ export class IBLEConnection extends IMeshDevice {
           if (value && value.byteLength > 0) {
             this.handleFromRadio(new Uint8Array(readBuffer, 0));
           }
+          this.onDeviceStatusEvent.next(
+            Types.DeviceStatusEnum.DEVICE_CONNECTED
+          );
         })
         .catch((e) => {
-          log(`IBLEConnection.readFromRadio`, e.message, LogLevelEnum.ERROR);
+          this.consecutiveFailedRequests++;
+          log(
+            `IBLEConnection.readFromRadio`,
+            e.message,
+            Protobuf.LogLevelEnum.ERROR
+          );
+          this.onDeviceStatusEvent.next(
+            Types.DeviceStatusEnum.DEVICE_RECONNECTING
+          );
+          /**
+           * @todo exponential backoff here?
+           */
           return new ArrayBuffer(0);
         });
     }
@@ -231,7 +215,7 @@ export class IBLEConnection extends IMeshDevice {
         log(
           `IBLEConnection.readFromCharacteristic`,
           e.message,
-          LogLevelEnum.ERROR
+          Protobuf.LogLevelEnum.ERROR
         );
       });
   }
@@ -250,13 +234,17 @@ export class IBLEConnection extends IMeshDevice {
      */
     if (!requestDeviceFilterParams?.hasOwnProperty("filters")) {
       requestDeviceFilterParams = {
-        filters: [{ services: [SERVICE_UUID] }],
+        filters: [{ services: [SERVICE_UUID] }]
       };
     }
     return navigator.bluetooth
       .requestDevice(requestDeviceFilterParams as RequestDeviceOptions)
       .catch((e) => {
-        log(`IBLEConnection.requestDevice`, e.message, LogLevelEnum.ERROR);
+        log(
+          `IBLEConnection.requestDevice`,
+          e.message,
+          Protobuf.LogLevelEnum.ERROR
+        );
       });
   }
 
@@ -268,11 +256,15 @@ export class IBLEConnection extends IMeshDevice {
     log(
       `IBLEConnection.connectToDevice`,
       `${device.name}, trying to connect now.`,
-      LogLevelEnum.DEBUG
+      Protobuf.LogLevelEnum.DEBUG
     );
 
     return device.gatt.connect().catch((e) => {
-      log(`IBLEConnection.connectToDevice`, e.message, LogLevelEnum.ERROR);
+      log(
+        `IBLEConnection.connectToDevice`,
+        e.message,
+        Protobuf.LogLevelEnum.ERROR
+      );
     });
   }
 
@@ -282,7 +274,7 @@ export class IBLEConnection extends IMeshDevice {
    */
   private async getService(connection: BluetoothRemoteGATTServer) {
     return connection.getPrimaryService(SERVICE_UUID).catch((e) => {
-      log(`IBLEConnection.getService`, e.message, LogLevelEnum.ERROR);
+      log(`IBLEConnection.getService`, e.message, Protobuf.LogLevelEnum.ERROR);
     });
   }
 
@@ -298,7 +290,7 @@ export class IBLEConnection extends IMeshDevice {
       log(
         `IBLEConnection.getCharacteristics`,
         `Successfully got toRadioCharacteristic.`,
-        LogLevelEnum.DEBUG
+        Protobuf.LogLevelEnum.DEBUG
       );
       this.fromRadioCharacteristic = await service.getCharacteristic(
         FROMRADIO_UUID
@@ -306,7 +298,7 @@ export class IBLEConnection extends IMeshDevice {
       log(
         `IBLEConnection.getCharacteristics`,
         `Successfully got fromRadioCharacteristic.`,
-        LogLevelEnum.DEBUG
+        Protobuf.LogLevelEnum.DEBUG
       );
       this.fromNumCharacteristic = await service.getCharacteristic(
         FROMNUM_UUID
@@ -314,10 +306,14 @@ export class IBLEConnection extends IMeshDevice {
       log(
         `IBLEConnection.getCharacteristics`,
         `Successfully got fromNumCharacteristic.`,
-        LogLevelEnum.DEBUG
+        Protobuf.LogLevelEnum.DEBUG
       );
     } catch (e) {
-      log(`IBLEConnection.getCharacteristics`, e.message, LogLevelEnum.ERROR);
+      log(
+        `IBLEConnection.getCharacteristics`,
+        e.message,
+        Protobuf.LogLevelEnum.ERROR
+      );
     }
   }
 
@@ -328,6 +324,7 @@ export class IBLEConnection extends IMeshDevice {
     await this.fromNumCharacteristic.startNotifications();
     /**
      * bind.this makes the object reference to IBLEConnection accessible within the callback
+     * @todo stop using eventListener
      */
     this.fromNumCharacteristic.addEventListener(
       "characteristicvaluechanged",
@@ -337,7 +334,7 @@ export class IBLEConnection extends IMeshDevice {
     log(
       `IBLEConnection.subscribeToBLENotification`,
       `BLE notifications activated.`,
-      LogLevelEnum.DEBUG
+      Protobuf.LogLevelEnum.DEBUG
     );
   }
 
@@ -359,11 +356,15 @@ export class IBLEConnection extends IMeshDevice {
     log(
       `IBLEConnection.handleBLENotification`,
       `BLE notification received: ${event}.`,
-      LogLevelEnum.DEBUG
+      Protobuf.LogLevelEnum.DEBUG
     );
 
     await this.readFromRadio().catch((e) => {
-      log(`IBLEConnection.handleBLENotification`, e, LogLevelEnum.ERROR);
+      log(
+        `IBLEConnection.handleBLENotification`,
+        e,
+        Protobuf.LogLevelEnum.ERROR
+      );
     });
   }
 
@@ -374,21 +375,31 @@ export class IBLEConnection extends IMeshDevice {
     this.onDisconnected();
 
     if (!this.userInitiatedDisconnect) {
-      this.isReconnecting = true;
+      if (this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING) {
+        this.onDeviceStatusEvent.next(
+          Types.DeviceStatusEnum.DEVICE_RECONNECTING
+        );
+      }
 
       const toTry = async () => {
         await this.connect();
       };
 
       const success = () => {
-        this.isReconnecting = false;
+        /**
+         * @todo, do we need to reconfigure the device
+         */
+        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
       };
 
       const fail = () => {
+        /**
+         * Do we need to set the deviceStatus here or call onDisconnect()?
+         */
         log(
           `IBLEConnection.handleBLEDisconnect`,
           `Automatic reconnect failed.`,
-          LogLevelEnum.DEBUG
+          Protobuf.LogLevelEnum.DEBUG
         );
       };
 
