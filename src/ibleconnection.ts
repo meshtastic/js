@@ -169,11 +169,6 @@ export class IBLEConnection extends IMeshDevice {
           if (value && value.byteLength > 0) {
             this.handleFromRadio(new Uint8Array(readBuffer, 0));
           }
-          log(
-            `IBLEConnection.readFromRadio`,
-            "Request Success, sending onDeviceStatusEvent: DEVICE_CONNECTED",
-            Protobuf.LogLevelEnum.TRACE
-          );
           this.onDeviceStatusEvent.next(
             Types.DeviceStatusEnum.DEVICE_CONNECTED
           );
@@ -184,11 +179,6 @@ export class IBLEConnection extends IMeshDevice {
             `IBLEConnection.readFromRadio`,
             e.message,
             Protobuf.LogLevelEnum.ERROR
-          );
-          log(
-            `IMeshDevice.readFromRadio`,
-            "Sending onDeviceStatusEvent: DEVICE_RECONNECTING",
-            Protobuf.LogLevelEnum.TRACE
           );
           this.onDeviceStatusEvent.next(
             Types.DeviceStatusEnum.DEVICE_RECONNECTING
@@ -386,11 +376,6 @@ export class IBLEConnection extends IMeshDevice {
 
     if (!this.userInitiatedDisconnect) {
       if (this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING) {
-        log(
-          `IBLEConnection.handleBLEDisconnect`,
-          "Sending onDeviceStatusEvent: DEVICE_RECONNECTING",
-          Protobuf.LogLevelEnum.TRACE
-        );
         this.onDeviceStatusEvent.next(
           Types.DeviceStatusEnum.DEVICE_RECONNECTING
         );
@@ -404,11 +389,6 @@ export class IBLEConnection extends IMeshDevice {
         /**
          * @todo, do we need to reconfigure the device
          */
-        log(
-          `IBLEConnection.handleBLEDisconnect`,
-          "Sending onDeviceStatusEvent: DEVICE_CONFIGURED",
-          Protobuf.LogLevelEnum.TRACE
-        );
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
       };
 

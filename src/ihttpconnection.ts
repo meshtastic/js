@@ -45,11 +45,6 @@ export class IHTTPConnection extends IMeshDevice {
     receiveBatchRequests = false,
     fetchInterval?: number
   ) {
-    log(
-      `IHTTPConnection.connect`,
-      "Sending onDeviceStatusEvent: DEVICE_CONNECTING",
-      Protobuf.LogLevelEnum.TRACE
-    );
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
     this.receiveBatchRequests = receiveBatchRequests;
@@ -65,8 +60,8 @@ export class IHTTPConnection extends IMeshDevice {
     if (await this.ping()) {
       log(
         `IHTTPConnection.connect`,
-        `Starting new connection timer.`,
-        Protobuf.LogLevelEnum.TRACE
+        `Starting new request timer.`,
+        Protobuf.LogLevelEnum.DEBUG
       );
       this.fetchTimer(fetchInterval);
     }
@@ -100,11 +95,6 @@ export class IHTTPConnection extends IMeshDevice {
         pingSuccessful = false;
         this.consecutiveFailedRequests++;
         log(`IHTTPConnection.connect`, e.message, Protobuf.LogLevelEnum.ERROR);
-        log(
-          `IHTTPConnection.connect`,
-          "Sending onDeviceStatusEvent: DEVICE_RECONNECTING",
-          Protobuf.LogLevelEnum.TRACE
-        );
         this.onDeviceStatusEvent.next(
           Types.DeviceStatusEnum.DEVICE_RECONNECTING
         );
@@ -132,21 +122,11 @@ export class IHTTPConnection extends IMeshDevice {
         }
       )
         .then(async (response) => {
-          log(
-            `IHTTPConnection.readFromRadio`,
-            "Request Success, sending onDeviceStatusEvent: DEVICE_CONNECTED",
-            Protobuf.LogLevelEnum.TRACE
-          );
           this.onDeviceStatusEvent.next(
             Types.DeviceStatusEnum.DEVICE_CONNECTED
           );
 
           if (this.deviceStatus < Types.DeviceStatusEnum.DEVICE_CONNECTED) {
-            log(
-              `IHTTPConnection.readFromRadio`,
-              "Sending onDeviceStatusEvent: DEVICE_CONNECTED",
-              Protobuf.LogLevelEnum.TRACE
-            );
             this.onDeviceStatusEvent.next(
               Types.DeviceStatusEnum.DEVICE_CONNECTED
             );
@@ -155,11 +135,6 @@ export class IHTTPConnection extends IMeshDevice {
           readBuffer = await response.arrayBuffer();
 
           if (readBuffer.byteLength > 0) {
-            log(
-              `IHTTPConnection.readFromRadio`,
-              `Received ${readBuffer.byteLength} bytes from radio.`,
-              Protobuf.LogLevelEnum.TRACE
-            );
             await this.handleFromRadio(new Uint8Array(readBuffer, 0));
           }
         })
@@ -184,11 +159,6 @@ export class IHTTPConnection extends IMeshDevice {
           if (
             this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
           ) {
-            log(
-              `IHTTPConnection.readFromRadio`,
-              "Sending onDeviceStatusEvent: DEVICE_RECONNECTING",
-              Protobuf.LogLevelEnum.TRACE
-            );
             this.onDeviceStatusEvent.next(
               Types.DeviceStatusEnum.DEVICE_RECONNECTING
             );
@@ -209,11 +179,6 @@ export class IHTTPConnection extends IMeshDevice {
       body: typedArrayToBuffer(ToRadioUInt8Array)
     })
       .then(async (_) => {
-        log(
-          `IHTTPConnection.writeToRadio`,
-          "Request Success, sending onDeviceStatusEvent: DEVICE_CONNECTED",
-          Protobuf.LogLevelEnum.TRACE
-        );
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
         await this.readFromRadio().catch((e) => {
@@ -226,11 +191,6 @@ export class IHTTPConnection extends IMeshDevice {
           `IHTTPConnection.writeToRadio`,
           e.message,
           Protobuf.LogLevelEnum.ERROR
-        );
-        log(
-          `IMeshDevice.readFromRadio`,
-          "Sending onDeviceStatusEvent: DEVICE_RECONNECTING",
-          Protobuf.LogLevelEnum.TRACE
         );
         this.onDeviceStatusEvent.next(
           Types.DeviceStatusEnum.DEVICE_RECONNECTING
@@ -284,11 +244,6 @@ export class IHTTPConnection extends IMeshDevice {
       method: "POST"
     })
       .then(() => {
-        log(
-          `IHTTPConnection.restartDevice`,
-          "Sending onDeviceStatusEvent: DEVICE_RESTARTING",
-          Protobuf.LogLevelEnum.TRACE
-        );
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_RESTARTING);
       })
       .catch((e) => {

@@ -28,6 +28,8 @@ export abstract class IMeshDevice {
       this.deviceStatus = status;
       if (status === Types.DeviceStatusEnum.DEVICE_CONFIGURED)
         this.isConfigured = true;
+      else if (status === Types.DeviceStatusEnum.DEVICE_CONFIGURING)
+        this.isConfigured = false;
     });
   }
 
@@ -85,10 +87,17 @@ export abstract class IMeshDevice {
   readonly onNodeInfoPacketEvent: Subject<Types.NodeInfoPacket> = new Subject();
 
   /**
-   * Fires when a new FromRadio message containing a Routing packet has been received from device
+   * Fires when a new FromRadio message containing a AndminMessage packet has been received from device
    * @event
    */
-  readonly onRoutingPacketEvent: Subject<Types.RoutingInfoPacket> = new Subject();
+  readonly onAdminPacketEvent: Subject<Protobuf.MeshPacket> = new Subject();
+
+  /**
+   * Fires when a new FromRadio message containing a Routing packet has been received from device
+   * @todo, should this return `Protobuf.MeshPacket` if so, what is `Protobuf.Routing` for?
+   * @event
+   */
+  readonly onRoutingPacketEvent: Subject<Protobuf.MeshPacket> = new Subject();
 
   /**
    * Fires when a new FromRadio message containing a Position packet has been received from device
@@ -167,15 +176,9 @@ export abstract class IMeshDevice {
     destinationNum?: number,
     wantAck = false
   ) {
-    if (!this.isConfigured) {
-      log(
-        `IMeshDevice.sendPacket`,
-        `Device isn't ready, state: ${
-          Types.DeviceStatusEnum[this.deviceStatus]
-        }`,
-        Protobuf.LogLevelEnum.WARNING
-      );
-    }
+    /**
+     * @todo, does the device need to be configured?
+     */
 
     meshPacket.to = destinationNum ? destinationNum : BROADCAST_NUM;
     meshPacket.wantAck = wantAck;
@@ -192,9 +195,9 @@ export abstract class IMeshDevice {
 
   /**
    * Writes radio config to device
-   * @param configOptions
+   * @param radioConfig
    */
-  async setRadioConfig(configOptions: Protobuf.RadioConfig) {
+  async setRadioConfig(radioConfig: Protobuf.RadioConfig) {
     /**
      * @todo used to check if the radioConfig had bean read, should be verified by whatever clalls this function
      * ! @todo fix
@@ -206,7 +209,7 @@ export abstract class IMeshDevice {
           packet: new Protobuf.MeshPacket(
             new Protobuf.AdminMessage({
               setRadio: new Protobuf.RadioConfig({
-                preferences: configOptions.preferences
+                preferences: radioConfig.preferences
               })
             })
           )
@@ -282,22 +285,6 @@ export abstract class IMeshDevice {
    * Triggers the device configure process
    */
   async configure() {
-    /**
-     * @todo, chech if this works correctly
-     */
-    if (this.deviceStatus < Types.DeviceStatusEnum.DEVICE_CONNECTED) {
-      log(
-        `IMeshDevice.configure`,
-        `Interface is not connected`,
-        Protobuf.LogLevelEnum.ERROR
-      );
-    }
-
-    log(
-      `IMeshDevice.configure`,
-      "Sending onDeviceStatusEvent: DEVICE_CONFIGURING",
-      Protobuf.LogLevelEnum.TRACE
-    );
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
     log(
@@ -319,11 +306,16 @@ export abstract class IMeshDevice {
       Protobuf.LogLevelEnum.DEBUG
     );
     await this.readFromRadio().then(() => {
-      log(
-        `IMeshDevice.configure`,
-        `Completed reading radio configuration.`,
-        Protobuf.LogLevelEnum.DEBUG
-      );
+      /**
+       * @todo, sometimes this doesn't broadcast the `configured` status message
+       */
+      if (!this.isConfigured) {
+        log(
+          `IMeshDevice.sendPacket`,
+          `Device failed to read config`,
+          Protobuf.LogLevelEnum.WARNING
+        );
+      }
     });
   }
 
@@ -341,14 +333,6 @@ export abstract class IMeshDevice {
   protected async handleFromRadio(fromRadio: Uint8Array) {
     let fromRadioObj: Protobuf.FromRadio;
 
-    if (fromRadio.byteLength < 1) {
-      log(
-        `IMeshDevice.handleFromRadio`,
-        `Empty buffer received.`,
-        Protobuf.LogLevelEnum.DEBUG
-      );
-    }
-
     try {
       fromRadioObj = Protobuf.FromRadio.decode(fromRadio);
     } catch (e) {
@@ -362,11 +346,6 @@ export abstract class IMeshDevice {
     /**
      * Send generic fromRadio Event
      */
-    log(
-      `IMeshDevice.handleFromRadio`,
-      "Sending onFromRadioEvent",
-      Protobuf.LogLevelEnum.TRACE
-    );
     this.onFromRadioEvent.next(fromRadioObj);
 
     switch (fromRadioObj.payloadVariant) {
@@ -412,13 +391,11 @@ export abstract class IMeshDevice {
       case "logRecord":
         break;
 
+      /**
+       * @todo, what is this used for now?
+       */
       case "configCompleteId":
         if (fromRadioObj.configCompleteId === MY_CONFIG_ID) {
-          log(
-            `IHTTPConnection.handleFromRadio`,
-            "Sending onDeviceStatusEvent: DEVICE_CONFIGURED",
-            Protobuf.LogLevelEnum.TRACE
-          );
           this.onDeviceStatusEvent.next(
             Types.DeviceStatusEnum.DEVICE_CONFIGURED
           );
@@ -452,7 +429,7 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Gets called when a data, user or position packet is received from device
+   * Gets called when a MeshPacket is received from device
    * @param meshPacket
    */
   private handleMeshPacket(meshPacket: Protobuf.MeshPacket) {
@@ -464,9 +441,6 @@ export abstract class IMeshDevice {
     this.onDataPacketEvent.next(meshPacket);
 
     if (meshPacket.decoded.payload) {
-      console.log(
-        `got portnum ${Protobuf.PortNumEnum[meshPacket.decoded.portnum]}`
-      );
       switch (meshPacket.decoded.portnum) {
         case Protobuf.PortNumEnum.TEXT_MESSAGE_APP:
           /**
@@ -483,11 +457,6 @@ export abstract class IMeshDevice {
             data: text
           });
           break;
-        case Protobuf.PortNumEnum.REMOTE_HARDWARE_APP:
-          /**
-           * Remote Hardware
-           */
-          console.log("CATCH - REMOTE_HARDWARE_APP");
         case Protobuf.PortNumEnum.POSITION_APP:
           /**
            * Position
@@ -502,6 +471,7 @@ export abstract class IMeshDevice {
             packet: meshPacket,
             data: position
           });
+          break;
         case Protobuf.PortNumEnum.NODEINFO_APP:
           /**
            * Node Info
@@ -517,41 +487,34 @@ export abstract class IMeshDevice {
             packet: meshPacket,
             data: nodeInfo
           });
+          break;
         case Protobuf.PortNumEnum.ROUTING_APP:
           /**
            * Routing
            */
-          const routing = Protobuf.Routing.decode(meshPacket.decoded.payload);
 
           log(
             `IMeshDevice.handleMeshPacket`,
             "Sending onRoutingPacketEvent",
             Protobuf.LogLevelEnum.TRACE
           );
-          this.onRoutingPacketEvent.next({
-            packet: meshPacket,
-            data: routing
-          });
+          this.onRoutingPacketEvent.next(meshPacket);
+          break;
         case Protobuf.PortNumEnum.ADMIN_APP:
           /**
            * Admin
            */
-          console.log("CATCH - ADMIN_APP");
-        case Protobuf.PortNumEnum.REPLY_APP:
-          /**
-           * Reply
-           */
-          console.log("CATCH - REPLY_APP");
-        case Protobuf.PortNumEnum.STORE_FORWARD_APP:
-          /**
-           * Store and forward
-           */
-          console.log("CATCH - STORE_FORWARD_APP");
-        case Protobuf.PortNumEnum.RANGE_TEST_APP:
-          /**
-           * Range test
-           */
-          console.log("CATCH - RANGE_TEST_APP");
+          const adminMessage = Protobuf.AdminMessage.decode(
+            meshPacket.decoded.payload
+          );
+
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Sending onAdminPacketEvent",
+            Protobuf.LogLevelEnum.TRACE
+          );
+          this.onAdminPacketEvent.next(meshPacket);
+          break;
         default:
           log(
             "IMeshDevice.handleMeshPacket",
@@ -560,6 +523,7 @@ export abstract class IMeshDevice {
             }`,
             Protobuf.LogLevelEnum.WARNING
           );
+          break;
       }
     } else {
       log(
@@ -574,11 +538,6 @@ export abstract class IMeshDevice {
    * Gets called when a link to the device has been established
    */
   protected async onConnected() {
-    log(
-      `IMeshDevice.onConnected`,
-      "Sending onDeviceStatusEvent: DEVICE_CONNECTED",
-      Protobuf.LogLevelEnum.TRACE
-    );
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
     await this.configure().catch((e) => {
@@ -590,11 +549,6 @@ export abstract class IMeshDevice {
    * Gets called when a link to the device has been disconnected
    */
   protected onDisconnected() {
-    log(
-      `IMeshDevice.onDisconnected`,
-      "Sending onDeviceStatusEvent: DEVICE_DISCONNECTED",
-      Protobuf.LogLevelEnum.TRACE
-    );
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
   }
 }
