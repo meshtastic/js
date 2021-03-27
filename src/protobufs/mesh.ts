@@ -274,6 +274,9 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
   @Field.d(9, "uint32")
   errorCount: number;
 
+  @Field.d(10, "uint32")
+  rebootCount: number;
+
   @Field.d(13, "uint32")
   messageTimeoutMsec: number;
 

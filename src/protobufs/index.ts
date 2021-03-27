@@ -1,5 +1,5 @@
 /**
- * Current as of Meshtastic-protobufs #f9c4f875818c9aa6995e6e25803d52557a1779c7
+ * Current as of Meshtastic-protobufs #1f56681b2b629a92a099784f78cd11dff31a5a8f
  */
 
 export * from "./admin";
