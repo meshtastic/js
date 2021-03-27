@@ -63,7 +63,7 @@ export class IBLEConnection extends IMeshDevice {
    * Initiates the connect process to a meshtastic device via bluetooth
    * @param requestDeviceFilterParams Optional filter options for the web bluetooth api requestDevice() method
    */
-  async connect(requestDeviceFilterParams?: RequestDeviceOptions) {
+  public async connect(requestDeviceFilterParams?: RequestDeviceOptions) {
     if (this.deviceStatus >= Types.DeviceStatusEnum.DEVICE_CONNECTED) {
       log(
         `IBLEConnection.connect`,
@@ -128,7 +128,9 @@ export class IBLEConnection extends IMeshDevice {
 
       await this.subscribeToBLENotification();
 
-      await this.onConnected();
+      this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+
+      await this.configure();
     } catch (e) {
       log(`IBLEConnection.connect`, e.message, Protobuf.LogLevelEnum.ERROR);
     }
@@ -137,10 +139,11 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Disconnects from the meshtastic device
    */
-  disconnect() {
+  public disconnect() {
     this.userInitiatedDisconnect = true;
 
     /**
+     * @todo, send disconnected event
      * No need to call parent onDisconnected here, calling disconnect() triggers gatt event
      */
     this.connection.disconnect();
@@ -150,14 +153,14 @@ export class IBLEConnection extends IMeshDevice {
    * Pings device to check if it is avaliable
    * @todo implement
    */
-  async ping() {
+  public async ping() {
     return true;
   }
 
   /**
    * Short description
    */
-  async readFromRadio() {
+  protected async readFromRadio() {
     let readBuffer = new ArrayBuffer(1);
 
     /**
@@ -174,7 +177,6 @@ export class IBLEConnection extends IMeshDevice {
           );
         })
         .catch((e) => {
-          this.consecutiveFailedRequests++;
           log(
             `IBLEConnection.readFromRadio`,
             e.message,
@@ -194,7 +196,7 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Short description
    */
-  async writeToRadio(ToRadioUInt8Array: Uint8Array) {
+  protected async writeToRadio(ToRadioUInt8Array: Uint8Array) {
     await this.toRadioCharacteristic.writeValue(
       typedArrayToBuffer(ToRadioUInt8Array)
     );
@@ -326,6 +328,12 @@ export class IBLEConnection extends IMeshDevice {
      * bind.this makes the object reference to IBLEConnection accessible within the callback
      * @todo stop using eventListener
      */
+    // this.fromNumCharacteristic.addEventListener(
+    //   "characteristicvaluechanged",
+    //   (event) => {
+    //     this.handleBLENotification(event.target);
+    //   }
+    // );
     this.fromNumCharacteristic.addEventListener(
       "characteristicvaluechanged",
       this.handleBLENotification.bind(this)
@@ -372,7 +380,7 @@ export class IBLEConnection extends IMeshDevice {
    * Short description
    */
   private handleBLEDisconnect() {
-    this.onDisconnected();
+    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
 
     if (!this.userInitiatedDisconnect) {
       if (this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING) {

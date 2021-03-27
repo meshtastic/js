@@ -41,7 +41,6 @@ export interface TextPacket {
 export interface DeviceTransaction {
   success: boolean;
   interaction_time: number;
-  consecutiveFailedRequests?: number;
 }
 
 interface WebSPIFFSFileInstance {

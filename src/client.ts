@@ -1,5 +1,6 @@
 import { IBLEConnection } from "./ibleconnection";
 import { IHTTPConnection } from "./ihttpconnection";
+import { ISerialConnection } from "./iserialconnection";
 
 /**
  * Allows to create new connections to devices and manages them.
@@ -10,7 +11,7 @@ export class Client {
   /**
    * Array containing all created connection interfaces
    */
-  deviceInterfaces: Array<IBLEConnection | IHTTPConnection>;
+  deviceInterfaces: Array<IBLEConnection | IHTTPConnection | ISerialConnection>;
 
   constructor() {
     this.deviceInterfaces = [];
@@ -19,7 +20,7 @@ export class Client {
   /**
    * Creates a new Bluetooth Low Enery connection interface
    */
-  createBLEConnection() {
+  public createBLEConnection() {
     const iBLEConnection = new IBLEConnection();
     this.deviceInterfaces.push(iBLEConnection);
     return iBLEConnection;
@@ -28,7 +29,7 @@ export class Client {
   /**
    * Creates a new HTTP(S) connection interface
    */
-  createHTTPConnection() {
+  public createHTTPConnection() {
     const iHTTPConnection = new IHTTPConnection();
     this.deviceInterfaces.push(iHTTPConnection);
     return iHTTPConnection;
@@ -37,13 +38,17 @@ export class Client {
   /**
    * Creates a new Serial connection interface
    */
-  createSerialConnection() {}
+  public createSerialConnection() {
+    const iSerialConnection = new ISerialConnection();
+    this.deviceInterfaces.push(iSerialConnection);
+    return iSerialConnection;
+  }
 
   /**
    * Adds an already created connection interface to the client
    * @param connectionObj Desired Bluetooth or HTTP connection to device
    */
-  addConnection(connectionObj: IBLEConnection | IHTTPConnection) {
+  public addConnection(connectionObj: IBLEConnection | IHTTPConnection) {
     this.deviceInterfaces.push(connectionObj);
   }
 }

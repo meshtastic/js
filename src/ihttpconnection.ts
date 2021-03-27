@@ -20,7 +20,8 @@ export class IHTTPConnection extends IMeshDevice {
     super();
 
     this.url = undefined;
-    this.consecutiveFailedRequests = 0;
+
+    this.receiveBatchRequests = false;
   }
 
   /**
@@ -28,47 +29,50 @@ export class IHTTPConnection extends IMeshDevice {
    * @param address The IP Address/Domain to connect to, without protocol
    * @param tls Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
    * @param receiveBatchRequests Enables receiving messages all at once, versus one per request
-   * @param fetchInterval Sets a fixed interval in that the device is fetched for new messages
+   * @param fetchInterval (ms) Sets a fixed interval in that the device is fetched for new messages, defaults to 5 seconds
    */
-  async connect(
+  public async connect(
     address: string,
     tls?: boolean,
-    receiveBatchRequests = false,
-    fetchInterval?: number
+    receiveBatchRequests?: boolean,
+    fetchInterval = 5000
   ) {
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
     this.receiveBatchRequests = receiveBatchRequests;
 
-    this.consecutiveFailedRequests = 0;
-
     if (!this.url) {
-      /**
-       * assemble url
-       */
       this.url = tls ? `https://${address}` : `http://${address}`;
     }
     if (await this.ping()) {
       log(
         `IHTTPConnection.connect`,
-        `Starting new request timer.`,
+        `Ping succeeded, starting new request timer.`,
         Protobuf.LogLevelEnum.DEBUG
       );
-      this.fetchTimer(fetchInterval);
+      setInterval(async () => {
+        await this.readFromRadio().catch((e) => {
+          log(`IHTTPConnection`, e, Protobuf.LogLevelEnum.ERROR);
+        });
+      }, fetchInterval);
+    } else {
+      setTimeout(() => {
+        this.connect(address, tls, receiveBatchRequests, fetchInterval);
+      }, 10000);
     }
   }
 
   /**
    * Disconnects from the meshtastic device
    */
-  disconnect() {
-    this.onDisconnected();
+  public disconnect() {
+    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
   }
 
   /**
    * Pings device to check if it is avaliable
    */
-  async ping() {
+  public async ping() {
     log(
       `IHTTPConnection.connect`,
       `Attempting device ping.`,
@@ -80,11 +84,12 @@ export class IHTTPConnection extends IMeshDevice {
     await fetch(this.url + `/hotspot-detect.html`, {})
       .then(async (_) => {
         pingSuccessful = true;
-        await this.onConnected();
+        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+
+        await this.configure();
       })
       .catch((e) => {
         pingSuccessful = false;
-        this.consecutiveFailedRequests++;
         log(`IHTTPConnection.connect`, e.message, Protobuf.LogLevelEnum.ERROR);
         this.onDeviceStatusEvent.next(
           Types.DeviceStatusEnum.DEVICE_RECONNECTING
@@ -94,17 +99,14 @@ export class IHTTPConnection extends IMeshDevice {
   }
 
   /**
-   * Short description
+   * Reads any avaliable protobuf messages from the radio
    */
-  async readFromRadio() {
+  protected async readFromRadio() {
     let readBuffer = new ArrayBuffer(1);
 
-    /**
-     * Keep reading data until we stop receiving any
-     */
     while (readBuffer.byteLength > 0) {
       await fetch(
-        this.url + `/api/v1/fromradio?all=${this.receiveBatchRequests ? 1 : 0}`,
+        this.url + `/api/v1/fromradio?all=${this.receiveBatchRequests}`,
         {
           method: "GET",
           headers: {
@@ -136,7 +138,6 @@ export class IHTTPConnection extends IMeshDevice {
            * @todo do we need a failedRequests counter as we are going to broadcast device disconnected events
            * @todo if device is offline, it spam creates requests
            */
-          this.consecutiveFailedRequests++;
           log(
             `IHTTPConnection.readFromRadio`,
             e.message,
@@ -159,9 +160,9 @@ export class IHTTPConnection extends IMeshDevice {
   }
 
   /**
-   * Short description
+   * Sends supplied protobuf message to the radio
    */
-  async writeToRadio(ToRadioUInt8Array: Uint8Array) {
+  protected async writeToRadio(ToRadioUInt8Array: Uint8Array) {
     await fetch(`${this.url}/api/v1/toradio`, {
       method: "PUT",
       headers: {
@@ -177,7 +178,6 @@ export class IHTTPConnection extends IMeshDevice {
         });
       })
       .catch((e) => {
-        this.consecutiveFailedRequests++;
         log(
           `IHTTPConnection.writeToRadio`,
           e.message,
@@ -190,47 +190,9 @@ export class IHTTPConnection extends IMeshDevice {
   }
 
   /**
-   * Short description
-   */
-  private async fetchTimer(fetchInterval?: number) {
-    /**
-     * @todo change this behaviour, change to a more conservative retry rate
-     */
-    if (this.consecutiveFailedRequests > 3) {
-      return this.disconnect();
-    }
-
-    await this.readFromRadio().catch((e) => {
-      log(`IHTTPConnection`, e, Protobuf.LogLevelEnum.ERROR);
-    });
-
-    /**
-     * Calculate new interval and set timeout again
-     */
-    let newInterval = 5e3;
-
-    if (!fetchInterval) {
-      newInterval =
-        this.consecutiveFailedRequests > 2
-          ? 12e4
-          : this.consecutiveFailedRequests > 3
-          ? 3e4
-          : this.consecutiveFailedRequests > 4
-          ? 2e4
-          : this.consecutiveFailedRequests > 5
-          ? 15e3
-          : 1e4;
-    } else {
-      newInterval = fetchInterval;
-    }
-
-    setTimeout(this.fetchTimer.bind(this), newInterval);
-  }
-
-  /**
    * Web API method: Restart device
    */
-  async restartDevice() {
+  public async restartDevice() {
     return fetch(`${this.url}/restart`, {
       method: "POST"
     })
@@ -238,7 +200,6 @@ export class IHTTPConnection extends IMeshDevice {
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_RESTARTING);
       })
       .catch((e) => {
-        this.consecutiveFailedRequests++;
         log(
           `IHTTPConnection.restartDevice`,
           e.message,
@@ -250,7 +211,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Web API method: Get airtime statistics
    */
-  async getStatistics() {
+  public async getStatistics() {
     return fetch(`${this.url}/json/report`, {
       method: "GET"
     })
@@ -258,7 +219,6 @@ export class IHTTPConnection extends IMeshDevice {
         return (await response.json()) as Types.WebStatisticsResponse;
       })
       .catch((e) => {
-        this.consecutiveFailedRequests++;
         log(
           `IHTTPConnection.getStatistics`,
           e.message,
@@ -270,7 +230,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Web API method: Scan for WiFi AP's
    */
-  async getNetworks() {
+  public async getNetworks() {
     return fetch(`${this.url}/json/scanNetworks`, {
       method: "GET"
     })
@@ -278,7 +238,6 @@ export class IHTTPConnection extends IMeshDevice {
         return (await response.json()) as Types.WebNetworkResponse;
       })
       .catch((e) => {
-        this.consecutiveFailedRequests++;
         log(
           `IHTTPConnection.getNetworks`,
           e.message,
@@ -290,7 +249,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Web API method: Fetch SPIFFS contents
    */
-  async getSPIFFS() {
+  public async getSPIFFS() {
     return fetch(`${this.url}/json/spiffs/browse/static`, {
       method: "GET"
     })
@@ -298,7 +257,6 @@ export class IHTTPConnection extends IMeshDevice {
         return (await response.json()) as Types.WebSPIFFSResponse;
       })
       .catch((e) => {
-        this.consecutiveFailedRequests++;
         log(
           `IHTTPConnection.getSPIFFS`,
           e.message,
@@ -310,7 +268,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Web API method: Delete SPIFFS file
    */
-  async deleteSPIFFS(file: string) {
+  public async deleteSPIFFS(file: string) {
     return fetch(
       `${this.url}/json/spiffs/delete/static?${new URLSearchParams({
         delete: file
@@ -323,7 +281,6 @@ export class IHTTPConnection extends IMeshDevice {
         return (await response.json()) as Types.WebSPIFFSResponse;
       })
       .catch((e) => {
-        this.consecutiveFailedRequests++;
         log(
           `IHTTPConnection.deleteSPIFFS`,
           e.message,
@@ -336,11 +293,10 @@ export class IHTTPConnection extends IMeshDevice {
    * Web API method: Make device LED blink
    * @todo, strongly type response
    */
-  async blinkLED() {
+  public async blinkLED() {
     return fetch(`${this.url}/json/blink`, {
       method: "POST"
     }).catch((e) => {
-      this.consecutiveFailedRequests++;
       log(`IHTTPConnection.blinkLED`, e.message, Protobuf.LogLevelEnum.ERROR);
     });
   }
