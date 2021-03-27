@@ -58,4 +58,7 @@ export class AdminMessage extends Message<AdminMessage> {
 
   @Field.d(34, "bool")
   exitSimulator: boolean;
+
+  @Field.d(35, "int32")
+  rebootSeconds: number;
 }
