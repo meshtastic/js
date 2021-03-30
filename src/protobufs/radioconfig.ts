@@ -104,6 +104,9 @@ export class UserPreferences extends Message<UserPreferences> {
   @Field.d(39, "bool")
   fixedPosition: boolean;
 
+  @Field.d(40, "bool")
+  serialDisabled: boolean;
+
   @Field.d(100, "bool")
   factoryReset: boolean;
 
