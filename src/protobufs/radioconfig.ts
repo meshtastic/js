@@ -125,6 +125,9 @@ export class UserPreferences extends Message<UserPreferences> {
   @Field.d(36, "uint32")
   gpsAttemptTime: number;
 
+  @Field.d(41, "float")
+  frequencyOffset: number;
+
   @Field.d(103, "uint32", "repeated")
   ignoreIncoming: number;
 
