@@ -35,15 +35,6 @@ export interface TextPacket {
   data: string;
 }
 
-/**
- * @todo deprecate
- */
-export interface DeviceTransaction {
-  success: boolean;
-  interaction_time: number;
-  consecutiveFailedRequests?: number;
-}
-
 interface WebSPIFFSFileInstance {
   nameModified: string;
   name: string;

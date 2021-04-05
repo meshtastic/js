@@ -104,6 +104,9 @@ export class UserPreferences extends Message<UserPreferences> {
   @Field.d(39, "bool")
   fixedPosition: boolean;
 
+  @Field.d(40, "bool")
+  serialDisabled: boolean;
+
   @Field.d(100, "bool")
   factoryReset: boolean;
 
@@ -121,6 +124,15 @@ export class UserPreferences extends Message<UserPreferences> {
 
   @Field.d(36, "uint32")
   gpsAttemptTime: number;
+
+  @Field.d(41, "float")
+  frequencyOffset: number;
+
+  @Field.d(42, "string")
+  mqttServer: string;
+
+  @Field.d(43, "bool")
+  mqttDisabled: boolean;
 
   @Field.d(103, "uint32", "repeated")
   ignoreIncoming: number;

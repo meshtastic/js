@@ -87,7 +87,9 @@ export enum ErrorEnum {
   MAX_RETRANSMIT = 5,
   NO_CHANNEL = 6,
   TOO_LARGE = 7,
-  NO_RESPONSE = 8
+  NO_RESPONSE = 8,
+  BAD_REQUEST = 32,
+  NOT_AUTHORIZED = 33
 }
 
 /**
@@ -185,6 +187,9 @@ export class MeshPacket extends Message<MeshPacket> {
 
   @Field.d(12, PriorityEnum)
   priority: PriorityEnum;
+
+  @Field.d(13, "int32")
+  rxRSSI: number;
 }
 
 export enum ConstantsEnum {
@@ -208,6 +213,9 @@ export class NodeInfo extends Message<NodeInfo> {
 
   @Field.d(7, "float")
   snr: number;
+
+  @Field.d(4, "fixed32")
+  last_heard: number;
 }
 
 export enum CriticalErrorCodeEnum {
@@ -265,6 +273,9 @@ export class MyNodeInfo extends Message<MyNodeInfo> {
 
   @Field.d(9, "uint32")
   errorCount: number;
+
+  @Field.d(10, "uint32")
+  rebootCount: number;
 
   @Field.d(13, "uint32")
   messageTimeoutMsec: number;
@@ -350,12 +361,15 @@ export class FromRadio extends Message<FromRadio> {
  */
 @Type.d("ToRadio")
 export class ToRadio extends Message<ToRadio> {
-  @OneOf.d("packet", "wantConfigId")
-  payloadVariant: "packet" | "wantConfigId";
+  @OneOf.d("packet", "wantConfigId", "disconnect")
+  payloadVariant: "packet" | "wantConfigId" | "disconnect";
 
   @Field.d(2, MeshPacket)
   packet: MeshPacket;
 
   @Field.d(100, "uint32")
   wantConfigId: number;
+
+  @Field.d(104, "bool")
+  disconnect: boolean;
 }
