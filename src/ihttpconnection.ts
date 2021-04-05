@@ -115,6 +115,9 @@ export class IHTTPConnection extends IMeshDevice {
         }
       )
         .then(async (response) => {
+          /**
+           * @todo, is the DEVICE_CONNECTED event duplicated here, why are we checking for the connection status.
+           */
           this.onDeviceStatusEvent.next(
             Types.DeviceStatusEnum.DEVICE_CONNECTED
           );
@@ -132,21 +135,11 @@ export class IHTTPConnection extends IMeshDevice {
           }
         })
         .catch((e) => {
-          /**
-           * @todo does onDeviceTransationEvent need to be dispatched here too?
-           * @todo exponential backoff here?
-           * @todo do we need a failedRequests counter as we are going to broadcast device disconnected events
-           * @todo if device is offline, it spam creates requests
-           */
           log(
             `IHTTPConnection.readFromRadio`,
             e.message,
             Protobuf.LogLevelEnum.ERROR
           );
-
-          /**
-           * @todo broadcast reconnecting event and then after x attempts, broadcast disconnected
-           */
 
           if (
             this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING

@@ -128,6 +128,12 @@ export class UserPreferences extends Message<UserPreferences> {
   @Field.d(41, "float")
   frequencyOffset: number;
 
+  @Field.d(42, "string")
+  mqttServer: string;
+
+  @Field.d(43, "bool")
+  mqttDisabled: boolean;
+
   @Field.d(103, "uint32", "repeated")
   ignoreIncoming: number;
 

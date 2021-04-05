@@ -24,7 +24,8 @@ export abstract class IMeshDevice {
   private myNodeInfo: Protobuf.MyNodeInfo;
 
   /**
-   * short description
+   * @todo better desc
+   * Randomly generated number to ensure confiuration lockstep
    */
   private configId: number;
 
@@ -168,7 +169,7 @@ export abstract class IMeshDevice {
    * @param destinationNum Node number of the destination node
    * @param wantAck Whether or not acknowledgement is wanted
    * @param wantResponse Used for testing, requests recpipient to respond in kind with the same type of request
-   * @param echoResponse Sends events back to client, usefull for messaging, as all packets (mesh and local) can be managed centrally
+   * @param echoResponse Sends events back to client, without being sent to the device
    */
   public async sendPacket(
     byteData: Uint8Array,
