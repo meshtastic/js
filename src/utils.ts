@@ -1,4 +1,4 @@
-import { Protobuf } from "./";
+import { LogRecord_Level } from "./generated/mesh";
 import { SettingsManager } from "./settingsmanager";
 
 /**
@@ -25,6 +25,7 @@ const typedArrayToBuffer = (array: Uint8Array) => {
 };
 
 /**
+ * @todo phase out
  * This function keeps calling `toTry` until promise resolves or fails
  *  https://googlechrome.github.io/samples/web-bluetooth/automatic-reconnect-async-await.html
  *
@@ -59,14 +60,10 @@ const exponentialBackoff = async (
  * @param message Informative message
  * @param logLevel Desired logging level
  */
-const log = (
-  emitter: string,
-  message: string,
-  logLevel: Protobuf.LogLevelEnum
-) => {
+const log = (emitter: string, message: string, logLevel: LogRecord_Level) => {
   if (logLevel >= SettingsManager.debugMode) {
     switch (logLevel) {
-      case Protobuf.LogLevelEnum.TRACE:
+      case LogRecord_Level.TRACE:
         console.info(
           `%c[TRACE]%c ${emitter}\n%c${message}`,
           "color:grey",
@@ -75,7 +72,7 @@ const log = (
         );
         break;
 
-      case Protobuf.LogLevelEnum.DEBUG:
+      case LogRecord_Level.DEBUG:
         console.info(
           `%c[DEBUG]%c ${emitter}\n%c${message}`,
           "color:lightcyan",
@@ -84,7 +81,7 @@ const log = (
         );
         break;
 
-      case Protobuf.LogLevelEnum.INFO:
+      case LogRecord_Level.INFO:
         console.info(
           `%c[INFO]%c ${emitter}\n%c${message}`,
           "color:darkgrey",
@@ -92,7 +89,7 @@ const log = (
           "color:white"
         );
         break;
-      case Protobuf.LogLevelEnum.WARNING:
+      case LogRecord_Level.WARNING:
         console.warn(
           `%c[WARNING]%c ${emitter}\n%c${message}`,
           "color:yellow",
@@ -101,7 +98,7 @@ const log = (
         );
         break;
 
-      case Protobuf.LogLevelEnum.ERROR:
+      case LogRecord_Level.ERROR:
         console.error(
           `%c[ERROR]%c ${emitter}\n%c${message}`,
           "color:orangered",
@@ -110,7 +107,7 @@ const log = (
         );
         break;
 
-      case Protobuf.LogLevelEnum.CRITICAL:
+      case LogRecord_Level.CRITICAL:
         console.error(
           `%c[CRITICAL]%c ${emitter}\n%c${message}`,
           "color:red",

@@ -2,3 +2,5 @@
 dist
 docs
 examples
+src/generated
+protobufs
