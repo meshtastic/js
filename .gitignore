@@ -28,3 +28,4 @@ node_modules
 !.yarn/versions
 .pnp.*
 src/generated/*.ts
+!src/generated/index.ts
