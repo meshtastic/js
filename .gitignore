@@ -27,3 +27,5 @@ node_modules
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+src/generated/*.ts
+!src/generated/index.ts

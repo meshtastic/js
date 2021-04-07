@@ -1,4 +1,5 @@
-import { Protobuf, Types } from "./";
+import { Types } from "./";
+import { LogRecord_Level } from "./generated/mesh";
 import { IMeshDevice } from "./imeshdevice";
 import { log, typedArrayToBuffer } from "./utils";
 
@@ -9,12 +10,12 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * URL of the device that is to be connected to.
    */
-  url: string;
+  url: string | undefined;
 
   /**
    * Enables receiving messages all at once, versus one per request
    */
-  receiveBatchRequests: boolean;
+  receiveBatchRequests: boolean | undefined;
 
   constructor() {
     super();
@@ -48,11 +49,11 @@ export class IHTTPConnection extends IMeshDevice {
       log(
         `IHTTPConnection.connect`,
         `Ping succeeded, starting new request timer.`,
-        Protobuf.LogLevelEnum.DEBUG
+        LogRecord_Level.DEBUG
       );
       setInterval(async () => {
         await this.readFromRadio().catch((e) => {
-          log(`IHTTPConnection`, e, Protobuf.LogLevelEnum.ERROR);
+          log(`IHTTPConnection`, e, LogRecord_Level.ERROR);
         });
       }, fetchInterval);
     } else {
@@ -76,7 +77,7 @@ export class IHTTPConnection extends IMeshDevice {
     log(
       `IHTTPConnection.connect`,
       `Attempting device ping.`,
-      Protobuf.LogLevelEnum.DEBUG
+      LogRecord_Level.DEBUG
     );
 
     let pingSuccessful = false;
@@ -90,7 +91,7 @@ export class IHTTPConnection extends IMeshDevice {
       })
       .catch((e) => {
         pingSuccessful = false;
-        log(`IHTTPConnection.connect`, e.message, Protobuf.LogLevelEnum.ERROR);
+        log(`IHTTPConnection.connect`, e.message, LogRecord_Level.ERROR);
         this.onDeviceStatusEvent.next(
           Types.DeviceStatusEnum.DEVICE_RECONNECTING
         );
@@ -138,7 +139,7 @@ export class IHTTPConnection extends IMeshDevice {
           log(
             `IHTTPConnection.readFromRadio`,
             e.message,
-            Protobuf.LogLevelEnum.ERROR
+            LogRecord_Level.ERROR
           );
 
           if (
@@ -167,15 +168,11 @@ export class IHTTPConnection extends IMeshDevice {
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
         await this.readFromRadio().catch((e) => {
-          log(`IHTTPConnection`, e, Protobuf.LogLevelEnum.ERROR);
+          log(`IHTTPConnection`, e, LogRecord_Level.ERROR);
         });
       })
       .catch((e) => {
-        log(
-          `IHTTPConnection.writeToRadio`,
-          e.message,
-          Protobuf.LogLevelEnum.ERROR
-        );
+        log(`IHTTPConnection.writeToRadio`, e.message, LogRecord_Level.ERROR);
         this.onDeviceStatusEvent.next(
           Types.DeviceStatusEnum.DEVICE_RECONNECTING
         );
@@ -193,11 +190,7 @@ export class IHTTPConnection extends IMeshDevice {
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_RESTARTING);
       })
       .catch((e) => {
-        log(
-          `IHTTPConnection.restartDevice`,
-          e.message,
-          Protobuf.LogLevelEnum.ERROR
-        );
+        log(`IHTTPConnection.restartDevice`, e.message, LogRecord_Level.ERROR);
       });
   }
 
@@ -212,11 +205,7 @@ export class IHTTPConnection extends IMeshDevice {
         return (await response.json()) as Types.WebStatisticsResponse;
       })
       .catch((e) => {
-        log(
-          `IHTTPConnection.getStatistics`,
-          e.message,
-          Protobuf.LogLevelEnum.ERROR
-        );
+        log(`IHTTPConnection.getStatistics`, e.message, LogRecord_Level.ERROR);
       });
   }
 
@@ -231,11 +220,7 @@ export class IHTTPConnection extends IMeshDevice {
         return (await response.json()) as Types.WebNetworkResponse;
       })
       .catch((e) => {
-        log(
-          `IHTTPConnection.getNetworks`,
-          e.message,
-          Protobuf.LogLevelEnum.ERROR
-        );
+        log(`IHTTPConnection.getNetworks`, e.message, LogRecord_Level.ERROR);
       });
   }
 
@@ -250,11 +235,7 @@ export class IHTTPConnection extends IMeshDevice {
         return (await response.json()) as Types.WebSPIFFSResponse;
       })
       .catch((e) => {
-        log(
-          `IHTTPConnection.getSPIFFS`,
-          e.message,
-          Protobuf.LogLevelEnum.ERROR
-        );
+        log(`IHTTPConnection.getSPIFFS`, e.message, LogRecord_Level.ERROR);
       });
   }
 
@@ -274,11 +255,7 @@ export class IHTTPConnection extends IMeshDevice {
         return (await response.json()) as Types.WebSPIFFSResponse;
       })
       .catch((e) => {
-        log(
-          `IHTTPConnection.deleteSPIFFS`,
-          e.message,
-          Protobuf.LogLevelEnum.ERROR
-        );
+        log(`IHTTPConnection.deleteSPIFFS`, e.message, LogRecord_Level.ERROR);
       });
   }
 
@@ -290,7 +267,7 @@ export class IHTTPConnection extends IMeshDevice {
     return fetch(`${this.url}/json/blink`, {
       method: "POST"
     }).catch((e) => {
-      log(`IHTTPConnection.blinkLED`, e.message, Protobuf.LogLevelEnum.ERROR);
+      log(`IHTTPConnection.blinkLED`, e.message, LogRecord_Level.ERROR);
     });
   }
 }

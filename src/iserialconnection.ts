@@ -5,14 +5,21 @@ import { IMeshDevice } from "./imeshdevice";
  * @description NOT YET IMPLEMENTED
  */
 export class ISerialConnection extends IMeshDevice {
+  private port: SerialPort | undefined;
+
   constructor() {
     super();
+
+    this.port = undefined;
   }
 
   /**
    */
   public async connect() {
-    // console.log(navigator.usb.getDevices());
+    this.port = await navigator.serial.requestPort();
+    await this.port.open({
+      baudRate: 921600
+    });
   }
 
   /**

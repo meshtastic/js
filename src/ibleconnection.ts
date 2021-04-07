@@ -1,10 +1,11 @@
-import { Protobuf, Types } from "./";
+import { Types } from "./";
 import {
   FROMNUM_UUID,
   FROMRADIO_UUID,
   SERVICE_UUID,
   TORADIO_UUID
 } from "./constants";
+import { LogRecord_Level } from "./generated/mesh";
 import { IMeshDevice } from "./imeshdevice";
 import { log, typedArrayToBuffer } from "./utils";
 
@@ -15,32 +16,32 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Currently connected BLE device
    */
-  device: BluetoothDevice;
+  device: BluetoothDevice | undefined;
 
   /**
    * Connection interface to currently connected BLE device
    */
-  connection: BluetoothRemoteGATTServer;
+  connection: BluetoothRemoteGATTServer | undefined;
 
   /**
    * Short Description
    */
-  service: BluetoothRemoteGATTService;
+  service: BluetoothRemoteGATTService | undefined;
 
   /**
    * Short Description
    */
-  toRadioCharacteristic: BluetoothRemoteGATTCharacteristic;
+  toRadioCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
   /**
    * Short Description
    */
-  fromRadioCharacteristic: BluetoothRemoteGATTCharacteristic;
+  fromRadioCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
   /**
    * Short Description
    */
-  fromNumCharacteristic: BluetoothRemoteGATTCharacteristic;
+  fromNumCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
   /**
    * States if the device was force disconnected by a user
@@ -68,7 +69,7 @@ export class IBLEConnection extends IMeshDevice {
       log(
         `IBLEConnection.connect`,
         `This browser doesn't support the WebBluetooth API`,
-        Protobuf.LogLevelEnum.WARNING
+        LogRecord_Level.WARNING
       );
     }
 
@@ -81,73 +82,72 @@ export class IBLEConnection extends IMeshDevice {
         log(
           `IBLEConnection.connect`,
           `No device selected`,
-          Protobuf.LogLevelEnum.ERROR
+          LogRecord_Level.ERROR
         );
       } else {
         this.device = device;
       }
-    }
+    } else {
+      if (this.deviceStatus > Types.DeviceStatusEnum.DEVICE_RECONNECTING) {
+        /**
+         * @todo look into the `advertisementreceived` event
+         */
+        this.device.addEventListener("gattserverdisconnected", () => {
+          this.onDeviceStatusEvent.next(
+            Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+          );
 
-    if (this.deviceStatus > Types.DeviceStatusEnum.DEVICE_RECONNECTING) {
-      /**
-       * @todo look into the `advertisementreceived` event
-       */
-      this.device.addEventListener("gattserverdisconnected", () => {
-        this.onDeviceStatusEvent.next(
-          Types.DeviceStatusEnum.DEVICE_DISCONNECTED
-        );
+          if (!this.userInitiatedDisconnect) {
+            if (
+              this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
+            ) {
+              this.onDeviceStatusEvent.next(
+                Types.DeviceStatusEnum.DEVICE_RECONNECTING
+              );
+            }
 
-        if (!this.userInitiatedDisconnect) {
-          if (
-            this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
-          ) {
-            this.onDeviceStatusEvent.next(
-              Types.DeviceStatusEnum.DEVICE_RECONNECTING
-            );
+            /**
+             * @replace with setInterval or setTimeout
+             */
+
+            //  setTimeout(() => {
+            //   await this.connect(requestDeviceFilterParams);
+            // }, 10000);
           }
+        });
+      }
+      const connection = await this.connectToDevice(this.device);
 
-          /**
-           * @replace with setInterval or setTimeout
-           */
+      if (connection && this.service) {
+        this.connection = connection;
 
-          //  setTimeout(() => {
-          //   await this.connect(requestDeviceFilterParams);
-          // }, 10000);
+        const service = await this.getService(this.connection);
+
+        if (service) {
+          this.service = service;
+        } else {
+          log(
+            `IBLEConnection.connect`,
+            `Service has not been establised`,
+            LogRecord_Level.ERROR
+          );
         }
-      });
+
+        await this.getCharacteristics(this.service);
+
+        await this.subscribeToBLENotification();
+
+        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+
+        await this.configure();
+      } else {
+        log(
+          `IBLEConnection.connect`,
+          `Connection has not been establised`,
+          LogRecord_Level.ERROR
+        );
+      }
     }
-
-    const connection = await this.connectToDevice(this.device);
-
-    if (connection) {
-      this.connection = connection;
-    } else {
-      log(
-        `IBLEConnection.connect`,
-        `Connection has not been establised`,
-        Protobuf.LogLevelEnum.ERROR
-      );
-    }
-
-    const service = await this.getService(this.connection);
-
-    if (service) {
-      this.service = service;
-    } else {
-      log(
-        `IBLEConnection.connect`,
-        `Service has not been establised`,
-        Protobuf.LogLevelEnum.ERROR
-      );
-    }
-
-    await this.getCharacteristics(this.service);
-
-    await this.subscribeToBLENotification();
-
-    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
-
-    await this.configure();
   }
 
   /**
@@ -155,9 +155,10 @@ export class IBLEConnection extends IMeshDevice {
    */
   public disconnect() {
     this.userInitiatedDisconnect = true;
-
-    this.connection.disconnect();
-    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    if (this.connection) {
+      this.connection.disconnect();
+      this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    }
   }
 
   /**
@@ -174,7 +175,7 @@ export class IBLEConnection extends IMeshDevice {
   protected async readFromRadio() {
     let readBuffer = new ArrayBuffer(1);
 
-    while (readBuffer.byteLength > 0) {
+    while (readBuffer.byteLength > 0 && this.fromRadioCharacteristic) {
       await this.readFromCharacteristic(this.fromRadioCharacteristic)
         .then((value) => {
           if (value && value.byteLength > 0) {
@@ -185,11 +186,7 @@ export class IBLEConnection extends IMeshDevice {
           );
         })
         .catch((e) => {
-          log(
-            `IBLEConnection.readFromRadio`,
-            e.message,
-            Protobuf.LogLevelEnum.ERROR
-          );
+          log(`IBLEConnection.readFromRadio`, e.message, LogRecord_Level.ERROR);
           if (
             this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
           ) {
@@ -210,9 +207,11 @@ export class IBLEConnection extends IMeshDevice {
    * Sends supplied protobuf message to the radio
    */
   protected async writeToRadio(ToRadioUInt8Array: Uint8Array) {
-    await this.toRadioCharacteristic.writeValue(
-      typedArrayToBuffer(ToRadioUInt8Array)
-    );
+    if (this.toRadioCharacteristic) {
+      await this.toRadioCharacteristic.writeValue(
+        typedArrayToBuffer(ToRadioUInt8Array)
+      );
+    }
   }
 
   /**
@@ -230,7 +229,7 @@ export class IBLEConnection extends IMeshDevice {
         log(
           `IBLEConnection.readFromCharacteristic`,
           e.message,
-          Protobuf.LogLevelEnum.ERROR
+          LogRecord_Level.ERROR
         );
       });
   }
@@ -256,11 +255,7 @@ export class IBLEConnection extends IMeshDevice {
     return navigator.bluetooth
       .requestDevice(requestDeviceFilterParams as RequestDeviceOptions)
       .catch((e) => {
-        log(
-          `IBLEConnection.requestDevice`,
-          e.message,
-          Protobuf.LogLevelEnum.ERROR
-        );
+        log(`IBLEConnection.requestDevice`, e.message, LogRecord_Level.ERROR);
       });
   }
 
@@ -275,15 +270,11 @@ export class IBLEConnection extends IMeshDevice {
     log(
       `IBLEConnection.connectToDevice`,
       `${device.name}, trying to connect now.`,
-      Protobuf.LogLevelEnum.DEBUG
+      LogRecord_Level.DEBUG
     );
 
-    return device.gatt.connect().catch((e) => {
-      log(
-        `IBLEConnection.connectToDevice`,
-        e.message,
-        Protobuf.LogLevelEnum.ERROR
-      );
+    return device.gatt?.connect().catch((e) => {
+      log(`IBLEConnection.connectToDevice`, e.message, LogRecord_Level.ERROR);
     });
   }
 
@@ -294,7 +285,7 @@ export class IBLEConnection extends IMeshDevice {
    */
   private async getService(connection: BluetoothRemoteGATTServer) {
     return connection.getPrimaryService(SERVICE_UUID).catch((e) => {
-      log(`IBLEConnection.getService`, e.message, Protobuf.LogLevelEnum.ERROR);
+      log(`IBLEConnection.getService`, e.message, LogRecord_Level.ERROR);
     });
   }
 
@@ -311,7 +302,7 @@ export class IBLEConnection extends IMeshDevice {
       log(
         `IBLEConnection.getCharacteristics`,
         `Successfully got toRadioCharacteristic.`,
-        Protobuf.LogLevelEnum.DEBUG
+        LogRecord_Level.DEBUG
       );
       this.fromRadioCharacteristic = await service.getCharacteristic(
         FROMRADIO_UUID
@@ -319,7 +310,7 @@ export class IBLEConnection extends IMeshDevice {
       log(
         `IBLEConnection.getCharacteristics`,
         `Successfully got fromRadioCharacteristic.`,
-        Protobuf.LogLevelEnum.DEBUG
+        LogRecord_Level.DEBUG
       );
       this.fromNumCharacteristic = await service.getCharacteristic(
         FROMNUM_UUID
@@ -327,13 +318,13 @@ export class IBLEConnection extends IMeshDevice {
       log(
         `IBLEConnection.getCharacteristics`,
         `Successfully got fromNumCharacteristic.`,
-        Protobuf.LogLevelEnum.DEBUG
+        LogRecord_Level.DEBUG
       );
     } catch (e) {
       log(
         `IBLEConnection.getCharacteristics`,
         e.message,
-        Protobuf.LogLevelEnum.ERROR
+        LogRecord_Level.ERROR
       );
     }
   }
@@ -342,33 +333,25 @@ export class IBLEConnection extends IMeshDevice {
    * BLE notify characteristic published by device, gets called when new fromRadio is available for read
    */
   private async subscribeToBLENotification() {
-    await this.fromNumCharacteristic.startNotifications();
-    /**
-     * bind.this makes the object reference to IBLEConnection accessible within the callback
-     * @todo stop using eventListener
-     */
-    // this.fromNumCharacteristic.addEventListener(
-    //   "characteristicvaluechanged",
-    //   (event) => {
-    //     this.handleBLENotification(event.target);
-    //   }
-    // );
-    /**
-     * @todo, stop using `bind()`
-     */
-    this.fromNumCharacteristic.addEventListener(
-      "characteristicvaluechanged",
-      this.handleBLENotification.bind(this)
-    );
+    if (this.fromNumCharacteristic) {
+      await this.fromNumCharacteristic.startNotifications();
 
-    /**
-     * @todo isn't this verbose?
-     */
-    log(
-      `IBLEConnection.subscribeToBLENotification`,
-      `BLE notifications activated.`,
-      Protobuf.LogLevelEnum.DEBUG
-    );
+      this.fromNumCharacteristic.addEventListener(
+        "characteristicvaluechanged",
+        (event) => {
+          this.handleBLENotification(event.type);
+        }
+      );
+
+      /**
+       * @todo isn't this verbose?
+       */
+      log(
+        `IBLEConnection.subscribeToBLENotification`,
+        `BLE notifications activated.`,
+        LogRecord_Level.DEBUG
+      );
+    }
   }
 
   /**
@@ -380,15 +363,11 @@ export class IBLEConnection extends IMeshDevice {
     log(
       `IBLEConnection.handleBLENotification`,
       `BLE notification received: ${event}.`,
-      Protobuf.LogLevelEnum.DEBUG
+      LogRecord_Level.DEBUG
     );
 
     await this.readFromRadio().catch((e) => {
-      log(
-        `IBLEConnection.handleBLENotification`,
-        e,
-        Protobuf.LogLevelEnum.ERROR
-      );
+      log(`IBLEConnection.handleBLENotification`, e, LogRecord_Level.ERROR);
     });
   }
 }

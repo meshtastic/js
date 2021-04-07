@@ -1,4 +1,5 @@
-import { Protobuf } from "./";
+import { AdminMessage } from "./generated/admin";
+import { MeshPacket, NodeInfo, Position, Routing } from "./generated/mesh";
 
 export enum DeviceStatusEnum {
   DEVICE_RESTARTING,
@@ -10,28 +11,31 @@ export enum DeviceStatusEnum {
   DEVICE_CONFIGURED
 }
 
+/**
+ * @todo temporarily made packet optional, revert!
+ */
 export interface NodeInfoPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.NodeInfo;
+  packet?: MeshPacket;
+  data: NodeInfo;
 }
 
 export interface AdminPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.AdminMessage;
+  packet: MeshPacket;
+  data: AdminMessage;
 }
 
 export interface RoutingInfoPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.Routing;
+  packet: MeshPacket;
+  data: Routing;
 }
 
 export interface PositionPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.Position;
+  packet: MeshPacket;
+  data: Position;
 }
 
 export interface TextPacket {
-  packet: Protobuf.MeshPacket;
+  packet: MeshPacket;
   data: string;
 }
 
