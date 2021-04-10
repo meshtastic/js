@@ -1,6 +1,7 @@
 import { Types } from "./";
 import { LogRecord_Level } from "./generated/mesh";
 import { IMeshDevice } from "./imeshdevice";
+import type { httpConnectionParameters } from "./types";
 import { log, typedArrayToBuffer } from "./utils";
 
 /**
@@ -27,23 +28,17 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Initiates the connect process to a meshtastic device via HTTP(S)
-   * @param address The IP Address/Domain to connect to, without protocol
-   * @param tls Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
-   * @param receiveBatchRequests Enables receiving messages all at once, versus one per request
-   * @param fetchInterval (ms) Sets a fixed interval in that the device is fetched for new messages, defaults to 5 seconds
+   * @param parameters http connection parameters
    */
-  public async connect(
-    address: string,
-    tls?: boolean,
-    receiveBatchRequests?: boolean,
-    fetchInterval = 5000
-  ) {
+  public async connect(parameters: httpConnectionParameters): Promise<void> {
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
-    this.receiveBatchRequests = receiveBatchRequests;
+    this.receiveBatchRequests = parameters.receiveBatchRequests;
 
     if (!this.url) {
-      this.url = tls ? `https://${address}` : `http://${address}`;
+      this.url = `${parameters.tls ? "https://" : "http://"}${
+        parameters.address
+      }`;
     }
     if (await this.ping()) {
       log(
@@ -51,14 +46,22 @@ export class IHTTPConnection extends IMeshDevice {
         `Ping succeeded, starting new request timer.`,
         LogRecord_Level.DEBUG
       );
-      setInterval(async () => {
-        await this.readFromRadio().catch((e) => {
-          log(`IHTTPConnection`, e, LogRecord_Level.ERROR);
-        });
-      }, fetchInterval);
+      setInterval(
+        async () => {
+          await this.readFromRadio().catch((e) => {
+            log(`IHTTPConnection`, e, LogRecord_Level.ERROR);
+          });
+        },
+        parameters.fetchInterval ? parameters.fetchInterval : 5000
+      );
     } else {
       setTimeout(() => {
-        this.connect(address, tls, receiveBatchRequests, fetchInterval);
+        this.connect({
+          address: parameters.address,
+          fetchInterval: parameters.fetchInterval,
+          receiveBatchRequests: parameters.receiveBatchRequests,
+          tls: parameters.tls
+        });
       }, 10000);
     }
   }
@@ -66,14 +69,14 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Disconnects from the meshtastic device
    */
-  public disconnect() {
+  public disconnect(): void {
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
   }
 
   /**
    * Pings device to check if it is avaliable
    */
-  public async ping() {
+  public async ping(): Promise<boolean> {
     log(
       `IHTTPConnection.connect`,
       `Attempting device ping.`,
@@ -83,7 +86,7 @@ export class IHTTPConnection extends IMeshDevice {
     let pingSuccessful = false;
 
     await fetch(this.url + `/hotspot-detect.html`, {})
-      .then(async (_) => {
+      .then(async () => {
         pingSuccessful = true;
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
@@ -102,7 +105,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Reads any avaliable protobuf messages from the radio
    */
-  protected async readFromRadio() {
+  protected async readFromRadio(): Promise<void> {
     let readBuffer = new ArrayBuffer(1);
 
     while (readBuffer.byteLength > 0) {
@@ -156,7 +159,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Sends supplied protobuf message to the radio
    */
-  protected async writeToRadio(ToRadioUInt8Array: Uint8Array) {
+  protected async writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void> {
     await fetch(`${this.url}/api/v1/toradio`, {
       method: "PUT",
       headers: {
@@ -164,7 +167,7 @@ export class IHTTPConnection extends IMeshDevice {
       },
       body: typedArrayToBuffer(ToRadioUInt8Array)
     })
-      .then(async (_) => {
+      .then(async () => {
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
         await this.readFromRadio().catch((e) => {
@@ -182,7 +185,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Web API method: Restart device
    */
-  public async restartDevice() {
+  public async restartDevice(): Promise<void> {
     return fetch(`${this.url}/restart`, {
       method: "POST"
     })
@@ -197,7 +200,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Web API method: Get airtime statistics
    */
-  public async getStatistics() {
+  public async getStatistics(): Promise<void | Types.WebStatisticsResponse> {
     return fetch(`${this.url}/json/report`, {
       method: "GET"
     })
@@ -212,7 +215,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Web API method: Scan for WiFi AP's
    */
-  public async getNetworks() {
+  public async getNetworks(): Promise<void | Types.WebNetworkResponse> {
     return fetch(`${this.url}/json/scanNetworks`, {
       method: "GET"
     })
@@ -227,7 +230,7 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Web API method: Fetch SPIFFS contents
    */
-  public async getSPIFFS() {
+  public async getSPIFFS(): Promise<void | Types.WebSPIFFSResponse> {
     return fetch(`${this.url}/json/spiffs/browse/static`, {
       method: "GET"
     })
@@ -242,7 +245,9 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Web API method: Delete SPIFFS file
    */
-  public async deleteSPIFFS(file: string) {
+  public async deleteSPIFFS(
+    file: string
+  ): Promise<void | Types.WebSPIFFSResponse> {
     return fetch(
       `${this.url}/json/spiffs/delete/static?${new URLSearchParams({
         delete: file
@@ -263,7 +268,7 @@ export class IHTTPConnection extends IMeshDevice {
    * Web API method: Make device LED blink
    * @todo, strongly type response
    */
-  public async blinkLED() {
+  public async blinkLED(): Promise<void | Response> {
     return fetch(`${this.url}/json/blink`, {
       method: "POST"
     }).catch((e) => {

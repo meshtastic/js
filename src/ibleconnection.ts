@@ -7,6 +7,7 @@ import {
 } from "./constants";
 import { LogRecord_Level } from "./generated/mesh";
 import { IMeshDevice } from "./imeshdevice";
+import type { bleConnectionParameters } from "./types";
 import { log, typedArrayToBuffer } from "./utils";
 
 /**
@@ -62,9 +63,9 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Initiates the connect process to a meshtastic device via bluetooth
-   * @param requestDeviceFilterParams Optional filter options for the web bluetooth api requestDevice() method
+   * @param parameters ble connection parameters
    */
-  public async connect(requestDeviceFilterParams?: RequestDeviceOptions) {
+  public async connect(parameters: bleConnectionParameters): Promise<void> {
     if (!navigator.bluetooth) {
       log(
         `IBLEConnection.connect`,
@@ -77,7 +78,9 @@ export class IBLEConnection extends IMeshDevice {
      * If no device has been selected, open request device browser prompt
      */
     if (!this.device) {
-      const device = await this.requestDevice(requestDeviceFilterParams);
+      const device = await this.requestDevice(
+        parameters.requestDeviceFilterParams
+      );
       if (!device) {
         log(
           `IBLEConnection.connect`,
@@ -87,59 +90,66 @@ export class IBLEConnection extends IMeshDevice {
       } else {
         this.device = device;
       }
-    } else {
-      if (this.deviceStatus > Types.DeviceStatusEnum.DEVICE_RECONNECTING) {
-        /**
-         * @todo look into the `advertisementreceived` event
-         */
-        this.device.addEventListener("gattserverdisconnected", () => {
-          this.onDeviceStatusEvent.next(
-            Types.DeviceStatusEnum.DEVICE_DISCONNECTED
-          );
+    }
 
-          if (!this.userInitiatedDisconnect) {
-            if (
-              this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
-            ) {
-              this.onDeviceStatusEvent.next(
-                Types.DeviceStatusEnum.DEVICE_RECONNECTING
-              );
-            }
+    if (
+      this.device &&
+      this.deviceStatus > Types.DeviceStatusEnum.DEVICE_RECONNECTING
+    ) {
+      /**
+       * @todo look into the `advertisementreceived` event
+       */
+      this.device.addEventListener("gattserverdisconnected", () => {
+        this.onDeviceStatusEvent.next(
+          Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+        );
 
-            /**
-             * @replace with setInterval or setTimeout
-             */
-
-            //  setTimeout(() => {
-            //   await this.connect(requestDeviceFilterParams);
-            // }, 10000);
+        if (!this.userInitiatedDisconnect) {
+          if (
+            this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
+          ) {
+            this.onDeviceStatusEvent.next(
+              Types.DeviceStatusEnum.DEVICE_RECONNECTING
+            );
           }
-        });
-      }
+
+          /**
+           * @replace with setInterval or setTimeout
+           */
+
+          //  setTimeout(() => {
+          //   await this.connect(requestDeviceFilterParams);
+          // }, 10000);
+        }
+      });
+    }
+    if (this.device) {
       const connection = await this.connectToDevice(this.device);
 
-      if (connection && this.service) {
+      if (connection) {
         this.connection = connection;
 
-        const service = await this.getService(this.connection);
+        await this.getService(this.connection).then(async (service) => {
+          if (service) {
+            this.service = service;
 
-        if (service) {
-          this.service = service;
-        } else {
-          log(
-            `IBLEConnection.connect`,
-            `Service has not been establised`,
-            LogRecord_Level.ERROR
-          );
-        }
+            await this.getCharacteristics(this.service);
 
-        await this.getCharacteristics(this.service);
+            await this.subscribeToBLENotification();
 
-        await this.subscribeToBLENotification();
+            this.onDeviceStatusEvent.next(
+              Types.DeviceStatusEnum.DEVICE_CONNECTED
+            );
 
-        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
-
-        await this.configure();
+            await this.configure();
+          } else {
+            log(
+              `IBLEConnection.connect`,
+              `Failed to connect, no service returned.`,
+              LogRecord_Level.ERROR
+            );
+          }
+        });
       } else {
         log(
           `IBLEConnection.connect`,
@@ -153,7 +163,7 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Disconnects from the meshtastic device
    */
-  public disconnect() {
+  public disconnect(): void {
     this.userInitiatedDisconnect = true;
     if (this.connection) {
       this.connection.disconnect();
@@ -165,48 +175,54 @@ export class IBLEConnection extends IMeshDevice {
    * Pings device to check if it is avaliable
    * @todo implement
    */
-  public async ping() {
+  public async ping(): Promise<boolean> {
     return true;
   }
 
   /**
    * Short description
    */
-  protected async readFromRadio() {
+  protected async readFromRadio(): Promise<void> {
     let readBuffer = new ArrayBuffer(1);
 
     while (readBuffer.byteLength > 0 && this.fromRadioCharacteristic) {
-      await this.readFromCharacteristic(this.fromRadioCharacteristic)
-        .then((value) => {
-          if (value && value.byteLength > 0) {
-            this.handleFromRadio(new Uint8Array(readBuffer, 0));
-          }
-          this.onDeviceStatusEvent.next(
-            Types.DeviceStatusEnum.DEVICE_CONNECTED
-          );
-        })
-        .catch((e) => {
-          log(`IBLEConnection.readFromRadio`, e.message, LogRecord_Level.ERROR);
-          if (
-            this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
-          ) {
+      if (this.fromRadioCharacteristic) {
+        await this.readFromCharacteristic(this.fromRadioCharacteristic)
+          .then((value) => {
+            if (value && value.byteLength > 0) {
+              this.handleFromRadio(new Uint8Array(readBuffer, 0));
+            }
             this.onDeviceStatusEvent.next(
-              Types.DeviceStatusEnum.DEVICE_RECONNECTING
+              Types.DeviceStatusEnum.DEVICE_CONNECTED
             );
-          }
+          })
+          .catch((e) => {
+            log(
+              `IBLEConnection.readFromRadio`,
+              e.message,
+              LogRecord_Level.ERROR
+            );
+            if (
+              this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
+            ) {
+              this.onDeviceStatusEvent.next(
+                Types.DeviceStatusEnum.DEVICE_RECONNECTING
+              );
+            }
 
-          /**
-           * @todo, why the empty array buffer
-           */
-          return new ArrayBuffer(0);
-        });
+            /**
+             * @todo, why the empty array buffer
+             */
+            return new ArrayBuffer(0);
+          });
+      }
     }
   }
 
   /**
    * Sends supplied protobuf message to the radio
    */
-  protected async writeToRadio(ToRadioUInt8Array: Uint8Array) {
+  protected async writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void> {
     if (this.toRadioCharacteristic) {
       await this.toRadioCharacteristic.writeValue(
         typedArrayToBuffer(ToRadioUInt8Array)

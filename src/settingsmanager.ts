@@ -17,7 +17,7 @@ export class SettingsManager {
    * Sets the library-wide logging level
    * @param level Desired level of logging
    */
-  static setDebugMode(level: LogRecord_Level) {
+  static setDebugMode(level: LogRecord_Level): void {
     if (!(level in LogRecord_Level)) {
       log(
         `SettingsManager.setDebugMode`,

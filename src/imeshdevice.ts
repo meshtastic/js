@@ -3,23 +3,23 @@ import { Subject } from "rxjs";
 import { Types } from "./";
 import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants";
 import { AdminMessage } from "./generated/admin";
-import { Channel } from "./generated/channel";
+import type { Channel } from "./generated/channel";
+import type { LogRecord, User } from "./generated/mesh";
 import {
   FromRadio,
-  LogRecord,
   LogRecord_Level,
   MeshPacket,
   MyNodeInfo,
   NodeInfo,
   Position,
-  ToRadio,
-  User
+  ToRadio
 } from "./generated/mesh";
 import { PortNum } from "./generated/portnums";
-import {
+import type {
   RadioConfig,
   RadioConfig_UserPreferences
 } from "./generated/radioconfig";
+import type { ConnectionParameters } from "./types";
 import { log } from "./utils";
 
 /**
@@ -79,7 +79,7 @@ export abstract class IMeshDevice {
   /**
    * Abstract method that connects to the radio
    */
-  protected abstract connect(..._: any): Promise<void>;
+  protected abstract connect(parameters: ConnectionParameters): Promise<void>;
 
   /**
    * Abstract method that disconnects from the radio
@@ -167,7 +167,11 @@ export abstract class IMeshDevice {
    * @param destinationNum Node number of the destination node
    * @param wantAck Whether or not acknowledgement is wanted
    */
-  public sendText(text: string, destinationNum?: number, wantAck = false) {
+  public sendText(
+    text: string,
+    destinationNum?: number,
+    wantAck = false
+  ): Promise<void> {
     const enc = new TextEncoder();
 
     return this.sendPacket(
@@ -196,7 +200,7 @@ export abstract class IMeshDevice {
     wantAck = false,
     wantResponse = false,
     echoResponse = false
-  ) {
+  ): Promise<void> {
     const meshPacket = MeshPacket.create({
       payloadVariant: {
         decoded: {
@@ -235,7 +239,9 @@ export abstract class IMeshDevice {
    * Writes radio config to device
    * @param preferences Radio UserPreferences
    */
-  public async setPreferences(preferences: RadioConfig_UserPreferences) {
+  public async setPreferences(
+    preferences: RadioConfig_UserPreferences
+  ): Promise<void> {
     const setRadio = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -261,7 +267,7 @@ export abstract class IMeshDevice {
    * @param owner
    * @todo what is `confirmSetOwner`?
    */
-  public async setOwner(owner: User) {
+  public async setOwner(owner: User): Promise<void> {
     const setOwner = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -285,7 +291,7 @@ export abstract class IMeshDevice {
    * @param channel
    * @todo what is `confirmSetChannel`?
    */
-  public async setChannelSettings(channel: Channel) {
+  public async setChannelSettings(channel: Channel): Promise<void> {
     const setChannel = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -307,7 +313,7 @@ export abstract class IMeshDevice {
   /**
    * Triggers the device configure process
    */
-  public async configure() {
+  public async configure(): Promise<void> {
     log(
       `IMeshDevice.configure`,
       `Reading device configuration`,
@@ -372,7 +378,7 @@ export abstract class IMeshDevice {
   /**
    * Generates random packet identifier
    */
-  private generateRandId() {
+  private generateRandId(): number {
     return Math.floor(Math.random() * 1e9);
   }
 
@@ -380,8 +386,8 @@ export abstract class IMeshDevice {
    * Gets called whenever a fromRadio message is received from device, returns fromRadio data
    * @param fromRadio Uint8Array containing raw radio data
    */
-  protected async handleFromRadio(fromRadio: Uint8Array) {
-    let decodedMessage = FromRadio.fromBinary(fromRadio);
+  protected async handleFromRadio(fromRadio: Uint8Array): Promise<void> {
+    const decodedMessage = FromRadio.fromBinary(fromRadio);
 
     this.onFromRadioEvent.next(decodedMessage);
 
@@ -492,9 +498,6 @@ export abstract class IMeshDevice {
           /**
            * Text messages
            */
-          const text = new TextDecoder().decode(
-            meshPacket.payloadVariant.decoded.payload
-          );
           log(
             `IMeshDevice.handleMeshPacket`,
             "Received onTextPacketEvent",
@@ -502,7 +505,9 @@ export abstract class IMeshDevice {
           );
           this.onTextPacketEvent.next({
             packet: meshPacket,
-            data: text
+            data: new TextDecoder().decode(
+              meshPacket.payloadVariant.decoded.payload
+            )
           });
           break;
         case PortNum.POSITION_APP:
@@ -514,24 +519,15 @@ export abstract class IMeshDevice {
             "Received onPositionPacketEvent",
             LogRecord_Level.TRACE
           );
-          const position = Position.fromBinary(
-            meshPacket.payloadVariant.decoded.payload
-          );
           this.onPositionPacketEvent.next({
             packet: meshPacket,
-            data: position
+            data: Position.fromBinary(meshPacket.payloadVariant.decoded.payload)
           });
           break;
         case PortNum.NODEINFO_APP:
-          console.log(
-            "_____________NODEINFO_Portnum______________________________"
-          );
           /**
            * Node Info
            */
-          const nodeInfo = NodeInfo.fromBinary(
-            meshPacket.payloadVariant.decoded.payload
-          );
 
           log(
             `IMeshDevice.handleMeshPacket`,
@@ -540,7 +536,7 @@ export abstract class IMeshDevice {
           );
           this.onNodeInfoPacketEvent.next({
             packet: meshPacket,
-            data: nodeInfo
+            data: NodeInfo.fromBinary(meshPacket.payloadVariant.decoded.payload)
           });
           break;
         case PortNum.ROUTING_APP:
@@ -564,12 +560,11 @@ export abstract class IMeshDevice {
             "Received onAdminPacketEvent",
             LogRecord_Level.TRACE
           );
-          const adminMessage = AdminMessage.fromBinary(
-            meshPacket.payloadVariant.decoded.payload
-          );
           this.onAdminPacketEvent.next({
             packet: meshPacket,
-            data: adminMessage
+            data: AdminMessage.fromBinary(
+              meshPacket.payloadVariant.decoded.payload
+            )
           });
           break;
         default:

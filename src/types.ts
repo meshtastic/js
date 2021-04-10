@@ -1,5 +1,6 @@
-import { AdminMessage } from "./generated/admin";
-import { MeshPacket, NodeInfo, Position, Routing } from "./generated/mesh";
+import type { IBLEConnection, IHTTPConnection, ISerialConnection } from "./";
+import type { AdminMessage } from "./generated/admin";
+import type { MeshPacket, NodeInfo, Position, Routing } from "./generated/mesh";
 
 export enum DeviceStatusEnum {
   DEVICE_RESTARTING,
@@ -11,6 +12,45 @@ export enum DeviceStatusEnum {
   DEVICE_CONFIGURED
 }
 
+export type DeviceInterface =
+  | IHTTPConnection
+  | IBLEConnection
+  | ISerialConnection;
+
+export type ConnectionParameters =
+  | httpConnectionParameters
+  | bleConnectionParameters
+  | serialConnectionParameters;
+
+export interface httpConnectionParameters {
+  /**
+   * address The IP Address/Domain to connect to, without protocol
+   */
+  address: string;
+  /**
+   * Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
+   */
+  tls?: boolean;
+  /**
+   * Enables receiving messages all at once, versus one per request
+   */
+  receiveBatchRequests?: boolean;
+  /**
+   * (ms) Sets a fixed interval in that the device is fetched for new messages, defaults to 5 seconds
+   */
+  fetchInterval: number;
+}
+
+export interface bleConnectionParameters {
+  /**
+   * Optional filter options for the web bluetooth api requestDevice() method
+   */
+  requestDeviceFilterParams?: RequestDeviceOptions;
+}
+
+export interface serialConnectionParameters {
+  baudRate?: number;
+}
 /**
  * @todo temporarily made packet optional, revert!
  */
