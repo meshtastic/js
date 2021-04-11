@@ -425,10 +425,6 @@ export abstract class IMeshDevice {
         break;
 
       case "nodeInfo":
-        console.log(
-          "_____________NODEINFO_FromRadio______________________________"
-        );
-
         log(
           `IMeshDevice.handleFromRadio`,
           "Received onNodeInfoPacketEvent",
