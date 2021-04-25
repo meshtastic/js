@@ -159,13 +159,13 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * Sends supplied protobuf message to the radio
    */
-  protected async writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void> {
+  protected async writeToRadio(data: Uint8Array): Promise<void> {
     await fetch(`${this.url}/api/v1/toradio`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/x-protobuf"
       },
-      body: typedArrayToBuffer(ToRadioUInt8Array)
+      body: typedArrayToBuffer(data)
     })
       .then(async () => {
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);

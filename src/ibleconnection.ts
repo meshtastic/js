@@ -17,12 +17,12 @@ export class IBLEConnection extends IMeshDevice {
   /**
    * Currently connected BLE device
    */
-  device: BluetoothDevice | undefined;
+  device: BluetoothDevice | void;
 
   /**
    * Connection interface to currently connected BLE device
    */
-  connection: BluetoothRemoteGATTServer | undefined;
+  connection: BluetoothRemoteGATTServer | void;
 
   /**
    * Short Description
@@ -49,6 +49,21 @@ export class IBLEConnection extends IMeshDevice {
    */
   userInitiatedDisconnect: boolean;
 
+  /**
+   * Queue that holds data to be written to the device, to prevent simultaneous writes
+   */
+  writeQueue: Uint8Array[];
+
+  /**
+   * Weather the we should currently write to the device or not, to prevent simultaneous writes
+   */
+  writeLock: boolean;
+
+  /**
+   * Set when a read promise has yet to be resolved, to prevent simultaneous reads.
+   */
+  pendingRead: boolean;
+
   constructor() {
     super();
 
@@ -59,6 +74,9 @@ export class IBLEConnection extends IMeshDevice {
     this.fromRadioCharacteristic = undefined;
     this.fromNumCharacteristic = undefined;
     this.userInitiatedDisconnect = false;
+    this.writeQueue = [];
+    this.writeLock = false;
+    this.pendingRead = false;
   }
 
   /**
@@ -66,6 +84,7 @@ export class IBLEConnection extends IMeshDevice {
    * @param parameters ble connection parameters
    */
   public async connect(parameters: bleConnectionParameters): Promise<void> {
+    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTING);
     if (!navigator.bluetooth) {
       log(
         `IBLEConnection.connect`,
@@ -74,90 +93,82 @@ export class IBLEConnection extends IMeshDevice {
       );
     }
 
-    /**
-     * If no device has been selected, open request device browser prompt
-     */
-    if (!this.device) {
-      const device = await this.requestDevice(
-        parameters.requestDeviceFilterParams
-      );
-      if (!device) {
-        log(
-          `IBLEConnection.connect`,
-          `No device selected`,
-          LogRecord_Level.ERROR
-        );
-      } else {
-        this.device = device;
-      }
-    }
+    this.device = await this.requestDevice(
+      parameters.requestDeviceFilterParams
+    );
 
-    if (
-      this.device &&
-      this.deviceStatus > Types.DeviceStatusEnum.DEVICE_RECONNECTING
-    ) {
-      /**
-       * @todo look into the `advertisementreceived` event
-       */
-      this.device.addEventListener("gattserverdisconnected", () => {
-        this.onDeviceStatusEvent.next(
-          Types.DeviceStatusEnum.DEVICE_DISCONNECTED
-        );
-
-        if (!this.userInitiatedDisconnect) {
-          if (
-            this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
-          ) {
-            this.onDeviceStatusEvent.next(
-              Types.DeviceStatusEnum.DEVICE_RECONNECTING
-            );
-          }
-
-          /**
-           * @replace with setInterval or setTimeout
-           */
-
-          //  setTimeout(() => {
-          //   await this.connect(requestDeviceFilterParams);
-          // }, 10000);
-        }
-      });
-    }
     if (this.device) {
-      const connection = await this.connectToDevice(this.device);
+      this.device.gatt
+        ?.connect()
+        .then(async (connection) => {
+          connection
+            .getPrimaryService(SERVICE_UUID)
+            .then(async (service) => {
+              if (service) {
+                this.service = service;
 
-      if (connection) {
-        this.connection = connection;
+                await this.getCharacteristics(this.service);
 
-        await this.getService(this.connection).then(async (service) => {
-          if (service) {
-            this.service = service;
+                await this.subscribeToBLENotification();
 
-            await this.getCharacteristics(this.service);
+                this.onDeviceStatusEvent.next(
+                  Types.DeviceStatusEnum.DEVICE_CONNECTED
+                );
 
-            await this.subscribeToBLENotification();
-
-            this.onDeviceStatusEvent.next(
-              Types.DeviceStatusEnum.DEVICE_CONNECTED
-            );
-
-            await this.configure();
-          } else {
-            log(
-              `IBLEConnection.connect`,
-              `Failed to connect, no service returned.`,
-              LogRecord_Level.ERROR
-            );
-          }
+                await this.configure();
+              } else {
+                log(
+                  `IBLEConnection.connect`,
+                  `Failed to connect, no service returned.`,
+                  LogRecord_Level.ERROR
+                );
+              }
+            })
+            .catch((e) => {
+              log(
+                `IBLEConnection.getService`,
+                e.message,
+                LogRecord_Level.ERROR
+              );
+            });
+          this.connection = connection;
+        })
+        .catch((e) => {
+          log(`IBLEConnection.connect`, e.message, LogRecord_Level.ERROR);
         });
-      } else {
-        log(
-          `IBLEConnection.connect`,
-          `Connection has not been establised`,
-          LogRecord_Level.ERROR
-        );
-      }
     }
+
+    // if (
+    //   this.device &&
+    //   this.deviceStatus > Types.DeviceStatusEnum.DEVICE_RECONNECTING
+    // ) {
+    //   /**
+    //    * @todo look into the `advertisementreceived` event
+    //    */
+    //   this.device.addEventListener("gattserverdisconnected", () => {
+    //     this.onDeviceStatusEvent.next(
+    //       Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+    //     );
+
+    //     if (!this.userInitiatedDisconnect) {
+    //       if (
+    //         this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
+    //       ) {
+    //         this.onDeviceStatusEvent.next(
+    //           Types.DeviceStatusEnum.DEVICE_RECONNECTING
+    //         );
+    //       }
+
+    //       /**
+    //        * @replace with setInterval or setTimeout
+    //        */
+
+    //       //  setTimeout(() => {
+    //       //   await this.connect(requestDeviceFilterParams);
+    //       // }, 10000);
+    //     }
+    //   });
+    // }
   }
 
   /**
@@ -167,8 +178,8 @@ export class IBLEConnection extends IMeshDevice {
     this.userInitiatedDisconnect = true;
     if (this.connection) {
       this.connection.disconnect();
-      this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     }
+    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
   }
 
   /**
@@ -183,71 +194,61 @@ export class IBLEConnection extends IMeshDevice {
    * Short description
    */
   protected async readFromRadio(): Promise<void> {
+    if (this.pendingRead) {
+      return Promise.resolve();
+    }
+    this.pendingRead = true;
     let readBuffer = new ArrayBuffer(1);
 
     while (readBuffer.byteLength > 0 && this.fromRadioCharacteristic) {
-      if (this.fromRadioCharacteristic) {
-        await this.readFromCharacteristic(this.fromRadioCharacteristic)
-          .then((value) => {
-            if (value && value.byteLength > 0) {
+      await this.fromRadioCharacteristic
+        .readValue()
+        .then((value) => {
+          if (value) {
+            readBuffer = value.buffer;
+
+            if (value.byteLength > 0) {
               this.handleFromRadio(new Uint8Array(readBuffer, 0));
             }
-            this.onDeviceStatusEvent.next(
-              Types.DeviceStatusEnum.DEVICE_CONNECTED
-            );
-          })
-          .catch((e) => {
-            log(
-              `IBLEConnection.readFromRadio`,
-              e.message,
-              LogRecord_Level.ERROR
-            );
-            if (
-              this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
-            ) {
-              this.onDeviceStatusEvent.next(
-                Types.DeviceStatusEnum.DEVICE_RECONNECTING
-              );
-            }
-
-            /**
-             * @todo, why the empty array buffer
-             */
-            return new ArrayBuffer(0);
-          });
-      }
+          }
+          this.onDeviceStatusEvent.next(
+            Types.DeviceStatusEnum.DEVICE_CONNECTED
+          );
+        })
+        .catch((e) => {
+          readBuffer = new ArrayBuffer(0);
+          log(`IBLEConnection.readFromRadio`, e.message, LogRecord_Level.ERROR);
+        });
     }
+    this.pendingRead = false;
   }
 
   /**
    * Sends supplied protobuf message to the radio
    */
-  protected async writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void> {
-    if (this.toRadioCharacteristic) {
-      await this.toRadioCharacteristic.writeValue(
-        typedArrayToBuffer(ToRadioUInt8Array)
-      );
+  protected async writeToRadio(data: Uint8Array): Promise<void> {
+    this.writeQueue.push(data);
+    if (this.writeLock) {
+      return Promise.resolve();
+    } else {
+      this.writeLock = true;
+      if (this.toRadioCharacteristic) {
+        while (this.writeQueue.length) {
+          await this.toRadioCharacteristic
+            .writeValue(typedArrayToBuffer(this.writeQueue[0]))
+            .then(() => {
+              this.writeQueue.shift();
+            })
+            .catch((e) => {
+              log(
+                `IBLEConnection.writeToRadio`,
+                e.message,
+                LogRecord_Level.ERROR
+              );
+            });
+        }
+      }
     }
-  }
-
-  /**
-   * Short description
-   */
-  private async readFromCharacteristic(
-    characteristic: BluetoothRemoteGATTCharacteristic
-  ) {
-    return await characteristic
-      .readValue()
-      .then((value) => {
-        return value.buffer;
-      })
-      .catch((e) => {
-        log(
-          `IBLEConnection.readFromCharacteristic`,
-          e.message,
-          LogRecord_Level.ERROR
-        );
-      });
   }
 
   /**
@@ -269,80 +270,37 @@ export class IBLEConnection extends IMeshDevice {
       };
     }
     return navigator.bluetooth
-      .requestDevice(requestDeviceFilterParams as RequestDeviceOptions)
+      .requestDevice(requestDeviceFilterParams)
       .catch((e) => {
         log(`IBLEConnection.requestDevice`, e.message, LogRecord_Level.ERROR);
       });
   }
-
-  /**
-   * Connect to the specified bluetooth device
-   * @param device Desired Bluetooth device
-   */
-  private async connectToDevice(device: BluetoothDevice) {
-    /**
-     * @todo, is this logging verbose?
-     */
-    log(
-      `IBLEConnection.connectToDevice`,
-      `${device.name}, trying to connect now.`,
-      LogRecord_Level.DEBUG
-    );
-
-    return device.gatt?.connect().catch((e) => {
-      log(`IBLEConnection.connectToDevice`, e.message, LogRecord_Level.ERROR);
-    });
-  }
-
-  /**
-   * Short description
-   * @todo, include in caller function, does not need it's own method
-   * @param connection
-   */
-  private async getService(connection: BluetoothRemoteGATTServer) {
-    return connection.getPrimaryService(SERVICE_UUID).catch((e) => {
-      log(`IBLEConnection.getService`, e.message, LogRecord_Level.ERROR);
-    });
-  }
-
   /**
    * Short description
    * @todo wtf are some of these?
    * @param service
    */
   private async getCharacteristics(service: BluetoothRemoteGATTService) {
-    try {
-      this.toRadioCharacteristic = await service.getCharacteristic(
-        TORADIO_UUID
-      );
-      log(
-        `IBLEConnection.getCharacteristics`,
-        `Successfully got toRadioCharacteristic.`,
-        LogRecord_Level.DEBUG
-      );
-      this.fromRadioCharacteristic = await service.getCharacteristic(
-        FROMRADIO_UUID
-      );
-      log(
-        `IBLEConnection.getCharacteristics`,
-        `Successfully got fromRadioCharacteristic.`,
-        LogRecord_Level.DEBUG
-      );
-      this.fromNumCharacteristic = await service.getCharacteristic(
-        FROMNUM_UUID
-      );
-      log(
-        `IBLEConnection.getCharacteristics`,
-        `Successfully got fromNumCharacteristic.`,
-        LogRecord_Level.DEBUG
-      );
-    } catch (e) {
-      log(
-        `IBLEConnection.getCharacteristics`,
-        e.message,
-        LogRecord_Level.ERROR
-      );
-    }
+    this.toRadioCharacteristic = await service.getCharacteristic(TORADIO_UUID);
+    log(
+      `IBLEConnection.getCharacteristics`,
+      `Successfully got toRadioCharacteristic.`,
+      LogRecord_Level.DEBUG
+    );
+    this.fromRadioCharacteristic = await service.getCharacteristic(
+      FROMRADIO_UUID
+    );
+    log(
+      `IBLEConnection.getCharacteristics`,
+      `Successfully got fromRadioCharacteristic.`,
+      LogRecord_Level.DEBUG
+    );
+    this.fromNumCharacteristic = await service.getCharacteristic(FROMNUM_UUID);
+    log(
+      `IBLEConnection.getCharacteristics`,
+      `Successfully got fromNumCharacteristic.`,
+      LogRecord_Level.DEBUG
+    );
   }
 
   /**
@@ -354,36 +312,10 @@ export class IBLEConnection extends IMeshDevice {
 
       this.fromNumCharacteristic.addEventListener(
         "characteristicvaluechanged",
-        (event) => {
-          this.handleBLENotification(event.type);
+        async (event) => {
+          await this.readFromRadio();
         }
       );
-
-      /**
-       * @todo isn't this verbose?
-       */
-      log(
-        `IBLEConnection.subscribeToBLENotification`,
-        `BLE notifications activated.`,
-        LogRecord_Level.DEBUG
-      );
     }
-  }
-
-  /**
-   * Short description
-   * @todo, this isn't needed, does almost nothing, only logs a few items.
-   * @param event
-   */
-  private async handleBLENotification(event: string) {
-    log(
-      `IBLEConnection.handleBLENotification`,
-      `BLE notification received: ${event}.`,
-      LogRecord_Level.DEBUG
-    );
-
-    await this.readFromRadio().catch((e) => {
-      log(`IBLEConnection.handleBLENotification`, e, LogRecord_Level.ERROR);
-    });
   }
 }

@@ -69,7 +69,7 @@ export abstract class IMeshDevice {
   /**
    * Abstract method that writes data to the radio
    */
-  protected abstract writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void>;
+  protected abstract writeToRadio(data: Uint8Array): Promise<void>;
 
   /**
    * Abstract method that reads data from the radio
@@ -334,17 +334,15 @@ export abstract class IMeshDevice {
 
     await this.readFromRadio();
 
-    const radioRequest = AdminMessage.toBinary(
-      AdminMessage.create({
-        variant: {
-          getRadioRequest: true,
-          oneofKind: "getRadioRequest"
-        }
-      })
-    );
-
-    this.sendPacket(
-      radioRequest,
+    await this.sendPacket(
+      AdminMessage.toBinary(
+        AdminMessage.create({
+          variant: {
+            getRadioRequest: true,
+            oneofKind: "getRadioRequest"
+          }
+        })
+      ),
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
@@ -352,17 +350,15 @@ export abstract class IMeshDevice {
     );
 
     for (let index = 1; index <= this.myNodeInfo.maxChannels; index++) {
-      const channelRequest = AdminMessage.toBinary(
-        AdminMessage.create({
-          variant: {
-            getChannelRequest: index,
-            oneofKind: "getChannelRequest"
-          }
-        })
-      );
-
-      this.sendPacket(
-        channelRequest,
+      await this.sendPacket(
+        AdminMessage.toBinary(
+          AdminMessage.create({
+            variant: {
+              getChannelRequest: index,
+              oneofKind: "getChannelRequest"
+            }
+          })
+        ),
         PortNum.ADMIN_APP,
         this.myNodeInfo.myNodeNum,
         true,
@@ -391,6 +387,9 @@ export abstract class IMeshDevice {
 
     this.onFromRadioEvent.next(decodedMessage);
 
+    /**
+     * @todo, does this do anything?
+     */
     if (decodedMessage.payloadVariant.oneofKind === "packet") {
       decodedMessage.payloadVariant.packet;
     }
