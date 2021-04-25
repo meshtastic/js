@@ -46,5 +46,5 @@ export class ISerialConnection extends IMeshDevice {
   /**
    * Short description
    */
-  protected async writeToRadio(ToRadioUInt8Array: Uint8Array): Promise<void> {}
+  protected async writeToRadio(data: Uint8Array): Promise<void> {}
 }
