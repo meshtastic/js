@@ -2,7 +2,8 @@ import { Types } from "./";
 import { LogRecord_Level } from "./generated/mesh";
 import { IMeshDevice } from "./imeshdevice";
 import type { httpConnectionParameters } from "./types";
-import { log, typedArrayToBuffer } from "./utils";
+import { typedArrayToBuffer } from "./utils/general";
+import { log } from "./utils/logging";
 
 /**
  * Allows to connect to a meshtastic device over HTTP(S)

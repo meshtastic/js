@@ -46,6 +46,10 @@ export interface bleConnectionParameters {
    * Optional filter options for the web bluetooth api requestDevice() method
    */
   requestDeviceFilterParams?: RequestDeviceOptions;
+  /**
+   * Connect directly to a Bluetooth deivce, obtained from `getDevices()`
+   */
+  device?: BluetoothDevice;
 }
 
 export interface serialConnectionParameters {

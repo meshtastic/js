@@ -1,5 +1,5 @@
 import { LogRecord_Level } from "./generated/mesh";
-import { log } from "./utils";
+import { log } from "./utils/logging";
 
 /**
  * Handles library-wide settings

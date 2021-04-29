@@ -20,7 +20,7 @@ import type {
   RadioConfig_UserPreferences
 } from "./generated/radioconfig";
 import type { ConnectionParameters } from "./types";
-import { log } from "./utils";
+import { log } from "./utils/logging";
 
 /**
  * Base class for connection methods to extend

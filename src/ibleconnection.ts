@@ -8,7 +8,8 @@ import {
 import { LogRecord_Level } from "./generated/mesh";
 import { IMeshDevice } from "./imeshdevice";
 import type { bleConnectionParameters } from "./types";
-import { log, typedArrayToBuffer } from "./utils";
+import { typedArrayToBuffer } from "./utils/general";
+import { log } from "./utils/logging";
 
 /**
  * Allows to connect to a meshtastic device via bluetooth
@@ -78,6 +79,12 @@ export class IBLEConnection extends IMeshDevice {
     this.writeLock = false;
     this.pendingRead = false;
   }
+  /**
+   * Gets list of bluetooth devices that can be passed to `connect`
+   */
+  public getDevices(): Promise<BluetoothDevice[]> {
+    return navigator.bluetooth.getDevices();
+  }
 
   /**
    * Initiates the connect process to a meshtastic device via bluetooth
@@ -93,9 +100,17 @@ export class IBLEConnection extends IMeshDevice {
       );
     }
 
-    this.device = await this.requestDevice(
-      parameters.requestDeviceFilterParams
-    );
+    if (parameters.device) {
+      this.device = parameters.device;
+    } else {
+      this.device = await this.requestDevice(
+        parameters?.requestDeviceFilterParams
+      ).catch(() => {
+        /**
+         * @todo emit event here so the ui can react to the user dismissing the dialogue
+         */
+      });
+    }
 
     if (this.device) {
       this.device.gatt
@@ -234,73 +249,51 @@ export class IBLEConnection extends IMeshDevice {
       this.writeLock = true;
       if (this.toRadioCharacteristic) {
         while (this.writeQueue.length) {
-          await this.toRadioCharacteristic
-            .writeValue(typedArrayToBuffer(this.writeQueue[0]))
-            .then(() => {
-              this.writeQueue.shift();
-            })
-            .catch((e) => {
-              log(
-                `IBLEConnection.writeToRadio`,
-                e.message,
-                LogRecord_Level.ERROR
-              );
-            });
+          if (this.writeQueue[0]) {
+            await this.toRadioCharacteristic
+              .writeValue(typedArrayToBuffer(this.writeQueue[0]))
+              .then(() => {
+                this.writeQueue.shift();
+              })
+              .catch((e) => {
+                log(
+                  `IBLEConnection.writeToRadio`,
+                  e.message,
+                  LogRecord_Level.ERROR
+                );
+              });
+          }
         }
       }
     }
   }
 
   /**
-   * @todo, shorten
-   * Opens the browsers native select device dialog, listing devices based on the applied filter
-   * Later: use getDevices() to get a list of in-range ble devices that can be connected to, useful for displaying a list of devices in
-   * an own UI, bypassing the browsers select/pairing dialog
+   * Let's user select the device from avaliable Bluetooth devices
    * @param requestDeviceFilterParams Bluetooth device request filters
    */
   private async requestDevice(
     requestDeviceFilterParams?: RequestDeviceOptions
   ) {
-    /**
-     * @todo filters does not exist on RequestDeviceOptions? look into the desired structure of the filter, currently is a union type
-     */
-    if (!requestDeviceFilterParams?.hasOwnProperty("filters")) {
-      requestDeviceFilterParams = {
-        filters: [{ services: [SERVICE_UUID] }]
-      };
-    }
-    return navigator.bluetooth
-      .requestDevice(requestDeviceFilterParams)
-      .catch((e) => {
-        log(`IBLEConnection.requestDevice`, e.message, LogRecord_Level.ERROR);
-      });
+    const filter = requestDeviceFilterParams
+      ? requestDeviceFilterParams
+      : {
+          filters: [{ services: [SERVICE_UUID] }]
+        };
+    return navigator.bluetooth.requestDevice(filter).catch((e) => {
+      log(`IBLEConnection.requestDevice`, e.message, LogRecord_Level.ERROR);
+    });
   }
   /**
-   * Short description
-   * @todo wtf are some of these?
+   * Fetch BLE characteristics for use with reading and writing to the radio
    * @param service
    */
   private async getCharacteristics(service: BluetoothRemoteGATTService) {
     this.toRadioCharacteristic = await service.getCharacteristic(TORADIO_UUID);
-    log(
-      `IBLEConnection.getCharacteristics`,
-      `Successfully got toRadioCharacteristic.`,
-      LogRecord_Level.DEBUG
-    );
     this.fromRadioCharacteristic = await service.getCharacteristic(
       FROMRADIO_UUID
     );
-    log(
-      `IBLEConnection.getCharacteristics`,
-      `Successfully got fromRadioCharacteristic.`,
-      LogRecord_Level.DEBUG
-    );
     this.fromNumCharacteristic = await service.getCharacteristic(FROMNUM_UUID);
-    log(
-      `IBLEConnection.getCharacteristics`,
-      `Successfully got fromNumCharacteristic.`,
-      LogRecord_Level.DEBUG
-    );
   }
 
   /**
@@ -312,7 +305,7 @@ export class IBLEConnection extends IMeshDevice {
 
       this.fromNumCharacteristic.addEventListener(
         "characteristicvaluechanged",
-        async (event) => {
+        async () => {
           await this.readFromRadio();
         }
       );
