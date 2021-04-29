@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@protobuf-ts/plugin": "^1.0.13",
-    "@types/jest": "^26.0.22",
+    "@types/jest": "^26.0.23",
     "@types/w3c-web-serial": "^1.0.1",
     "@types/web-bluetooth": "0.0.9",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
@@ -43,7 +43,7 @@
     "build": "tsc",
     "generate:protobufs": "npx protoc --plugin=node_modules/ts-proto/protoc-gen-ts_proto --ts_out src/generated/ --ts_proto_opt=useOptionals=true --ts_opt long_type_string --proto_path protobufs protobufs/*.proto",
     "generate:docs": "typedoc src/index.ts",
-    "lint": "prettier --check .",
+    "lint": "prettier --check . && eslint src/*.ts",
     "test": "jest"
   },
   "pre-commit": [
