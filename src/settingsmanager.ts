@@ -11,8 +11,6 @@ export class SettingsManager {
    */
   static debugMode: LogRecord_Level = LogRecord_Level.WARNING;
 
-  constructor() {}
-
   /**
    * Sets the library-wide logging level
    * @param level Desired level of logging

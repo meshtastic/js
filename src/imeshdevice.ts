@@ -219,20 +219,28 @@ export abstract class IMeshDevice {
       wantAck: wantAck
     });
 
-    if (echoResponse) {
-      this.handleMeshPacket(meshPacket);
-    }
-
-    await this.writeToRadio(
-      ToRadio.toBinary(
-        ToRadio.create({
-          payloadVariant: {
-            packet: meshPacket,
-            oneofKind: "packet"
-          }
-        })
-      )
+    const toRadio = ToRadio.toBinary(
+      ToRadio.create({
+        payloadVariant: {
+          packet: meshPacket,
+          oneofKind: "packet"
+        }
+      })
     );
+
+    if (toRadio.length > 512) {
+      log(
+        `IMeshDevice.sendPacket`,
+        `Message longer than 512 characters, it will not be sent!`,
+        LogRecord_Level.WARNING
+      );
+    } else {
+      if (echoResponse) {
+        this.handleMeshPacket(meshPacket);
+      }
+
+      await this.writeToRadio(toRadio);
+    }
   }
 
   /**

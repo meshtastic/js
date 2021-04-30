@@ -87,7 +87,7 @@ export class IBLEConnection extends IMeshDevice {
   }
 
   /**
-   * Initiates the connect process to a meshtastic device via bluetooth
+   * Initiates the connect process to a meshtastic device via Bluetooth
    * @param parameters ble connection parameters
    */
   public async connect(parameters: bleConnectionParameters): Promise<void> {

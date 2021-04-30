@@ -1,20 +1,26 @@
 {
   "compilerOptions": {
-    "module": "ES6",
+    "module": "ESNext",
     "moduleResolution": "Node",
-    "target": "ES2018",
+    "target": "ESNext",
     "sourceMap": true,
     "declaration": true,
     "outDir": "./dist",
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    // "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
     "strictBindCallApply": true,
     "strictFunctionTypes": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "noImplicitReturns": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/**/*"],
   "typedocOptions": {
