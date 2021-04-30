@@ -3,7 +3,7 @@ import { IMeshDevice } from "./imeshdevice";
 import type { serialConnectionParameters } from "./types";
 
 /**
- * Allows to connect to a meshtastic device over WebSerial
+ * Allows to connect to a Meshtastic device over WebSerial
  */
 export class ISerialConnection extends IMeshDevice {
   /**
@@ -62,7 +62,7 @@ export class ISerialConnection extends IMeshDevice {
   }
 
   /**
-   * Initiates the connect process to a meshtastic device via Web Serial
+   * Initiates the connect process to a Meshtastic device via Web Serial
    * @param parameters serial connection parameters
    */
   public async connect(parameters: serialConnectionParameters): Promise<void> {

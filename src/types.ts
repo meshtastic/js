@@ -57,7 +57,7 @@ export interface serialConnectionParameters {
   /**
    * Connect directly to a Serial port, obtained from `getPorts()`
    */
-  port: SerialPort;
+  port?: SerialPort;
 }
 /**
  * @todo temporarily made packet optional, revert!

@@ -6,7 +6,7 @@ import { typedArrayToBuffer } from "./utils/general";
 import { log } from "./utils/logging";
 
 /**
- * Allows to connect to a meshtastic device over HTTP(S)
+ * Allows to connect to a Meshtastic device over HTTP(S)
  */
 export class IHTTPConnection extends IMeshDevice {
   /**
@@ -28,7 +28,7 @@ export class IHTTPConnection extends IMeshDevice {
   }
 
   /**
-   * Initiates the connect process to a meshtastic device via HTTP(S)
+   * Initiates the connect process to a Meshtastic device via HTTP(S)
    * @param parameters http connection parameters
    */
   public async connect(parameters: httpConnectionParameters): Promise<void> {
@@ -68,7 +68,7 @@ export class IHTTPConnection extends IMeshDevice {
   }
 
   /**
-   * Disconnects from the meshtastic device
+   * Disconnects from the Meshtastic device
    */
   public disconnect(): void {
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
