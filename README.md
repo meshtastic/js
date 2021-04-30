@@ -4,8 +4,9 @@
 
 ## Overview
 
-Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic](https://meshtastic.org) devices. It can be used to build applications to interface with a [Meshtastic](https://meshtastic.org) network. Currently HTTP(S) and Bluetooth connections are supported.
+Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic](https://meshtastic.org) devices. It can be used to build applications to interface with a [Meshtastic](https://meshtastic.org) networks, via HTTP(S), Web Bluetooth or Web Serial.
 
+**[Getting Started Guide](https://meshtastic.org/docs/software/js/getting-started)**
 **[Documentation/API Reference](https://js.meshtastic.org)**
 
 ## Installation & Usage
@@ -20,86 +21,9 @@ yarn add @meshtastic/meshtasticjs
 npm install @meshtastic/meshtasticjs
 ```
 
-### Usage
-
-The library has a built in connection manager that will handle multiple devices of different connection types.
-
-```typescript
-import {
-  Client,
-  Types,
-  SettingsManager,
-} from "meshtasticjs";
-
-/**
- * Instantiate a new device manager
- */
-const client = new Client();
-
-/**
- * Optional: Set the logging level
- */
-SettingsManager.setDebugMode(Protobuf.LogLevelEnum.DEBUG);
-
-/**
- * Create the connection type of your choice
- */
-const httpConnection = client.createHTTPConnection();
-const bleConnection = client.createBLEConnection();
-
-/**
- * Connect to the device with the desired paramaters
- */
-httpConnection.connect(...connectionParams);
-bleConnection.connect(...connectionParams);
-
-/**
- * Device can now be accessed individually or via `deviceInterfaces`
- */
-client.deviceInterfaces.forEach(connection => {
-  ...
-});
-```
-
-All events can be handled via any of the inbuilt on**_x_**Event methods.
-
-```typescript
-httpConnection.onFromRadioEvent.subscribe(event => {
-    ...
-});
-```
-
-### Sending data
-
-Data in multiple formats can be send over the radio
-
-```typescript
-/**
- * Plaintext message
- */
-bleConnection.sendText("Message");
-
-/**
- * With recipient
- */
-bleConnection.sendText("Message", 1234);
-
-/**
- * Arbitrary data
- */
-bleConnection.sendPacket(
-  new Uint8Array([...data]),
-  Protobuf.PortNumEnum.PRIVATE_APP
-);
-
-/**
- * Send custom location
- */
-bleConnection.sendPosition(lat, lng, alt, time);
-```
-
 ### Compatibility
 
-The Bluetooth connection option relies on the availability of the Web Bluetooth API, which is represented in the compatibility matrix below.
+The Bluetooth and Serial connections rely on the availability of the Web Bluetooth and Web Serial API's respectively, this is represented in the compatibility matrices below.
 
-![Bluetooth compatability matrix](https://caniuse.bitsofco.de/image/web-bluetooth.png)
+![Web Bluetooth compatability matrix](https://caniuse.bitsofco.de/image/web-bluetooth.png)
+![Web Serial compatability matrix](https://caniuse.bitsofco.de/image/web-serial.png)
