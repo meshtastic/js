@@ -54,6 +54,10 @@ export interface bleConnectionParameters {
 
 export interface serialConnectionParameters {
   baudRate?: number;
+  /**
+   * Connect directly to a Serial port, obtained from `getPorts()`
+   */
+  port: SerialPort;
 }
 /**
  * @todo temporarily made packet optional, revert!
