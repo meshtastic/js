@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "Browser library for interfacing with meshtastic devices",
   "sideEffects": false,
   "type": "module",
@@ -53,7 +53,7 @@
     "preset": "ts-jest"
   },
   "keywords": [
-    "meshtastic bluetooth http library meshtasticjs"
+    "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
   ],
   "contributors": [
     {
