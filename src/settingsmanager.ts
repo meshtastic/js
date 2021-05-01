@@ -7,7 +7,6 @@ import { log } from "./utils/logging";
 export class SettingsManager {
   /**
    * Logging level for the application
-   * @todo setting value to LogRecord_Level.WARNING errors `undefined`
    */
   static debugMode: LogRecord_Level = LogRecord_Level.WARNING;
 
