@@ -42,7 +42,6 @@ export abstract class IMeshDevice {
   private myNodeInfo: MyNodeInfo;
 
   /**
-   * @todo better desc
    * Randomly generated number to ensure confiuration lockstep
    */
   private configId: number;
@@ -396,19 +395,11 @@ export abstract class IMeshDevice {
     this.onFromRadioEvent.next(decodedMessage);
 
     /**
-     * @todo, does this do anything?
-     */
-    if (decodedMessage.payloadVariant.oneofKind === "packet") {
-      decodedMessage.payloadVariant.packet;
-    }
-
-    /**
      * @todo add map here when `all=true` gets fixed.
      */
     switch (decodedMessage.payloadVariant.oneofKind) {
       case "packet":
         this.handleMeshPacket(decodedMessage.payloadVariant.packet);
-
         break;
 
       case "myInfo":
@@ -428,7 +419,6 @@ export abstract class IMeshDevice {
           "Received onMyNodeInfoEvent",
           LogRecord_Level.TRACE
         );
-
         break;
 
       case "nodeInfo":
@@ -444,7 +434,6 @@ export abstract class IMeshDevice {
         this.onNodeInfoPacketEvent.next({
           data: decodedMessage.payloadVariant.nodeInfo
         });
-
         break;
 
       case "logRecord":
@@ -464,20 +453,10 @@ export abstract class IMeshDevice {
             LogRecord_Level.ERROR
           );
         }
-
         break;
 
       case "rebooted":
         await this.configure();
-
-        break;
-
-      default:
-        log(
-          `MeshInterface.handleFromRadio`,
-          `Invalid data received`,
-          LogRecord_Level.ERROR
-        );
         break;
     }
   }
@@ -498,9 +477,6 @@ export abstract class IMeshDevice {
     if (meshPacket.payloadVariant.oneofKind === "decoded") {
       switch (meshPacket.payloadVariant.decoded.portnum) {
         case PortNum.TEXT_MESSAGE_APP:
-          /**
-           * Text messages
-           */
           log(
             `IMeshDevice.handleMeshPacket`,
             "Received onTextPacketEvent",
@@ -513,10 +489,8 @@ export abstract class IMeshDevice {
             )
           });
           break;
+
         case PortNum.POSITION_APP:
-          /**
-           * Position
-           */
           log(
             `IMeshDevice.handleMeshPacket`,
             "Received onPositionPacketEvent",
@@ -527,11 +501,8 @@ export abstract class IMeshDevice {
             data: Position.fromBinary(meshPacket.payloadVariant.decoded.payload)
           });
           break;
-        case PortNum.NODEINFO_APP:
-          /**
-           * Node Info
-           */
 
+        case PortNum.NODEINFO_APP:
           log(
             `IMeshDevice.handleMeshPacket`,
             "Received onNodeInfoPacketEvent",
@@ -542,11 +513,8 @@ export abstract class IMeshDevice {
             data: NodeInfo.fromBinary(meshPacket.payloadVariant.decoded.payload)
           });
           break;
-        case PortNum.ROUTING_APP:
-          /**
-           * Routing
-           */
 
+        case PortNum.ROUTING_APP:
           log(
             `IMeshDevice.handleMeshPacket`,
             "Received onRoutingPacketEvent",
@@ -554,10 +522,8 @@ export abstract class IMeshDevice {
           );
           this.onRoutingPacketEvent.next(meshPacket);
           break;
+
         case PortNum.ADMIN_APP:
-          /**
-           * Admin
-           */
           log(
             `IMeshDevice.handleMeshPacket`,
             "Received onAdminPacketEvent",
@@ -570,6 +536,7 @@ export abstract class IMeshDevice {
             )
           });
           break;
+
         default:
           log(
             "IMeshDevice.handleMeshPacket",

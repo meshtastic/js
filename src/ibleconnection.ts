@@ -103,13 +103,17 @@ export class IBLEConnection extends IMeshDevice {
     if (parameters.device) {
       this.device = parameters.device;
     } else {
-      this.device = await this.requestDevice(
-        parameters?.requestDeviceFilterParams
-      ).catch(() => {
-        /**
-         * @todo emit event here so the ui can react to the user dismissing the dialogue
-         */
-      });
+      this.device = await navigator.bluetooth
+        .requestDevice(
+          parameters.deviceFilter
+            ? parameters.deviceFilter
+            : {
+                filters: [{ services: [SERVICE_UUID] }]
+              }
+        )
+        .catch((e) => {
+          log(`IBLEConnection.requestDevice`, e.message, LogRecord_Level.ERROR);
+        });
     }
 
     if (this.device) {
@@ -119,25 +123,34 @@ export class IBLEConnection extends IMeshDevice {
           connection
             .getPrimaryService(SERVICE_UUID)
             .then(async (service) => {
-              if (service) {
-                this.service = service;
+              this.service = service;
 
-                await this.getCharacteristics(this.service);
+              this.toRadioCharacteristic = await service.getCharacteristic(
+                TORADIO_UUID
+              );
+              this.fromRadioCharacteristic = await service.getCharacteristic(
+                FROMRADIO_UUID
+              );
+              this.fromNumCharacteristic = await service.getCharacteristic(
+                FROMNUM_UUID
+              );
 
-                await this.subscribeToBLENotification();
+              if (this.fromNumCharacteristic) {
+                await this.fromNumCharacteristic.startNotifications();
 
-                this.onDeviceStatusEvent.next(
-                  Types.DeviceStatusEnum.DEVICE_CONNECTED
-                );
-
-                await this.configure();
-              } else {
-                log(
-                  `IBLEConnection.connect`,
-                  `Failed to connect, no service returned.`,
-                  LogRecord_Level.ERROR
+                this.fromNumCharacteristic.addEventListener(
+                  "characteristicvaluechanged",
+                  async () => {
+                    await this.readFromRadio();
+                  }
                 );
               }
+
+              this.onDeviceStatusEvent.next(
+                Types.DeviceStatusEnum.DEVICE_CONNECTED
+              );
+
+              await this.configure();
             })
             .catch((e) => {
               log(
@@ -265,50 +278,6 @@ export class IBLEConnection extends IMeshDevice {
           }
         }
       }
-    }
-  }
-
-  /**
-   * Let's user select the device from avaliable Bluetooth devices
-   * @param requestDeviceFilterParams Bluetooth device request filters
-   */
-  private async requestDevice(
-    requestDeviceFilterParams?: RequestDeviceOptions
-  ) {
-    const filter = requestDeviceFilterParams
-      ? requestDeviceFilterParams
-      : {
-          filters: [{ services: [SERVICE_UUID] }]
-        };
-    return navigator.bluetooth.requestDevice(filter).catch((e) => {
-      log(`IBLEConnection.requestDevice`, e.message, LogRecord_Level.ERROR);
-    });
-  }
-  /**
-   * Fetch BLE characteristics for use with reading and writing to the radio
-   * @param service
-   */
-  private async getCharacteristics(service: BluetoothRemoteGATTService) {
-    this.toRadioCharacteristic = await service.getCharacteristic(TORADIO_UUID);
-    this.fromRadioCharacteristic = await service.getCharacteristic(
-      FROMRADIO_UUID
-    );
-    this.fromNumCharacteristic = await service.getCharacteristic(FROMNUM_UUID);
-  }
-
-  /**
-   * BLE notify characteristic published by device, gets called when new fromRadio is available for read
-   */
-  private async subscribeToBLENotification() {
-    if (this.fromNumCharacteristic) {
-      await this.fromNumCharacteristic.startNotifications();
-
-      this.fromNumCharacteristic.addEventListener(
-        "characteristicvaluechanged",
-        async () => {
-          await this.readFromRadio();
-        }
-      );
     }
   }
 }

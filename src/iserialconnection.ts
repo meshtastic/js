@@ -55,7 +55,7 @@ export class ISerialConnection extends IMeshDevice {
   }
 
   /**
-   * Gets list of bluetooth devices that can be passed to `connect`
+   * Gets list of serial ports that can be passed to `connect`
    */
   public async getPorts(): Promise<SerialPort[]> {
     return await navigator.serial.getPorts();

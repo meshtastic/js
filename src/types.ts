@@ -45,7 +45,7 @@ export interface bleConnectionParameters {
   /**
    * Optional filter options for the web bluetooth api requestDevice() method
    */
-  requestDeviceFilterParams?: RequestDeviceOptions;
+  deviceFilter?: RequestDeviceOptions;
   /**
    * Connect directly to a Bluetooth deivce, obtained from `getDevices()`
    */
@@ -59,9 +59,7 @@ export interface serialConnectionParameters {
    */
   port?: SerialPort;
 }
-/**
- * @todo temporarily made packet optional, revert!
- */
+
 export interface NodeInfoPacket {
   packet?: MeshPacket;
   data: NodeInfo;
