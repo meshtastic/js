@@ -1,6 +1,6 @@
 import { Types } from "./";
 import { IMeshDevice } from "./imeshdevice";
-import type { serialConnectionParameters } from "./types";
+import type { SerialConnectionParameters } from "./types";
 
 /**
  * Allows to connect to a Meshtastic device over WebSerial
@@ -52,14 +52,14 @@ export class ISerialConnection extends IMeshDevice {
    * Gets list of serial ports that can be passed to `connect`
    */
   public async getPorts(): Promise<SerialPort[]> {
-    return await navigator.serial.getPorts();
+    return navigator.serial.getPorts();
   }
 
   /**
    * Initiates the connect process to a Meshtastic device via Web Serial
    * @param parameters serial connection parameters
    */
-  public async connect(parameters: serialConnectionParameters): Promise<void> {
+  public async connect(parameters: SerialConnectionParameters): Promise<void> {
     this.port = parameters.port
       ? parameters.port
       : await navigator.serial.requestPort();

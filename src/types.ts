@@ -18,11 +18,11 @@ export type DeviceInterface =
   | ISerialConnection;
 
 export type ConnectionParameters =
-  | httpConnectionParameters
-  | bleConnectionParameters
-  | serialConnectionParameters;
+  | HTTPConnectionParameters
+  | BLEConnectionParameters
+  | SerialConnectionParameters;
 
-export interface httpConnectionParameters {
+export interface HTTPConnectionParameters {
   /**
    * address The IP Address/Domain to connect to, without protocol
    */
@@ -41,7 +41,7 @@ export interface httpConnectionParameters {
   fetchInterval: number;
 }
 
-export interface bleConnectionParameters {
+export interface BLEConnectionParameters {
   /**
    * Optional filter options for the web bluetooth api requestDevice() method
    */
@@ -52,7 +52,7 @@ export interface bleConnectionParameters {
   device?: BluetoothDevice;
 }
 
-export interface serialConnectionParameters {
+export interface SerialConnectionParameters {
   baudRate?: number;
   /**
    * Connect directly to a Serial port, obtained from `getPorts()`

@@ -1,7 +1,7 @@
 import { Types } from "./";
 import { LogRecord_Level } from "./generated/mesh";
 import { IMeshDevice } from "./imeshdevice";
-import type { httpConnectionParameters } from "./types";
+import type { HTTPConnectionParameters } from "./types";
 import { typedArrayToBuffer } from "./utils/general";
 import { log } from "./utils/logging";
 
@@ -31,7 +31,7 @@ export class IHTTPConnection extends IMeshDevice {
    * Initiates the connect process to a Meshtastic device via HTTP(S)
    * @param parameters http connection parameters
    */
-  public async connect(parameters: httpConnectionParameters): Promise<void> {
+  public async connect(parameters: HTTPConnectionParameters): Promise<void> {
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
     this.receiveBatchRequests = parameters.receiveBatchRequests;

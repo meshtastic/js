@@ -7,7 +7,7 @@ import {
 } from "./constants";
 import { LogRecord_Level } from "./generated/mesh";
 import { IMeshDevice } from "./imeshdevice";
-import type { bleConnectionParameters } from "./types";
+import type { BLEConnectionParameters } from "./types";
 import { typedArrayToBuffer } from "./utils/general";
 import { log } from "./utils/logging";
 
@@ -90,7 +90,7 @@ export class IBLEConnection extends IMeshDevice {
    * Initiates the connect process to a Meshtastic device via Bluetooth
    * @param parameters ble connection parameters
    */
-  public async connect(parameters: bleConnectionParameters): Promise<void> {
+  public async connect(parameters: BLEConnectionParameters): Promise<void> {
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTING);
     if (!navigator.bluetooth) {
       log(

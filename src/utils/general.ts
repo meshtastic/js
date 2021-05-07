@@ -7,7 +7,7 @@ export const bufferToHex = (arrayBuffer: ArrayBuffer): string => {
     .call(new Uint8Array(arrayBuffer), (x: number) =>
       `00${x.toString(16)}`.slice(-2)
     )
-    .join("") as string;
+    .join("");
 };
 
 /**
