@@ -60,8 +60,46 @@ export abstract class IMeshDevice {
         this.isConfigured = false;
     });
 
-    this.onMyNodeInfoEvent.subscribe((myNodeInfo) => {
+    this.onMyNodeInfoEvent.subscribe(async (myNodeInfo) => {
       this.myNodeInfo = myNodeInfo;
+
+      if (!this.isConfigured) {
+        await this.sendPacket(
+          AdminMessage.toBinary(
+            AdminMessage.create({
+              variant: {
+                getRadioRequest: true,
+                oneofKind: "getRadioRequest"
+              }
+            })
+          ),
+          PortNum.ADMIN_APP,
+          this.myNodeInfo.myNodeNum,
+          true,
+          true
+        );
+
+        for (let index = 1; index <= this.myNodeInfo.maxChannels; index++) {
+          await this.sendPacket(
+            AdminMessage.toBinary(
+              AdminMessage.create({
+                variant: {
+                  getChannelRequest: index,
+                  oneofKind: "getChannelRequest"
+                }
+              })
+            ),
+            PortNum.ADMIN_APP,
+            this.myNodeInfo.myNodeNum,
+            true,
+            true
+          );
+        }
+
+        await this.readFromRadio();
+
+        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
+      }
     });
   }
 
@@ -340,42 +378,6 @@ export abstract class IMeshDevice {
     );
 
     await this.readFromRadio();
-
-    await this.sendPacket(
-      AdminMessage.toBinary(
-        AdminMessage.create({
-          variant: {
-            getRadioRequest: true,
-            oneofKind: "getRadioRequest"
-          }
-        })
-      ),
-      PortNum.ADMIN_APP,
-      this.myNodeInfo.myNodeNum,
-      true,
-      true
-    );
-
-    for (let index = 1; index <= this.myNodeInfo.maxChannels; index++) {
-      await this.sendPacket(
-        AdminMessage.toBinary(
-          AdminMessage.create({
-            variant: {
-              getChannelRequest: index,
-              oneofKind: "getChannelRequest"
-            }
-          })
-        ),
-        PortNum.ADMIN_APP,
-        this.myNodeInfo.myNodeNum,
-        true,
-        true
-      );
-    }
-
-    await this.readFromRadio();
-
-    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
   }
 
   /**
