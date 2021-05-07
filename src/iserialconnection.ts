@@ -33,7 +33,7 @@ export class ISerialConnection extends IMeshDevice {
   /**
    * Reads packets from transformed serial port steam and processes them.
    */
-  private async readLoop() {
+  private async readFromRadio() {
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const { value, done } = await this.reader.read();
@@ -101,7 +101,7 @@ export class ISerialConnection extends IMeshDevice {
       this.writer = this.port.writable;
     }
 
-    this.readLoop();
+    this.readFromRadio();
 
     /**
      * @todo, implement device keep-awake loop
@@ -123,13 +123,6 @@ export class ISerialConnection extends IMeshDevice {
    */
   public async ping(): Promise<boolean> {
     return true;
-  }
-
-  /**
-   * Not used by serial connections, logic handled internally by `ISerialConnection.readLoop()`
-   */
-  protected async readFromRadio(): Promise<void> {
-    return Promise.resolve();
   }
 
   /**

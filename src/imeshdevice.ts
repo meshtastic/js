@@ -96,8 +96,6 @@ export abstract class IMeshDevice {
           );
         }
 
-        await this.readFromRadio();
-
         this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
       }
     });
@@ -107,11 +105,6 @@ export abstract class IMeshDevice {
    * Abstract method that writes data to the radio
    */
   protected abstract writeToRadio(data: Uint8Array): Promise<void>;
-
-  /**
-   * Abstract method that reads data from the radio
-   */
-  protected abstract readFromRadio(): Promise<void>;
 
   /**
    * Abstract method that connects to the radio
@@ -376,8 +369,6 @@ export abstract class IMeshDevice {
         })
       )
     );
-
-    await this.readFromRadio();
   }
 
   /**
