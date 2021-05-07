@@ -21,11 +21,6 @@ export class ISerialConnection extends IMeshDevice {
    */
   private writer: WritableStream<ArrayBuffer>;
 
-  /**
-   * Connection state of the serial port
-   */
-  private portOpen: boolean;
-
   constructor() {
     super();
 
@@ -33,15 +28,14 @@ export class ISerialConnection extends IMeshDevice {
 
     this.reader = new ReadableStreamDefaultReader(new ReadableStream());
     this.writer = new WritableStream();
-
-    this.portOpen = false;
   }
 
   /**
    * Reads packets from transformed serial port steam and processes them.
    */
   private async readLoop() {
-    while (this.portOpen) {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
       const { value, done } = await this.reader.read();
       if (value) {
         this.handleFromRadio(value);
@@ -73,12 +67,6 @@ export class ISerialConnection extends IMeshDevice {
     await this.port.open({
       baudRate: parameters.baudRate ? parameters.baudRate : 921600
     });
-    this.port.addEventListener("connect", () => {
-      this.portOpen = true;
-    });
-    this.port.addEventListener("disconnect", () => {
-      this.portOpen = false;
-    });
 
     let byteBuffer = new Uint8Array([]);
 
@@ -93,15 +81,16 @@ export class ISerialConnection extends IMeshDevice {
                 const index = byteBuffer.findIndex((byte) => byte === 0x94);
                 const startBit2 = byteBuffer[index + 1];
                 const msb = byteBuffer[index + 2];
+                const lsb = byteBuffer[index + 3];
 
                 if (
                   startBit2 === 0xc3 &&
-                  byteBuffer.length >= index + 4 + msb
+                  byteBuffer.length >= index + 4 + lsb + msb
                 ) {
                   controller.enqueue(
-                    byteBuffer.subarray(index + 4, index + 4 + msb)
+                    byteBuffer.subarray(index + 4, index + 4 + lsb + msb)
                   );
-                  byteBuffer = byteBuffer.slice(index + 4 + msb);
+                  byteBuffer = byteBuffer.slice(index + 4 + lsb + msb);
                 }
               }
             }
@@ -147,7 +136,6 @@ export class ISerialConnection extends IMeshDevice {
    * Sends supplied protobuf message to the radio
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
-    console.log(this.writer.locked);
     const writer = this.writer.getWriter();
 
     writer.write(new Uint8Array([0x94, 0xc3, 0x00, data.length, ...data]));
