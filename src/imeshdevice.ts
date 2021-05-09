@@ -4,8 +4,8 @@ import { Types } from "./";
 import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants";
 import { AdminMessage } from "./generated/admin";
 import type { Channel } from "./generated/channel";
-import type { LogRecord, User } from "./generated/mesh";
 import {
+  Routing,
   FromRadio,
   LogRecord_Level,
   MeshPacket,
@@ -15,6 +15,7 @@ import {
   ToRadio
 } from "./generated/mesh";
 import { PortNum } from "./generated/portnums";
+import type { LogRecord, User } from "./generated/mesh";
 import type {
   RadioConfig,
   RadioConfig_UserPreferences
@@ -159,7 +160,7 @@ export abstract class IMeshDevice {
    * Fires when a new MeshPacket message containing a Routing packet has been received from device
    * @event
    */
-  public readonly onRoutingPacketEvent: Subject<MeshPacket> = new Subject();
+  public readonly onRoutingPacketEvent: Subject<Types.RoutingPacket> = new Subject();
 
   /**
    * Fires when a new MeshPacket message containing a Position packet has been received from device
@@ -221,7 +222,7 @@ export abstract class IMeshDevice {
    * @param destinationNum Node number of the destination node
    * @param wantAck Whether or not acknowledgement is wanted
    * @param wantResponse Used for testing, requests recpipient to respond in kind with the same type of request
-   * @param echoResponse Sends events back to client, without being sent to the device
+   * @param echoResponse Sends event back to client
    */
   public async sendPacket(
     byteData: Uint8Array,
@@ -513,7 +514,10 @@ export abstract class IMeshDevice {
             "Received onRoutingPacketEvent",
             LogRecord_Level.TRACE
           );
-          this.onRoutingPacketEvent.next(meshPacket);
+          this.onRoutingPacketEvent.next({
+            packet: meshPacket,
+            data: Routing.fromBinary(meshPacket.payloadVariant.decoded.payload)
+          });
           break;
 
         case PortNum.ADMIN_APP:

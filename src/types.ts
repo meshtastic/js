@@ -70,7 +70,7 @@ export interface AdminPacket {
   data: AdminMessage;
 }
 
-export interface RoutingInfoPacket {
+export interface RoutingPacket {
   packet: MeshPacket;
   data: Routing;
 }
