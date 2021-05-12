@@ -65,7 +65,7 @@ export class ISerialConnection extends IMeshDevice {
       : await navigator.serial.requestPort();
 
     await this.port.open({
-      baudRate: parameters.baudRate ? parameters.baudRate : 921600
+      baudRate: parameters.baudRate ?? 921600
     });
 
     let byteBuffer = new Uint8Array([]);
