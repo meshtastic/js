@@ -148,25 +148,29 @@ export abstract class IMeshDevice {
    * Fires when a new MeshPacket message containing a NodeInfo packet has been received from device
    * @event
    */
-  public readonly onNodeInfoPacketEvent: Subject<Types.NodeInfoPacket> = new Subject();
+  public readonly onNodeInfoPacketEvent: Subject<Types.NodeInfoPacket> =
+    new Subject();
 
   /**
    * Fires when a new MeshPacket message containing a AndminMessage packet has been received from device
    * @event
    */
-  public readonly onAdminPacketEvent: Subject<Types.AdminPacket> = new Subject();
+  public readonly onAdminPacketEvent: Subject<Types.AdminPacket> =
+    new Subject();
 
   /**
    * Fires when a new MeshPacket message containing a Routing packet has been received from device
    * @event
    */
-  public readonly onRoutingPacketEvent: Subject<Types.RoutingPacket> = new Subject();
+  public readonly onRoutingPacketEvent: Subject<Types.RoutingPacket> =
+    new Subject();
 
   /**
    * Fires when a new MeshPacket message containing a Position packet has been received from device
    * @event
    */
-  public readonly onPositionPacketEvent: Subject<Types.PositionPacket> = new Subject();
+  public readonly onPositionPacketEvent: Subject<Types.PositionPacket> =
+    new Subject();
 
   /**
    * Fires when a new MeshPacket message containing a Text packet has been received from device
@@ -178,7 +182,8 @@ export abstract class IMeshDevice {
    * Fires when the devices connection or configuration status changes
    * @event
    */
-  public readonly onDeviceStatusEvent: Subject<Types.DeviceStatusEnum> = new Subject();
+  public readonly onDeviceStatusEvent: Subject<Types.DeviceStatusEnum> =
+    new Subject();
 
   /**
    * Fires when a new FromRadio message containing a Text packet has been received from device
@@ -304,7 +309,6 @@ export abstract class IMeshDevice {
   /**
    * Sets devices owner data
    * @param owner
-   * @todo what is `confirmSetOwner`?
    */
   public async setOwner(owner: User): Promise<void> {
     const setOwner = AdminMessage.toBinary(
@@ -328,7 +332,6 @@ export abstract class IMeshDevice {
   /**
    * Sets devices ChannelSettings
    * @param channel
-   * @todo what is `confirmSetChannel`?
    */
   public async setChannelSettings(channel: Channel): Promise<void> {
     const setChannel = AdminMessage.toBinary(
@@ -453,6 +456,24 @@ export abstract class IMeshDevice {
         await this.configure();
         break;
     }
+  }
+
+  /**
+   * Completes all subjects
+   */
+  public complete(): void {
+    this.onFromRadioEvent.complete();
+    this.onMeshPacketEvent.complete();
+    this.onMyNodeInfoEvent.complete();
+    this.onRadioConfigEvent.complete();
+    this.onNodeInfoPacketEvent.complete();
+    this.onAdminPacketEvent.complete();
+    this.onRoutingPacketEvent.complete();
+    this.onPositionPacketEvent.complete();
+    this.onTextPacketEvent.complete();
+    this.onDeviceStatusEvent.complete();
+    this.onLogRecordEvent.complete();
+    this.onMeshHeartbeat.complete();
   }
 
   /**

@@ -164,39 +164,22 @@ export class IBLEConnection extends IMeshDevice {
         .catch((e) => {
           log(`IBLEConnection.connect`, e.message, LogRecord_Level.ERROR);
         });
+      this.device.addEventListener("gattserverdisconnected", () => {
+        this.onDeviceStatusEvent.next(
+          Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+        );
+
+        if (!this.userInitiatedDisconnect) {
+          if (
+            this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
+          ) {
+            this.onDeviceStatusEvent.next(
+              Types.DeviceStatusEnum.DEVICE_RECONNECTING
+            );
+          }
+        }
+      });
     }
-
-    // if (
-    //   this.device &&
-    //   this.deviceStatus > Types.DeviceStatusEnum.DEVICE_RECONNECTING
-    // ) {
-    //   /**
-    //    * @todo look into the `advertisementreceived` event
-    //    */
-    //   this.device.addEventListener("gattserverdisconnected", () => {
-    //     this.onDeviceStatusEvent.next(
-    //       Types.DeviceStatusEnum.DEVICE_DISCONNECTED
-    //     );
-
-    //     if (!this.userInitiatedDisconnect) {
-    //       if (
-    //         this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
-    //       ) {
-    //         this.onDeviceStatusEvent.next(
-    //           Types.DeviceStatusEnum.DEVICE_RECONNECTING
-    //         );
-    //       }
-
-    //       /**
-    //        * @replace with setInterval or setTimeout
-    //        */
-
-    //       //  setTimeout(() => {
-    //       //   await this.connect(requestDeviceFilterParams);
-    //       // }, 10000);
-    //     }
-    //   });
-    // }
   }
 
   /**
@@ -208,6 +191,7 @@ export class IBLEConnection extends IMeshDevice {
       this.connection.disconnect();
     }
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.complete();
   }
 
   /**

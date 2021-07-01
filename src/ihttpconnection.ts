@@ -72,6 +72,7 @@ export class IHTTPConnection extends IMeshDevice {
    */
   public disconnect(): void {
     this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.complete();
   }
 
   /**
@@ -107,6 +108,25 @@ export class IHTTPConnection extends IMeshDevice {
    * Reads any avaliable protobuf messages from the radio
    */
   protected async readFromRadio(): Promise<void> {
+    // const response = ajax
+    //   .get<ArrayBuffer>(
+    //     `${this.url}/api/v1/fromradio?all=${this.receiveBatchRequests}`,
+    //     {
+    //       Accept: "application/x-protobuf"
+    //     }
+    //   )
+    //   .pipe(
+    //     takeWhile((buffer) => buffer.response.byteLength > 0),
+    //     map((buffer) => {
+    //       this.onDeviceStatusEvent.next(
+    //         Types.DeviceStatusEnum.DEVICE_CONNECTED
+    //       );
+    //       this.handleFromRadio(new Uint8Array(buffer.response, 0));
+    //     })
+    //   );
+
+    // new Observable().pipe(takeUntil(response));
+
     let readBuffer = new ArrayBuffer(1);
 
     while (readBuffer.byteLength > 0) {
