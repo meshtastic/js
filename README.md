@@ -1,6 +1,6 @@
 # Meshtastic.js
 
-![NPM](https://badgen.net/npm/v/@meshtastic/meshtasticjs) ![Downloads](https://badgen.net/npm/dt/@meshtastic/meshtasticjs) ![Min Zipped](https://badgen.net/bundlephobia/minzip/@meshtastic/meshtasticjs) ![Dependencies](https://badgen.net/bundlephobia/dependency-count/@meshtastic/meshtasticjs) ![Tree Shakeable](https://badgen.net/bundlephobia/tree-shaking/@meshtastic/meshtasticjs)
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/@meshtastic/meshtasticjs) ![NPM](https://badgen.net/npm/v/@meshtastic/meshtasticjs) ![Downloads](https://badgen.net/npm/dt/@meshtastic/meshtasticjs)
 
 ## Overview
 
@@ -19,6 +19,32 @@ yarn add @meshtastic/meshtasticjs
 
 ```bash
 npm install @meshtastic/meshtasticjs
+```
+
+## Development & Building
+
+The [Meshtastic Protobufs submodule](https://github.com/meshtastic/meshtastic-protobufs/) must be pulled, this can be done via:
+
+```bash
+git submodule update --init
+```
+
+Then the type definitions need to be generated:
+
+```bash
+yarn generate:protobufs
+```
+
+Finally the project can be built:
+
+```bash
+yarn build
+```
+
+Optionally the doccumentation can be built with:
+
+```bash
+yarn generate:docs
 ```
 
 ### Compatibility
