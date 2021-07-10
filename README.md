@@ -1,6 +1,6 @@
 # Meshtastic.js
 
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/@meshtastic/meshtasticjs) ![NPM](https://badgen.net/npm/v/@meshtastic/meshtasticjs) ![Downloads](https://badgen.net/npm/dt/@meshtastic/meshtasticjs)
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/meshtastic/meshtastic.js) ![NPM](https://badgen.net/npm/v/@meshtastic/meshtasticjs) ![Downloads](https://badgen.net/npm/dt/@meshtastic/meshtasticjs)
 
 ## Overview
 
