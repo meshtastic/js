@@ -195,7 +195,7 @@ export abstract class IMeshDevice {
    * Fires when the device receives a meshPacket, returns a timestamp
    * @event
    */
-  public readonly onMeshHeartbeat: Subject<number> = new Subject();
+  public readonly onMeshHeartbeat: Subject<Date> = new Subject();
 
   /**
    * Sends a text over the radio
@@ -486,7 +486,7 @@ export abstract class IMeshDevice {
       /**
        * @todo, this shouldn't be called unless the device interracts with the mesh, currently it does.
        */
-      this.onMeshHeartbeat.next(Date.now());
+      this.onMeshHeartbeat.next(new Date());
     }
 
     if (meshPacket.payloadVariant.oneofKind === "decoded") {
