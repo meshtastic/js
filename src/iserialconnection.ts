@@ -115,7 +115,7 @@ export class ISerialConnection extends IMeshDevice {
    */
   public disconnect(): void {
     this.port?.close();
-    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
   }
 

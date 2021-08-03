@@ -32,7 +32,7 @@ export class IHTTPConnection extends IMeshDevice {
    * @param parameters http connection parameters
    */
   public async connect(parameters: HTTPConnectionParameters): Promise<void> {
-    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+    this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
     this.receiveBatchRequests = parameters.receiveBatchRequests;
 
@@ -71,7 +71,7 @@ export class IHTTPConnection extends IMeshDevice {
    * Disconnects from the Meshtastic device
    */
   public disconnect(): void {
-    this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
   }
 
@@ -90,16 +90,14 @@ export class IHTTPConnection extends IMeshDevice {
     await fetch(this.url + `/hotspot-detect.html`, {})
       .then(async () => {
         pingSuccessful = true;
-        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+        this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
         await this.configure();
       })
       .catch((e) => {
         pingSuccessful = false;
         log(`IHTTPConnection.connect`, e.message, LogRecord_Level.ERROR);
-        this.onDeviceStatusEvent.next(
-          Types.DeviceStatusEnum.DEVICE_RECONNECTING
-        );
+        this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
     return pingSuccessful;
   }
@@ -118,7 +116,7 @@ export class IHTTPConnection extends IMeshDevice {
     //   .pipe(
     //     takeWhile((buffer) => buffer.response.byteLength > 0),
     //     map((buffer) => {
-    //       this.onDeviceStatusEvent.next(
+    //       this.onDeviceStatus.emit(
     //         Types.DeviceStatusEnum.DEVICE_CONNECTED
     //       );
     //       this.handleFromRadio(new Uint8Array(buffer.response, 0));
@@ -143,14 +141,10 @@ export class IHTTPConnection extends IMeshDevice {
           /**
            * @todo, is the DEVICE_CONNECTED event duplicated here, why are we checking for the connection status.
            */
-          this.onDeviceStatusEvent.next(
-            Types.DeviceStatusEnum.DEVICE_CONNECTED
-          );
+          this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
           if (this.deviceStatus < Types.DeviceStatusEnum.DEVICE_CONNECTED) {
-            this.onDeviceStatusEvent.next(
-              Types.DeviceStatusEnum.DEVICE_CONNECTED
-            );
+            this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONNECTED);
           }
 
           readBuffer = await response.arrayBuffer();
@@ -169,7 +163,7 @@ export class IHTTPConnection extends IMeshDevice {
           if (
             this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
           ) {
-            this.onDeviceStatusEvent.next(
+            this.onDeviceStatus.emit(
               Types.DeviceStatusEnum.DEVICE_RECONNECTING
             );
           }
@@ -189,7 +183,7 @@ export class IHTTPConnection extends IMeshDevice {
       body: typedArrayToBuffer(data)
     })
       .then(async () => {
-        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+        this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
         await this.readFromRadio().catch((e) => {
           log(`IHTTPConnection`, e, LogRecord_Level.ERROR);
@@ -197,9 +191,7 @@ export class IHTTPConnection extends IMeshDevice {
       })
       .catch((e) => {
         log(`IHTTPConnection.writeToRadio`, e.message, LogRecord_Level.ERROR);
-        this.onDeviceStatusEvent.next(
-          Types.DeviceStatusEnum.DEVICE_RECONNECTING
-        );
+        this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
   }
 
@@ -211,7 +203,7 @@ export class IHTTPConnection extends IMeshDevice {
       method: "POST"
     })
       .then(() => {
-        this.onDeviceStatusEvent.next(Types.DeviceStatusEnum.DEVICE_RESTARTING);
+        this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_RESTARTING);
       })
       .catch((e) => {
         log(`IHTTPConnection.restartDevice`, e.message, LogRecord_Level.ERROR);
