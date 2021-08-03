@@ -97,7 +97,7 @@ export abstract class IMeshDevice {
           );
         }
 
-        this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
       }
     });
   }
@@ -360,7 +360,7 @@ export abstract class IMeshDevice {
       `Reading device configuration`,
       LogRecord_Level.DEBUG
     );
-    this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
     await this.writeToRadio(
       ToRadio.toBinary(
@@ -372,6 +372,16 @@ export abstract class IMeshDevice {
         })
       )
     );
+  }
+
+  /**
+   * Updates the device status eliminating duplicate status events
+   * @param status
+   */
+  public updateDeviceStatus(status: Types.DeviceStatusEnum): void {
+    if (status !== this.deviceStatus) {
+      this.onDeviceStatus.emit(status);
+    }
   }
 
   /**

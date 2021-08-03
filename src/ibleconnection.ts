@@ -91,7 +91,7 @@ export class IBLEConnection extends IMeshDevice {
    * @param parameters ble connection parameters
    */
   public async connect(parameters: BLEConnectionParameters): Promise<void> {
-    this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
     if (!navigator.bluetooth) {
       log(
         `IBLEConnection.connect`,
@@ -146,7 +146,7 @@ export class IBLEConnection extends IMeshDevice {
                 );
               }
 
-              this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+              this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
               await this.configure();
             })
@@ -163,15 +163,13 @@ export class IBLEConnection extends IMeshDevice {
           log(`IBLEConnection.connect`, e.message, LogRecord_Level.ERROR);
         });
       this.device.addEventListener("gattserverdisconnected", () => {
-        this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
 
         if (!this.userInitiatedDisconnect) {
           if (
             this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
           ) {
-            this.onDeviceStatus.emit(
-              Types.DeviceStatusEnum.DEVICE_RECONNECTING
-            );
+            this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
           }
         }
       });
@@ -186,7 +184,7 @@ export class IBLEConnection extends IMeshDevice {
     if (this.connection) {
       this.connection.disconnect();
     }
-    this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
   }
 
@@ -219,7 +217,7 @@ export class IBLEConnection extends IMeshDevice {
               this.handleFromRadio(new Uint8Array(readBuffer, 0));
             }
           }
-          this.onDeviceStatus.emit(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
         })
         .catch((e) => {
           readBuffer = new ArrayBuffer(0);
