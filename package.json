@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.6.16",
+  "version": "0.6.17",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "sideEffects": false,
@@ -20,18 +20,24 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@protobuf-ts/runtime": "^1.0.13",
+    "@protobuf-ts/runtime": "^2.0.1",
     "sub-events": "^1.8.9"
   },
   "devDependencies": {
-    "@protobuf-ts/plugin": "^1.0.13",
+    "@protobuf-ts/plugin": "2.0.0",
     "@types/w3c-web-serial": "^1.0.2",
     "@types/web-bluetooth": "^0.0.10",
-    "@typescript-eslint/eslint-plugin": "^4.28.2",
-    "@typescript-eslint/parser": "^4.28.1",
-    "eslint": "^7.30.0",
+    "@typescript-eslint/eslint-plugin": "^4.29.1",
+    "@typescript-eslint/parser": "^4.29.1",
+    "@verypossible/eslint-config": "^1.6.1",
+    "babel-plugin-module-resolver": "^4.1.0",
+    "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-import-resolver-babel-module": "^5.3.1",
+    "eslint-import-resolver-typescript": "^2.4.0",
+    "eslint-plugin-import": "^2.24.0",
+    "eslint-plugin-react": "^7.24.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
     "pre-commit": "^1.2.2",
     "prettier": "^2.3.2",
     "typedoc": "^0.21.2",
@@ -47,9 +53,6 @@
   "pre-commit": [
     "lint"
   ],
-  "jest": {
-    "preset": "ts-jest"
-  },
   "keywords": [
     "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
   ],

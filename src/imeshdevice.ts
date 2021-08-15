@@ -1,5 +1,6 @@
 import { SubEvent } from "sub-events";
 
+import type { Protobuf } from "./";
 import { Types } from "./";
 import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants";
 import { AdminMessage } from "./generated/admin";
@@ -15,11 +16,8 @@ import {
   ToRadio
 } from "./generated/mesh";
 import { PortNum } from "./generated/portnums";
-import type { LogRecord, User } from "./generated/mesh";
-import type {
-  RadioConfig,
-  RadioConfig_UserPreferences
-} from "./generated/radioconfig";
+import type { User } from "./generated/mesh";
+import type { RadioConfig_UserPreferences } from "./generated/radioconfig";
 import type { ConnectionParameters } from "./types";
 import { log } from "./utils/logging";
 
@@ -126,23 +124,24 @@ export abstract class IMeshDevice {
    * Fires when a new FromRadio message has been received from the device
    * @event
    */
-  public readonly onFromRadio: SubEvent<FromRadio> = new SubEvent();
+  public readonly onFromRadio: SubEvent<Protobuf.FromRadio> = new SubEvent();
 
   /**
    * Fires when a new FromRadio message containing a Data packet has been received from the device
    * @event
    */
-  public readonly onMeshPacket: SubEvent<MeshPacket> = new SubEvent();
+  public readonly onMeshPacket: SubEvent<Protobuf.MeshPacket> = new SubEvent();
 
   /**
    * Fires when a new MyNodeInfo message has been received from the device
    */
-  public readonly onMyNodeInfo: SubEvent<MyNodeInfo> = new SubEvent();
+  public readonly onMyNodeInfo: SubEvent<Protobuf.MyNodeInfo> = new SubEvent();
 
   /**
    * Fires when a new RadioConfig message has been received from the device
    */
-  public readonly onRadioConfig: SubEvent<RadioConfig> = new SubEvent();
+  public readonly onRadioConfig: SubEvent<Protobuf.RadioConfig> =
+    new SubEvent();
 
   /**
    * Fires when a new MeshPacket message containing a NodeInfo packet has been received from device
@@ -150,6 +149,12 @@ export abstract class IMeshDevice {
    */
   public readonly onNodeInfoPacket: SubEvent<Types.NodeInfoPacket> =
     new SubEvent();
+
+  /**
+   * Fires when a new MeshPacket message containing a NodeInfo packet has been received from device
+   * @event
+   */
+  public readonly onUserDataPacket: SubEvent<Protobuf.User> = new SubEvent();
 
   /**
    * Fires when a new MeshPacket message containing a AndminMessage packet has been received from device
@@ -188,7 +193,7 @@ export abstract class IMeshDevice {
    * Fires when a new FromRadio message containing a Text packet has been received from device
    * @event
    */
-  public readonly onLogRecord: SubEvent<LogRecord> = new SubEvent();
+  public readonly onLogRecord: SubEvent<Protobuf.LogRecord> = new SubEvent();
 
   /**
    * Fires when the device receives a meshPacket, returns a timestamp
@@ -440,6 +445,16 @@ export abstract class IMeshDevice {
         this.onNodeInfoPacket.emit({
           data: decodedMessage.payloadVariant.nodeInfo
         });
+
+        if (
+          decodedMessage.payloadVariant.nodeInfo.user &&
+          decodedMessage.payloadVariant.nodeInfo.num ===
+            this.myNodeInfo.myNodeNum
+        ) {
+          this.onUserDataPacket.emit(
+            decodedMessage.payloadVariant.nodeInfo.user
+          );
+        }
         break;
 
       case "logRecord":
@@ -489,7 +504,7 @@ export abstract class IMeshDevice {
    * Gets called when a MeshPacket is received from device
    * @param meshPacket
    */
-  private handleMeshPacket(meshPacket: MeshPacket) {
+  private handleMeshPacket(meshPacket: MeshPacket): void {
     this.onMeshPacket.emit(meshPacket);
     if (meshPacket.from !== this.myNodeInfo.myNodeNum) {
       /**

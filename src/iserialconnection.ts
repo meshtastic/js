@@ -33,12 +33,12 @@ export class ISerialConnection extends IMeshDevice {
   /**
    * Reads packets from transformed serial port steam and processes them.
    */
-  private async readFromRadio() {
+  private async readFromRadio(): Promise<void> {
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const { value, done } = await this.reader.read();
       if (value) {
-        this.handleFromRadio(value);
+        void this.handleFromRadio(value);
       }
 
       if (done) {
@@ -71,37 +71,34 @@ export class ISerialConnection extends IMeshDevice {
     let byteBuffer = new Uint8Array([]);
 
     if (this.port.readable && this.port.writable) {
-      this.reader = this.port.readable
-        .pipeThrough(
-          new TransformStream({
-            transform(chunk: Uint8Array, controller) {
-              byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
+      const transformer = new TransformStream<Uint8Array, Uint8Array>({
+        transform(chunk: Uint8Array, controller): void {
+          byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
 
-              if (byteBuffer.includes(0x94)) {
-                const index = byteBuffer.findIndex((byte) => byte === 0x94);
-                const startBit2 = byteBuffer[index + 1];
-                const msb = byteBuffer[index + 2];
-                const lsb = byteBuffer[index + 3];
+          if (byteBuffer.includes(0x94)) {
+            const index = byteBuffer.findIndex((byte) => byte === 0x94);
+            const startBit2 = byteBuffer[index + 1];
+            const msb = byteBuffer[index + 2];
+            const lsb = byteBuffer[index + 3];
 
-                if (
-                  startBit2 === 0xc3 &&
-                  byteBuffer.length >= index + 4 + lsb + msb
-                ) {
-                  controller.enqueue(
-                    byteBuffer.subarray(index + 4, index + 4 + lsb + msb)
-                  );
-                  byteBuffer = byteBuffer.slice(index + 4 + lsb + msb);
-                }
-              }
+            if (
+              startBit2 === 0xc3 &&
+              byteBuffer.length >= index + 4 + lsb + msb
+            ) {
+              controller.enqueue(
+                byteBuffer.subarray(index + 4, index + 4 + lsb + msb)
+              );
+              byteBuffer = byteBuffer.slice(index + 4 + lsb + msb);
             }
-          })
-        )
-        .getReader();
+          }
+        }
+      });
+      this.reader = this.port.readable.pipeThrough(transformer).getReader();
 
       this.writer = this.port.writable;
     }
 
-    this.readFromRadio();
+    void this.readFromRadio();
 
     /**
      * @todo, implement device keep-awake loop
@@ -123,7 +120,7 @@ export class ISerialConnection extends IMeshDevice {
    * Pings device to check if it is avaliable
    */
   public async ping(): Promise<boolean> {
-    return true;
+    return Promise.resolve(true);
   }
 
   /**
@@ -132,7 +129,9 @@ export class ISerialConnection extends IMeshDevice {
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     const writer = this.writer.getWriter();
 
-    writer.write(new Uint8Array([0x94, 0xc3, 0x00, data.length, ...data]));
+    await writer.write(
+      new Uint8Array([0x94, 0xc3, 0x00, data.length, ...data])
+    );
     writer.releaseLock();
   }
 }

@@ -57,7 +57,7 @@ export class IHTTPConnection extends IMeshDevice {
       );
     } else {
       setTimeout(() => {
-        this.connect({
+        void this.connect({
           address: parameters.address,
           fetchInterval: parameters.fetchInterval,
           receiveBatchRequests: parameters.receiveBatchRequests,
@@ -87,16 +87,16 @@ export class IHTTPConnection extends IMeshDevice {
 
     let pingSuccessful = false;
 
-    await fetch(this.url + `/hotspot-detect.html`, {})
+    await fetch(`${this.url}/hotspot-detect.html`, {})
       .then(async () => {
         pingSuccessful = true;
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
         await this.configure();
       })
-      .catch((e) => {
+      .catch(({ message }: { message: string }) => {
         pingSuccessful = false;
-        log(`IHTTPConnection.connect`, e.message, LogRecord_Level.ERROR);
+        log(`IHTTPConnection.connect`, message, LogRecord_Level.ERROR);
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
     return pingSuccessful;
@@ -129,7 +129,7 @@ export class IHTTPConnection extends IMeshDevice {
 
     while (readBuffer.byteLength > 0) {
       await fetch(
-        this.url + `/api/v1/fromradio?all=${this.receiveBatchRequests}`,
+        `${this.url}/api/v1/fromradio?all=${this.receiveBatchRequests ? 1 : 0}`,
         {
           method: "GET",
           headers: {
@@ -153,12 +153,8 @@ export class IHTTPConnection extends IMeshDevice {
             await this.handleFromRadio(new Uint8Array(readBuffer, 0));
           }
         })
-        .catch((e) => {
-          log(
-            `IHTTPConnection.readFromRadio`,
-            e.message,
-            LogRecord_Level.ERROR
-          );
+        .catch(({ message }: { message: string }) => {
+          log(`IHTTPConnection.readFromRadio`, message, LogRecord_Level.ERROR);
 
           if (
             this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
@@ -187,8 +183,8 @@ export class IHTTPConnection extends IMeshDevice {
           log(`IHTTPConnection`, e, LogRecord_Level.ERROR);
         });
       })
-      .catch((e) => {
-        log(`IHTTPConnection.writeToRadio`, e.message, LogRecord_Level.ERROR);
+      .catch(({ message }: { message: string }) => {
+        log(`IHTTPConnection.writeToRadio`, message, LogRecord_Level.ERROR);
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
   }
@@ -203,8 +199,8 @@ export class IHTTPConnection extends IMeshDevice {
       .then(() => {
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RESTARTING);
       })
-      .catch((e) => {
-        log(`IHTTPConnection.restartDevice`, e.message, LogRecord_Level.ERROR);
+      .catch(({ message }: { message: string }) => {
+        log(`IHTTPConnection.restartDevice`, message, LogRecord_Level.ERROR);
       });
   }
 
@@ -218,8 +214,8 @@ export class IHTTPConnection extends IMeshDevice {
       .then(async (response) => {
         return (await response.json()) as Types.WebStatisticsResponse;
       })
-      .catch((e) => {
-        log(`IHTTPConnection.getStatistics`, e.message, LogRecord_Level.ERROR);
+      .catch(({ message }: { message: string }) => {
+        log(`IHTTPConnection.getStatistics`, message, LogRecord_Level.ERROR);
       });
   }
 
@@ -233,8 +229,8 @@ export class IHTTPConnection extends IMeshDevice {
       .then(async (response) => {
         return (await response.json()) as Types.WebNetworkResponse;
       })
-      .catch((e) => {
-        log(`IHTTPConnection.getNetworks`, e.message, LogRecord_Level.ERROR);
+      .catch(({ message }: { message: string }) => {
+        log(`IHTTPConnection.getNetworks`, message, LogRecord_Level.ERROR);
       });
   }
 
@@ -248,8 +244,8 @@ export class IHTTPConnection extends IMeshDevice {
       .then(async (response) => {
         return (await response.json()) as Types.WebSPIFFSResponse;
       })
-      .catch((e) => {
-        log(`IHTTPConnection.getSPIFFS`, e.message, LogRecord_Level.ERROR);
+      .catch(({ message }: { message: string }) => {
+        log(`IHTTPConnection.getSPIFFS`, message, LogRecord_Level.ERROR);
       });
   }
 
@@ -262,7 +258,7 @@ export class IHTTPConnection extends IMeshDevice {
     return fetch(
       `${this.url}/json/spiffs/delete/static?${new URLSearchParams({
         delete: file
-      })}`,
+      }).toString()}`,
       {
         method: "DELETE"
       }
@@ -270,8 +266,8 @@ export class IHTTPConnection extends IMeshDevice {
       .then(async (response) => {
         return (await response.json()) as Types.WebSPIFFSResponse;
       })
-      .catch((e) => {
-        log(`IHTTPConnection.deleteSPIFFS`, e.message, LogRecord_Level.ERROR);
+      .catch(({ message }: { message: string }) => {
+        log(`IHTTPConnection.deleteSPIFFS`, message, LogRecord_Level.ERROR);
       });
   }
 
@@ -282,8 +278,8 @@ export class IHTTPConnection extends IMeshDevice {
   public async blinkLED(): Promise<void | Response> {
     return fetch(`${this.url}/json/blink`, {
       method: "POST"
-    }).catch((e) => {
-      log(`IHTTPConnection.blinkLED`, e.message, LogRecord_Level.ERROR);
+    }).catch(({ message }: { message: string }) => {
+      log(`IHTTPConnection.blinkLED`, message, LogRecord_Level.ERROR);
     });
   }
 }

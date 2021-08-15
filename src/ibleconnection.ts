@@ -111,16 +111,16 @@ export class IBLEConnection extends IMeshDevice {
                 filters: [{ services: [SERVICE_UUID] }]
               }
         )
-        .catch((e) => {
-          log(`IBLEConnection.requestDevice`, e.message, LogRecord_Level.ERROR);
+        .catch(({ message }: { message: string }) => {
+          log(`IBLEConnection.requestDevice`, message, LogRecord_Level.ERROR);
         });
     }
 
     if (this.device) {
       this.device.gatt
         ?.connect()
-        .then(async (connection) => {
-          connection
+        .then(async (connection): Promise<void> => {
+          await connection
             .getPrimaryService(SERVICE_UUID)
             .then(async (service) => {
               this.service = service;
@@ -140,6 +140,10 @@ export class IBLEConnection extends IMeshDevice {
 
                 this.fromNumCharacteristic.addEventListener(
                   "characteristicvaluechanged",
+                  /**
+                   * @todo fix
+                   */
+                  // eslint-disable-next-line @typescript-eslint/no-misused-promises
                   async () => {
                     await this.readFromRadio();
                   }
@@ -150,17 +154,13 @@ export class IBLEConnection extends IMeshDevice {
 
               await this.configure();
             })
-            .catch((e) => {
-              log(
-                `IBLEConnection.getService`,
-                e.message,
-                LogRecord_Level.ERROR
-              );
+            .catch(({ message }: { message: string }) => {
+              log(`IBLEConnection.getService`, message, LogRecord_Level.ERROR);
             });
           this.connection = connection;
         })
-        .catch((e) => {
-          log(`IBLEConnection.connect`, e.message, LogRecord_Level.ERROR);
+        .catch(({ message }: { message: string }) => {
+          log(`IBLEConnection.connect`, message, LogRecord_Level.ERROR);
         });
       this.device.addEventListener("gattserverdisconnected", () => {
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
@@ -193,7 +193,7 @@ export class IBLEConnection extends IMeshDevice {
    * @todo implement
    */
   public async ping(): Promise<boolean> {
-    return true;
+    return Promise.resolve(true);
   }
 
   /**
@@ -214,14 +214,14 @@ export class IBLEConnection extends IMeshDevice {
             readBuffer = value.buffer;
 
             if (value.byteLength > 0) {
-              this.handleFromRadio(new Uint8Array(readBuffer, 0));
+              void this.handleFromRadio(new Uint8Array(readBuffer, 0));
             }
           }
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
         })
-        .catch((e) => {
+        .catch(({ message }: { message: string }) => {
           readBuffer = new ArrayBuffer(0);
-          log(`IBLEConnection.readFromRadio`, e.message, LogRecord_Level.ERROR);
+          log(`IBLEConnection.readFromRadio`, message, LogRecord_Level.ERROR);
         });
     }
     this.pendingRead = false;
@@ -244,10 +244,10 @@ export class IBLEConnection extends IMeshDevice {
               .then(() => {
                 this.writeQueue.shift();
               })
-              .catch((e) => {
+              .catch(({ message }: { message: string }) => {
                 log(
                   `IBLEConnection.writeToRadio`,
-                  e.message,
+                  message,
                   LogRecord_Level.ERROR
                 );
               });
