@@ -151,7 +151,7 @@ export abstract class IMeshDevice {
     new SubEvent();
 
   /**
-   * Fires when a new MeshPacket message containing a NodeInfo packet has been received from device
+   * Fires when a new NodeInfo message has been reveived that has the same node number as the device
    * @event
    */
   public readonly onUserDataPacket: SubEvent<Protobuf.User> = new SubEvent();
