@@ -197,11 +197,13 @@ export abstract class IMeshDevice {
    * @param text
    * @param destinationNum Node number of the destination node
    * @param wantAck Whether or not acknowledgement is wanted
+   * @param callback If wantAck is true, callback is called when the ack is received
    */
   public sendText(
     text: string,
     destinationNum?: number,
-    wantAck = false
+    wantAck = false,
+    callback?: (id: number) => Promise<void>
   ): Promise<void> {
     const enc = new TextEncoder();
 
@@ -211,7 +213,8 @@ export abstract class IMeshDevice {
       destinationNum,
       wantAck,
       undefined,
-      true
+      true,
+      callback
     );
   }
 
@@ -232,7 +235,7 @@ export abstract class IMeshDevice {
     wantAck = false,
     wantResponse = false,
     echoResponse = false,
-    callback?: () => Promise<void>
+    callback?: (id: number) => Promise<void>
   ): Promise<void> {
     const meshPacket = MeshPacket.create({
       payloadVariant: {
@@ -286,9 +289,11 @@ export abstract class IMeshDevice {
   /**
    * Writes radio config to device
    * @param preferences Radio UserPreferences
+   * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async setPreferences(
-    preferences: Partial<RadioConfig_UserPreferences>
+    preferences: Partial<RadioConfig_UserPreferences>,
+    callback?: (id: number) => Promise<void>
   ): Promise<void> {
     const setRadio = AdminMessage.toBinary(
       AdminMessage.create({
@@ -301,18 +306,27 @@ export abstract class IMeshDevice {
       })
     );
 
-    console.log("sending packet");
-
     await this.sendPacket(
       setRadio,
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
-      true
+      true,
+      false,
+      async (id: number) => {
+        await this.getPreferences();
+        callback && callback(id);
+      }
     );
+  }
 
-    console.log("sending confirm");
-
+  /**
+   * Confirms the currently set preferences, and prevents changes from reverting after 10 minutes.
+   * @param callback If wantAck is true, callback is called when the ack is received
+   */
+  public async confirmSetPreferences(
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
     const confirmSetRadio = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -327,7 +341,9 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
-      true
+      true,
+      false,
+      callback
     );
   }
 
@@ -356,11 +372,12 @@ export abstract class IMeshDevice {
 
   /**
    * Sets devices ChannelSettings
-   * @param channel
+   * @param channel Channel data to be set
+   * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async setChannel(
     channel: Channel,
-    callback?: () => void
+    callback?: (id: number) => Promise<void>
   ): Promise<void> {
     const setChannel = AdminMessage.toBinary(
       AdminMessage.create({
@@ -378,20 +395,48 @@ export abstract class IMeshDevice {
       true,
       true,
       false,
-      async () => {
+      async (id: number) => {
         await this.getChannel(channel.index);
-        callback && callback();
+        callback && callback(id);
       }
     );
   }
 
   /**
+   * Confirms the currently set channels, and prevents changes from reverting after 10 minutes.
+   * @param callback If wantAck is true, callback is called when the ack is received
+   */
+  public async confirmSetChannel(
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
+    const confirmSetChannel = AdminMessage.toBinary(
+      AdminMessage.create({
+        variant: {
+          confirmSetRadio: true,
+          oneofKind: "confirmSetRadio"
+        }
+      })
+    );
+
+    await this.sendPacket(
+      confirmSetChannel,
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      true,
+      false,
+      callback
+    );
+  }
+
+  /**
    * Deletes specific channel via index
-   * @param index
+   * @param index Channel index to be deleted
+   * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async deleteChannel(
     index: number,
-    callback?: () => void
+    callback?: (id: number) => Promise<void>
   ): Promise<void> {
     const channel = Protobuf.Channel.create({
       index,
@@ -413,20 +458,21 @@ export abstract class IMeshDevice {
       true,
       true,
       false,
-      async () => {
+      async (id: number) => {
         await this.getChannel(channel.index);
-        callback && callback();
+        callback && callback(id);
       }
     );
   }
 
   /**
    * Gets devices ChannelSettings
-   * @param index
+   * @param index Channel index to be retrieved
+   * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async getChannel(
     index: number,
-    callback?: () => Promise<void>
+    callback?: (id: number) => Promise<void>
   ): Promise<void> {
     await this.sendPacket(
       AdminMessage.toBinary(
@@ -449,7 +495,7 @@ export abstract class IMeshDevice {
   /**
    * Gets devices RadioConfig
    */
-  public async getRadioConfig(): Promise<void> {
+  public async getPreferences(): Promise<void> {
     await this.sendPacket(
       AdminMessage.toBinary(
         AdminMessage.create({
@@ -488,7 +534,7 @@ export abstract class IMeshDevice {
       )
     );
 
-    await this.getRadioConfig();
+    await this.getPreferences();
 
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
   }

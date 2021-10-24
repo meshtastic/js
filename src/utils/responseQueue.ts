@@ -1,10 +1,6 @@
-import { Protobuf } from "../";
-
 export interface IQueueItem {
   id: number;
-  callback: () => Promise<void>;
-  type?: Protobuf.PortNum;
-  data?: Protobuf.Data;
+  callback: (id: number) => Promise<void>;
 }
 
 export class responseQueue {
@@ -16,7 +12,6 @@ export class responseQueue {
 
   public push(item: IQueueItem): void {
     this.queue.push(item);
-    console.log(`Queue length: ${this.queue.length}`);
   }
   public remove(id: number): void {
     this.queue = this.queue.filter((item) => {
@@ -28,7 +23,7 @@ export class responseQueue {
     const item = this.queue.find((queueItem) => queueItem.id === id);
 
     if (item) {
-      await item.callback();
+      await item.callback(id);
       this.remove(item.id);
     }
   }
