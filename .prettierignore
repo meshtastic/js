@@ -4,3 +4,4 @@ docs
 examples
 src/generated
 protobufs
+pnpm-lock.yaml

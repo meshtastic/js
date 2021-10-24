@@ -14,11 +14,7 @@ Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic]
 The library is available from [NPM](https://www.npmjs.com/package/@meshtastic/meshtasticjs) and can be installed with:
 
 ```bash
-yarn add @meshtastic/meshtasticjs
-```
-
-```bash
-npm install @meshtastic/meshtasticjs
+pnpm add @meshtastic/meshtasticjs
 ```
 
 ## Development & Building
@@ -32,19 +28,19 @@ git submodule update --init
 Then the type definitions need to be generated:
 
 ```bash
-yarn generate:protobufs
+pnpm generate:protobufs
 ```
 
 Finally the project can be built:
 
 ```bash
-yarn build
+pnpm build
 ```
 
 Optionally the doccumentation can be built with:
 
 ```bash
-yarn generate:docs
+pnpm generate:docs
 ```
 
 ### Compatibility

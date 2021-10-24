@@ -48,9 +48,9 @@ export class IHTTPConnection extends IMeshDevice {
         LogRecord_Level.DEBUG
       );
       setInterval(
-        async () => {
-          await this.readFromRadio().catch((e) => {
-            log(`IHTTPConnection`, e, LogRecord_Level.ERROR);
+        () => {
+          this.readFromRadio().catch((e: Error) => {
+            log(`IHTTPConnection`, e.message, LogRecord_Level.ERROR);
           });
         },
         parameters.fetchInterval ? parameters.fetchInterval : 5000
@@ -106,30 +106,13 @@ export class IHTTPConnection extends IMeshDevice {
    * Reads any avaliable protobuf messages from the radio
    */
   protected async readFromRadio(): Promise<void> {
-    // const response = ajax
-    //   .get<ArrayBuffer>(
-    //     `${this.url}/api/v1/fromradio?all=${this.receiveBatchRequests}`,
-    //     {
-    //       Accept: "application/x-protobuf"
-    //     }
-    //   )
-    //   .pipe(
-    //     takeWhile((buffer) => buffer.response.byteLength > 0),
-    //     map((buffer) => {
-    //       this.updateDeviceStatus(
-    //         Types.DeviceStatusEnum.DEVICE_CONNECTED
-    //       );
-    //       this.handleFromRadio(new Uint8Array(buffer.response, 0));
-    //     })
-    //   );
-
-    // new Observable().pipe(takeUntil(response));
-
     let readBuffer = new ArrayBuffer(1);
 
     while (readBuffer.byteLength > 0) {
       await fetch(
-        `${this.url}/api/v1/fromradio?all=${this.receiveBatchRequests ? 1 : 0}`,
+        `${this.url}/api/v1/fromradio?all=${
+          this.receiveBatchRequests ? "true" : "false"
+        }`,
         {
           method: "GET",
           headers: {
@@ -179,8 +162,8 @@ export class IHTTPConnection extends IMeshDevice {
       .then(async () => {
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
-        await this.readFromRadio().catch((e) => {
-          log(`IHTTPConnection`, e, LogRecord_Level.ERROR);
+        await this.readFromRadio().catch((e: Error) => {
+          log(`IHTTPConnection`, e.message, LogRecord_Level.ERROR);
         });
       })
       .catch(({ message }: { message: string }) => {

@@ -1,7 +1,6 @@
 import { SubEvent } from "sub-events";
 
-import type { Protobuf } from "./";
-import { Types } from "./";
+import { Protobuf, Types } from "./";
 import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants";
 import { AdminMessage } from "./generated/admin";
 import type { Channel } from "./generated/channel";
@@ -17,9 +16,10 @@ import {
 } from "./generated/mesh";
 import { PortNum } from "./generated/portnums";
 import type { User } from "./generated/mesh";
-import type { RadioConfig_UserPreferences } from "./generated/radioconfig";
+import { RadioConfig_UserPreferences } from "./generated/radioconfig";
 import type { ConnectionParameters } from "./types";
 import { log } from "./utils/logging";
+import { responseQueue } from "./utils/responseQueue";
 
 /**
  * Base class for connection methods to extend
@@ -45,11 +45,23 @@ export abstract class IMeshDevice {
    */
   private configId: number;
 
+  /**
+   * Device's preferences
+   */
+  private userPreferences: RadioConfig_UserPreferences;
+
+  /**
+   * @TODO desc
+   */
+  private responseQueue: responseQueue;
+
   constructor() {
     this.deviceStatus = Types.DeviceStatusEnum.DEVICE_DISCONNECTED;
     this.isConfigured = false;
     this.myNodeInfo = MyNodeInfo.create();
     this.configId = this.generateRandId();
+    this.userPreferences = RadioConfig_UserPreferences.create();
+    this.responseQueue = new responseQueue();
 
     this.onDeviceStatus.subscribe((status) => {
       this.deviceStatus = status;
@@ -62,40 +74,19 @@ export abstract class IMeshDevice {
     this.onMyNodeInfo.subscribe(async (myNodeInfo) => {
       this.myNodeInfo = myNodeInfo;
 
-      if (!this.isConfigured) {
-        await this.sendPacket(
-          AdminMessage.toBinary(
-            AdminMessage.create({
-              variant: {
-                getRadioRequest: true,
-                oneofKind: "getRadioRequest"
-              }
-            })
-          ),
-          PortNum.ADMIN_APP,
-          this.myNodeInfo.myNodeNum,
-          true,
-          true
-        );
+      for (let i = 1; i <= this.myNodeInfo.maxChannels; i++) {
+        await this.getChannel(i);
+      }
+    });
 
-        for (let index = 1; index <= this.myNodeInfo.maxChannels; index++) {
-          await this.sendPacket(
-            AdminMessage.toBinary(
-              AdminMessage.create({
-                variant: {
-                  getChannelRequest: index,
-                  oneofKind: "getChannelRequest"
-                }
-              })
-            ),
-            PortNum.ADMIN_APP,
-            this.myNodeInfo.myNodeNum,
-            true,
-            true
-          );
-        }
-
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
+    this.onAdminPacket.subscribe((adminPacket) => {
+      switch (adminPacket.data.variant.oneofKind) {
+        case "getRadioResponse":
+          if (adminPacket.data.variant.getRadioResponse.preferences) {
+            this.userPreferences =
+              adminPacket.data.variant.getRadioResponse.preferences;
+          }
+          break;
       }
     });
   }
@@ -232,6 +223,7 @@ export abstract class IMeshDevice {
    * @param wantAck Whether or not acknowledgement is wanted
    * @param wantResponse Used for testing, requests recpipient to respond in kind with the same type of request
    * @param echoResponse Sends event back to client
+   * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async sendPacket(
     byteData: Uint8Array,
@@ -239,7 +231,8 @@ export abstract class IMeshDevice {
     destinationNum?: number,
     wantAck = false,
     wantResponse = false,
-    echoResponse = false
+    echoResponse = false,
+    callback?: () => Promise<void>
   ): Promise<void> {
     const meshPacket = MeshPacket.create({
       payloadVariant: {
@@ -276,7 +269,14 @@ export abstract class IMeshDevice {
       );
     } else {
       if (echoResponse) {
-        this.handleMeshPacket(meshPacket);
+        await this.handleMeshPacket(meshPacket);
+      }
+
+      if (typeof callback === "function") {
+        this.responseQueue.push({
+          id: meshPacket.id,
+          callback
+        });
       }
 
       await this.writeToRadio(toRadio);
@@ -288,21 +288,42 @@ export abstract class IMeshDevice {
    * @param preferences Radio UserPreferences
    */
   public async setPreferences(
-    preferences: RadioConfig_UserPreferences
+    preferences: Partial<RadioConfig_UserPreferences>
   ): Promise<void> {
     const setRadio = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
           setRadio: {
-            preferences: preferences
+            preferences: { ...this.userPreferences, ...preferences }
           },
           oneofKind: "setRadio"
         }
       })
     );
 
+    console.log("sending packet");
+
     await this.sendPacket(
       setRadio,
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      true
+    );
+
+    console.log("sending confirm");
+
+    const confirmSetRadio = AdminMessage.toBinary(
+      AdminMessage.create({
+        variant: {
+          confirmSetRadio: true,
+          oneofKind: "confirmSetRadio"
+        }
+      })
+    );
+
+    await this.sendPacket(
+      confirmSetRadio,
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
@@ -337,7 +358,10 @@ export abstract class IMeshDevice {
    * Sets devices ChannelSettings
    * @param channel
    */
-  public async setChannelSettings(channel: Channel): Promise<void> {
+  public async setChannel(
+    channel: Channel,
+    callback?: () => void
+  ): Promise<void> {
     const setChannel = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -349,6 +373,92 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       setChannel,
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      true,
+      false,
+      async () => {
+        await this.getChannel(channel.index);
+        callback && callback();
+      }
+    );
+  }
+
+  /**
+   * Deletes specific channel via index
+   * @param index
+   */
+  public async deleteChannel(
+    index: number,
+    callback?: () => void
+  ): Promise<void> {
+    const channel = Protobuf.Channel.create({
+      index,
+      role: Protobuf.Channel_Role.DISABLED
+    });
+    const deleteChannel = AdminMessage.toBinary(
+      AdminMessage.create({
+        variant: {
+          setChannel: channel,
+          oneofKind: "setChannel"
+        }
+      })
+    );
+
+    await this.sendPacket(
+      deleteChannel,
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      true,
+      false,
+      async () => {
+        await this.getChannel(channel.index);
+        callback && callback();
+      }
+    );
+  }
+
+  /**
+   * Gets devices ChannelSettings
+   * @param index
+   */
+  public async getChannel(
+    index: number,
+    callback?: () => Promise<void>
+  ): Promise<void> {
+    await this.sendPacket(
+      AdminMessage.toBinary(
+        AdminMessage.create({
+          variant: {
+            getChannelRequest: index,
+            oneofKind: "getChannelRequest"
+          }
+        })
+      ),
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      true,
+      false,
+      callback
+    );
+  }
+
+  /**
+   * Gets devices RadioConfig
+   */
+  public async getRadioConfig(): Promise<void> {
+    await this.sendPacket(
+      AdminMessage.toBinary(
+        AdminMessage.create({
+          variant: {
+            getRadioRequest: true,
+            oneofKind: "getRadioRequest"
+          }
+        })
+      ),
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
@@ -377,6 +487,10 @@ export abstract class IMeshDevice {
         })
       )
     );
+
+    await this.getRadioConfig();
+
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
   }
 
   /**
@@ -410,7 +524,7 @@ export abstract class IMeshDevice {
      */
     switch (decodedMessage.payloadVariant.oneofKind) {
       case "packet":
-        this.handleMeshPacket(decodedMessage.payloadVariant.packet);
+        await this.handleMeshPacket(decodedMessage.payloadVariant.packet);
         break;
 
       case "myInfo":
@@ -498,13 +612,14 @@ export abstract class IMeshDevice {
     this.onDeviceStatus.cancelAll();
     this.onLogRecord.cancelAll();
     this.onMeshHeartbeat.cancelAll();
+    this.responseQueue.clear();
   }
 
   /**
    * Gets called when a MeshPacket is received from device
    * @param meshPacket
    */
-  private handleMeshPacket(meshPacket: MeshPacket): void {
+  private async handleMeshPacket(meshPacket: MeshPacket): Promise<void> {
     this.onMeshPacket.emit(meshPacket);
     if (meshPacket.from !== this.myNodeInfo.myNodeNum) {
       /**
@@ -563,6 +678,9 @@ export abstract class IMeshDevice {
             packet: meshPacket,
             data: Routing.fromBinary(meshPacket.payloadVariant.decoded.payload)
           });
+          await this.responseQueue.process(
+            meshPacket.payloadVariant.decoded.requestId
+          );
           break;
 
         case PortNum.ADMIN_APP:

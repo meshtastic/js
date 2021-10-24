@@ -78,8 +78,8 @@ export class ISerialConnection extends IMeshDevice {
           if (byteBuffer.includes(0x94)) {
             const index = byteBuffer.findIndex((byte) => byte === 0x94);
             const startBit2 = byteBuffer[index + 1];
-            const msb = byteBuffer[index + 2];
-            const lsb = byteBuffer[index + 3];
+            const msb = byteBuffer[index + 2] ?? 0;
+            const lsb = byteBuffer[index + 3] ?? 0;
 
             if (
               startBit2 === 0xc3 &&
