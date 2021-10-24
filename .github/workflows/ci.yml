@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code & submodules
-      - uses: actions/checkout@v2
+        uses: actions/checkout@v2
         with:
           submodules: true
 
@@ -20,12 +20,12 @@ jobs:
             ${{ runner.os }}-
 
       - name: Setup NodeJS
-      - uses: actions/setup-node@v2-beta
+        uses: actions/setup-node@v2-beta
         with:
           node-version: 17
 
       - name: Setup pnpm
-      - uses: pnpm/action-setup@v2.0.1
+        uses: pnpm/action-setup@v2.0.1
         with:
           version: 6.0.2
           run_install: true
