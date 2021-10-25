@@ -74,7 +74,7 @@ export abstract class IMeshDevice {
     this.onMyNodeInfo.subscribe(async (myNodeInfo) => {
       this.myNodeInfo = myNodeInfo;
 
-      for (let i = 1; i <= this.myNodeInfo.maxChannels; i++) {
+      for (let i = 0; i <= this.myNodeInfo.maxChannels; i++) {
         await this.getChannel(i);
       }
     });
@@ -478,7 +478,7 @@ export abstract class IMeshDevice {
       AdminMessage.toBinary(
         AdminMessage.create({
           variant: {
-            getChannelRequest: index,
+            getChannelRequest: index + 1,
             oneofKind: "getChannelRequest"
           }
         })
