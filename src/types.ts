@@ -1,7 +1,8 @@
 import type {
   IBLEConnection,
   IHTTPConnection,
-  ISerialConnection
+  ISerialConnection,
+  Protobuf
 } from "./index.js";
 import type { AdminMessage } from "./generated/admin.js";
 import type {
@@ -92,6 +93,51 @@ export interface PositionPacket {
 export interface TextPacket {
   packet: MeshPacket;
   data: string;
+}
+
+export interface PingPacket {
+  packet: MeshPacket;
+  data: Uint8Array;
+}
+
+export interface IpTunnelPacket {
+  packet: MeshPacket;
+  data: Uint8Array;
+}
+
+export interface SerialPacket {
+  packet: MeshPacket;
+  data: Uint8Array;
+}
+
+export interface StoreForwardPacket {
+  packet: MeshPacket;
+  data: Uint8Array;
+}
+
+export interface RangeTestPacket {
+  packet: MeshPacket;
+  data: Uint8Array;
+}
+
+export interface EnvironmentPacket {
+  packet: MeshPacket;
+  data: Protobuf.EnvironmentalMeasurement;
+}
+
+export interface PrivatePacket {
+  packet: MeshPacket;
+  data: Uint8Array;
+}
+
+export interface AtakPacket {
+  packet: MeshPacket;
+  data: Uint8Array;
+}
+
+export interface RemoteHardwarePacket {
+  packet: MeshPacket;
+  data: Protobuf.HardwareMessage;
 }
 
 interface WebSPIFFSFileInstance {

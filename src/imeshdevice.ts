@@ -148,10 +148,62 @@ export abstract class IMeshDevice {
   public readonly onUserDataPacket: SubEvent<Protobuf.User> = new SubEvent();
 
   /**
-   * Fires when a new MeshPacket message containing a AndminMessage packet has been received from device
+   * Fires when a new MeshPacket message containing an AdminMessage packet has been received from device
    * @event
    */
   public readonly onAdminPacket: SubEvent<Types.AdminPacket> = new SubEvent();
+
+  /**
+   * Fires when a new MeshPacket message containing a Ping packet has been received from device
+   * @event
+   */
+  public readonly onPingPacket: SubEvent<Types.PingPacket> = new SubEvent();
+
+  /**
+   * Fires when a new MeshPacket message containing a IP Tunnel packet has been received from device
+   * @event
+   */
+  public readonly onIpTunnelPacket: SubEvent<Types.IpTunnelPacket> =
+    new SubEvent();
+
+  /**
+   * Fires when a new MeshPacket message containing a Serial packet has been received from device
+   * @event
+   */
+  public readonly onSerialPacket: SubEvent<Types.SerialPacket> = new SubEvent();
+  /**
+   * Fires when a new MeshPacket message containing a Store and Forward packet has been received from device
+   * @event
+   */
+  public readonly onStoreForwardPacket: SubEvent<Types.StoreForwardPacket> =
+    new SubEvent();
+
+  /**
+   * Fires when a new MeshPacket message containing a Store and Forward packet has been received from device
+   * @event
+   */
+  public readonly onRangeTestPacket: SubEvent<Types.RangeTestPacket> =
+    new SubEvent();
+
+  /**
+   * Fires when a new MeshPacket message containing a Environmental Meassurement packet has been received from device
+   * @event
+   */
+  public readonly onEnvironmentPacket: SubEvent<Types.EnvironmentPacket> =
+    new SubEvent();
+
+  /**
+   * Fires when a new MeshPacket message containing a Private packet has been received from device
+   * @event
+   */
+  public readonly onPrivatePacket: SubEvent<Types.PrivatePacket> =
+    new SubEvent();
+
+  /**
+   * Fires when a new MeshPacket message containing a ATAK packet has been received from device
+   * @event
+   */
+  public readonly onAtakPacket: SubEvent<Types.AtakPacket> = new SubEvent();
 
   /**
    * Fires when a new MeshPacket message containing a Routing packet has been received from device
@@ -172,6 +224,13 @@ export abstract class IMeshDevice {
    * @event
    */
   public readonly onTextPacket: SubEvent<Types.TextPacket> = new SubEvent();
+
+  /**
+   * Fires when a new MeshPacket message containing a Remote Hardware packet has been received from device
+   * @event
+   */
+  public readonly onRemoteHardwarePacket: SubEvent<Types.RemoteHardwarePacket> =
+    new SubEvent();
 
   /**
    * Fires when the devices connection or configuration status changes
@@ -688,6 +747,20 @@ export abstract class IMeshDevice {
           });
           break;
 
+        case PortNum.REMOTE_HARDWARE_APP:
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onRemoteHardwarePacket",
+            LogRecord_Level.TRACE
+          );
+          this.onRemoteHardwarePacket.emit({
+            packet: meshPacket,
+            data: Protobuf.HardwareMessage.fromBinary(
+              meshPacket.payloadVariant.decoded.payload
+            )
+          });
+          break;
+
         case PortNum.POSITION_APP:
           log(
             `IMeshDevice.handleMeshPacket`,
@@ -739,6 +812,104 @@ export abstract class IMeshDevice {
             data: AdminMessage.fromBinary(
               meshPacket.payloadVariant.decoded.payload
             )
+          });
+          break;
+
+        case PortNum.REPLY_APP:
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onPingPacket",
+            LogRecord_Level.TRACE
+          );
+          this.onPingPacket.emit({
+            packet: meshPacket,
+            data: meshPacket.payloadVariant.decoded.payload
+          });
+          break;
+
+        case PortNum.IP_TUNNEL_APP:
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onIpTunnelPacket",
+            LogRecord_Level.TRACE
+          );
+          this.onIpTunnelPacket.emit({
+            packet: meshPacket,
+            data: meshPacket.payloadVariant.decoded.payload
+          });
+          break;
+
+        case PortNum.SERIAL_APP:
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onSerialPacket",
+            LogRecord_Level.TRACE
+          );
+          this.onSerialPacket.emit({
+            packet: meshPacket,
+            data: meshPacket.payloadVariant.decoded.payload
+          });
+          break;
+
+        case PortNum.STORE_FORWARD_APP:
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onStoreForwardPacket",
+            LogRecord_Level.TRACE
+          );
+          this.onStoreForwardPacket.emit({
+            packet: meshPacket,
+            data: meshPacket.payloadVariant.decoded.payload
+          });
+          break;
+
+        case PortNum.RANGE_TEST_APP:
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onRangeTestPacket",
+            LogRecord_Level.TRACE
+          );
+          this.onRangeTestPacket.emit({
+            packet: meshPacket,
+            data: meshPacket.payloadVariant.decoded.payload
+          });
+          break;
+
+        case PortNum.ENVIRONMENTAL_MEASUREMENT_APP:
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onEnvironmentPacket",
+            LogRecord_Level.TRACE
+          );
+          this.onEnvironmentPacket.emit({
+            packet: meshPacket,
+            data: Protobuf.EnvironmentalMeasurement.fromBinary(
+              meshPacket.payloadVariant.decoded.payload
+            )
+          });
+          break;
+
+        case PortNum.PRIVATE_APP:
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onPrivatePacket",
+            LogRecord_Level.TRACE
+          );
+          this.onPrivatePacket.emit({
+            packet: meshPacket,
+            data: meshPacket.payloadVariant.decoded.payload
+          });
+          break;
+
+        case PortNum.ATAK_FORWARDER:
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onAtakPacket",
+            LogRecord_Level.TRACE
+          );
+          this.onAtakPacket.emit({
+            packet: meshPacket,
+            data: meshPacket.payloadVariant.decoded.payload
           });
           break;
 
