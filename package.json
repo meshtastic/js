@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.6.19",
+  "version": "0.6.20",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "sideEffects": false,
@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.0.7",
+    "node-fetch": "^3.0.0",
     "sub-events": "^1.8.9"
   },
   "devDependencies": {
@@ -32,8 +33,8 @@
     "@protobuf-ts/plugin": "2.0.7",
     "@types/w3c-web-serial": "^1.0.2",
     "@types/web-bluetooth": "^0.0.11",
-    "@typescript-eslint/eslint-plugin": "^5.1.0",
-    "@typescript-eslint/parser": "^5.1.0",
+    "@typescript-eslint/eslint-plugin": "^5.2.0",
+    "@typescript-eslint/parser": "^5.2.0",
     "@verypossible/eslint-config": "^1.6.1",
     "babel-plugin-module-resolver": "^4.1.0",
     "eslint": "^8.1.0",
@@ -44,16 +45,16 @@
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-react": "^7.26.1",
     "eslint-plugin-react-hooks": "^4.2.0",
-    "node-protoc": "^1.0.2",
+    "node-protoc": "^1.0.3",
     "pre-commit": "^1.2.2",
     "prettier": "^2.4.1",
     "tslib": "^2.3.1",
-    "typedoc": "^0.22.6",
-    "typescript": "^4.5.0-beta"
+    "typedoc": "^0.22.7",
+    "typescript": "^4.4.4"
   },
   "scripts": {
     "build": "tsc",
-    "generate:protobufs": "protoc --plugin=node_modules/ts-proto/protoc-gen-ts_proto --ts_out src/generated/ --ts_proto_opt=useOptionals=true --ts_opt long_type_string --proto_path protobufs protobufs/*.proto",
+    "generate:protobufs": "protoc --ts_out src/generated/ --ts_opt long_type_string --proto_path protobufs protobufs/*.proto",
     "generate:docs": "typedoc src/index.ts",
     "update:protobufs": "cd protobufs && git pull origin master",
     "lint": "prettier --check . && eslint src/*.ts"

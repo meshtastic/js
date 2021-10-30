@@ -1,9 +1,16 @@
-import { Types } from "./";
-import { LogRecord_Level } from "./generated/mesh";
-import { IMeshDevice } from "./imeshdevice";
-import type { HTTPConnectionParameters } from "./types";
-import { typedArrayToBuffer } from "./utils/general";
-import { log } from "./utils/logging";
+import nodeFetch from "node-fetch";
+
+import { Types } from "./index.js";
+import { LogRecord_Level } from "./generated/mesh.js";
+import { IMeshDevice } from "./imeshdevice.js";
+import type { HTTPConnectionParameters } from "./types.js";
+import { typedArrayToBuffer } from "./utils/general.js";
+import { log } from "./utils/logging.js";
+
+if (!globalThis.fetch) {
+  //@ts-ignore fetch polyfill
+  globalThis.fetch = nodeFetch;
+}
 
 /**
  * Allows to connect to a Meshtastic device over HTTP(S)
@@ -44,9 +51,10 @@ export class IHTTPConnection extends IMeshDevice {
     if (await this.ping()) {
       log(
         `IHTTPConnection.connect`,
-        `Ping succeeded, starting new request timer.`,
+        `Ping succeeded, starting configuration and request timer.`,
         LogRecord_Level.DEBUG
       );
+      await this.configure();
       setInterval(
         () => {
           this.readFromRadio().catch((e: Error) => {
@@ -88,11 +96,9 @@ export class IHTTPConnection extends IMeshDevice {
     let pingSuccessful = false;
 
     await fetch(`${this.url}/hotspot-detect.html`, {})
-      .then(async () => {
+      .then(() => {
         pingSuccessful = true;
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
-
-        await this.configure();
       })
       .catch(({ message }: { message: string }) => {
         pingSuccessful = false;

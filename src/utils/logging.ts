@@ -1,5 +1,5 @@
-import { LogRecord_Level } from "../generated";
-import { SettingsManager } from "../settingsmanager";
+import { LogRecord_Level } from "../generated/index.js";
+import { SettingsManager } from "../settingsmanager.js";
 
 /**
  * Global event logger

@@ -1,6 +1,15 @@
-import type { IBLEConnection, IHTTPConnection, ISerialConnection } from "./";
-import type { AdminMessage } from "./generated/admin";
-import type { MeshPacket, NodeInfo, Position, Routing } from "./generated/mesh";
+import type {
+  IBLEConnection,
+  IHTTPConnection,
+  ISerialConnection
+} from "./index.js";
+import type { AdminMessage } from "./generated/admin.js";
+import type {
+  MeshPacket,
+  NodeInfo,
+  Position,
+  Routing
+} from "./generated/mesh.js";
 
 export enum DeviceStatusEnum {
   DEVICE_RESTARTING,
@@ -61,7 +70,7 @@ export interface SerialConnectionParameters {
 }
 
 export interface NodeInfoPacket {
-  packet?: MeshPacket;
+  packet: MeshPacket;
   data: NodeInfo;
 }
 

@@ -1,5 +1,5 @@
-import { LogRecord_Level } from "./generated/mesh";
-import { log } from "./utils/logging";
+import { LogRecord_Level } from "./generated/mesh.js";
+import { log } from "./utils/logging.js";
 
 /**
  * Handles library-wide settings

@@ -1,6 +1,6 @@
-import { Types } from "./";
-import { IMeshDevice } from "./imeshdevice";
-import type { SerialConnectionParameters } from "./types";
+import { Types } from "./index.js";
+import { IMeshDevice } from "./imeshdevice.js";
+import type { SerialConnectionParameters } from "./types.js";
 
 /**
  * Allows to connect to a Meshtastic device over WebSerial
@@ -56,14 +56,20 @@ export class ISerialConnection extends IMeshDevice {
   }
 
   /**
+   * Gets list of serial ports that can be passed to `connect`
+   */
+  public async getPort(filter?: SerialPortRequestOptions): Promise<SerialPort> {
+    return navigator.serial.requestPort(filter);
+  }
+
+  /**
    * Initiates the connect process to a Meshtastic device via Web Serial
    * @param parameters serial connection parameters
    */
   public async connect(parameters: SerialConnectionParameters): Promise<void> {
-    this.port = parameters.port
-      ? parameters.port
-      : await navigator.serial.requestPort();
+    this.port = parameters.port ? parameters.port : await this.getPort();
 
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
     await this.port.open({
       baudRate: parameters.baudRate ?? 921600
     });
@@ -103,6 +109,8 @@ export class ISerialConnection extends IMeshDevice {
     /**
      * @todo, implement device keep-awake loop
      */
+
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
     await this.configure();
   }

@@ -1,9 +1,9 @@
 import { SubEvent } from "sub-events";
 
-import { Protobuf, Types } from "./";
-import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants";
-import { AdminMessage } from "./generated/admin";
-import type { Channel } from "./generated/channel";
+import { Protobuf, Types } from "./index.js";
+import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants.js";
+import { AdminMessage } from "./generated/admin.js";
+import type { Channel } from "./generated/channel.js";
 import {
   Routing,
   FromRadio,
@@ -13,13 +13,13 @@ import {
   NodeInfo,
   Position,
   ToRadio
-} from "./generated/mesh";
-import { PortNum } from "./generated/portnums";
-import type { User } from "./generated/mesh";
-import { RadioConfig_UserPreferences } from "./generated/radioconfig";
-import type { ConnectionParameters } from "./types";
-import { log } from "./utils/logging";
-import { responseQueue } from "./utils/responseQueue";
+} from "./generated/mesh.js";
+import { PortNum } from "./generated/portnums.js";
+import type { User } from "./generated/mesh.js";
+import { RadioConfig_UserPreferences } from "./generated/radioconfig.js";
+import type { ConnectionParameters } from "./types.js";
+import { log } from "./utils/logging.js";
+import { responseQueue } from "./utils/responseQueue.js";
 
 /**
  * Base class for connection methods to extend
@@ -598,11 +598,9 @@ export abstract class IMeshDevice {
           "Received onNodeInfoPacket",
           LogRecord_Level.TRACE
         );
-        /**
-         * Unifi this, decodedMessage.packet should always be preasent? so you can tell who sent it etc?
-         * or maybe not, as meshpacket and mynodeinfo are oneofs
-         */
+
         this.onNodeInfoPacket.emit({
+          packet: MeshPacket.create(),
           data: decodedMessage.payloadVariant.nodeInfo
         });
 
@@ -708,6 +706,7 @@ export abstract class IMeshDevice {
             "Received onNodeInfoPacket",
             LogRecord_Level.TRACE
           );
+
           this.onNodeInfoPacket.emit({
             packet: meshPacket,
             data: NodeInfo.fromBinary(meshPacket.payloadVariant.decoded.payload)

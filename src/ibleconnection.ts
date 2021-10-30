@@ -1,15 +1,15 @@
-import { Types } from "./";
+import { Types } from "./index.js";
 import {
   FROMNUM_UUID,
   FROMRADIO_UUID,
   SERVICE_UUID,
   TORADIO_UUID
-} from "./constants";
-import { LogRecord_Level } from "./generated/mesh";
-import { IMeshDevice } from "./imeshdevice";
-import type { BLEConnectionParameters } from "./types";
-import { typedArrayToBuffer } from "./utils/general";
-import { log } from "./utils/logging";
+} from "./constants.js";
+import { LogRecord_Level } from "./generated/mesh.js";
+import { IMeshDevice } from "./imeshdevice.js";
+import type { BLEConnectionParameters } from "./types.js";
+import { typedArrayToBuffer } from "./utils/general.js";
+import { log } from "./utils/logging.js";
 
 /**
  * Allows to connect to a Meshtastic device via bluetooth
@@ -79,11 +79,33 @@ export class IBLEConnection extends IMeshDevice {
     this.writeLock = false;
     this.pendingRead = false;
   }
+
+  /**
+   * Gets web bluetooth support avaliability for the device
+   */
+  public supported(): Promise<boolean> {
+    return navigator.bluetooth.getAvailability();
+  }
+
   /**
    * Gets list of bluetooth devices that can be passed to `connect`
    */
   public getDevices(): Promise<BluetoothDevice[]> {
     return navigator.bluetooth.getDevices();
+  }
+
+  /**
+   * Opens browser dialog to select a device
+   */
+  public getDevice(filter?: RequestDeviceOptions): Promise<BluetoothDevice> {
+    return navigator.bluetooth.requestDevice(
+      filter ?? {
+        filters: [{ services: [SERVICE_UUID] }]
+      }
+    );
+    // .catch(({ message }: { message: string }) => {
+    //   log(`IBLEConnection.requestDevice`, message, LogRecord_Level.ERROR);
+    // });
   }
 
   /**
@@ -103,17 +125,7 @@ export class IBLEConnection extends IMeshDevice {
     if (parameters.device) {
       this.device = parameters.device;
     } else {
-      this.device = await navigator.bluetooth
-        .requestDevice(
-          parameters.deviceFilter
-            ? parameters.deviceFilter
-            : {
-                filters: [{ services: [SERVICE_UUID] }]
-              }
-        )
-        .catch(({ message }: { message: string }) => {
-          log(`IBLEConnection.requestDevice`, message, LogRecord_Level.ERROR);
-        });
+      this.device = await this.getDevice();
     }
 
     if (this.device) {

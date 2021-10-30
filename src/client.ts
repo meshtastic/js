@@ -1,7 +1,7 @@
-import { IBLEConnection } from "./ibleconnection";
-import { IHTTPConnection } from "./ihttpconnection";
-import { ISerialConnection } from "./iserialconnection";
-import type { DeviceInterface } from "./types";
+import { IBLEConnection } from "./ibleconnection.js";
+import { IHTTPConnection } from "./ihttpconnection.js";
+import { ISerialConnection } from "./iserialconnection.js";
+import type { DeviceInterface } from "./types.js";
 
 /**
  * Allows to create new connections to devices and manages them.
