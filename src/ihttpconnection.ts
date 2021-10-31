@@ -127,14 +127,7 @@ export class IHTTPConnection extends IMeshDevice {
         }
       )
         .then(async (response) => {
-          /**
-           * @todo, is the DEVICE_CONNECTED event duplicated here, why are we checking for the connection status.
-           */
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
-
-          if (this.deviceStatus < Types.DeviceStatusEnum.DEVICE_CONNECTED) {
-            this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
-          }
 
           readBuffer = await response.arrayBuffer();
 
@@ -145,11 +138,7 @@ export class IHTTPConnection extends IMeshDevice {
         .catch(({ message }: { message: string }) => {
           log(`IHTTPConnection.readFromRadio`, message, LogRecord_Level.ERROR);
 
-          if (
-            this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
-          ) {
-            this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
-          }
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
         });
     }
   }

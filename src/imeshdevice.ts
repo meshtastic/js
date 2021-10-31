@@ -10,12 +10,11 @@ import {
   LogRecord_Level,
   MeshPacket,
   MyNodeInfo,
-  NodeInfo,
   Position,
-  ToRadio
+  ToRadio,
+  User
 } from "./generated/mesh.js";
 import { PortNum } from "./generated/portnums.js";
-import type { User } from "./generated/mesh.js";
 import { RadioConfig_UserPreferences } from "./generated/radioconfig.js";
 import type { ConnectionParameters } from "./types.js";
 import { log } from "./utils/logging.js";
@@ -142,10 +141,10 @@ export abstract class IMeshDevice {
     new SubEvent();
 
   /**
-   * Fires when a new NodeInfo message has been reveived that has the same node number as the device
+   * Fires when a new MeshPacket message containing a User packet has been received from device
    * @event
    */
-  public readonly onUserDataPacket: SubEvent<Protobuf.User> = new SubEvent();
+  public readonly onUserPacket: SubEvent<Types.UserPacket> = new SubEvent();
 
   /**
    * Fires when a new MeshPacket message containing an AdminMessage packet has been received from device
@@ -662,16 +661,6 @@ export abstract class IMeshDevice {
           packet: MeshPacket.create(),
           data: decodedMessage.payloadVariant.nodeInfo
         });
-
-        if (
-          decodedMessage.payloadVariant.nodeInfo.user &&
-          decodedMessage.payloadVariant.nodeInfo.num ===
-            this.myNodeInfo.myNodeNum
-        ) {
-          this.onUserDataPacket.emit(
-            decodedMessage.payloadVariant.nodeInfo.user
-          );
-        }
         break;
 
       case "logRecord":
@@ -779,10 +768,13 @@ export abstract class IMeshDevice {
             "Received onNodeInfoPacket",
             LogRecord_Level.TRACE
           );
+          /**
+           * @todo, workaround for NODEINFO_APP plugin sending a User protobuf instead of a NodeInfo protobuf
+           */
 
-          this.onNodeInfoPacket.emit({
+          this.onUserPacket.emit({
             packet: meshPacket,
-            data: NodeInfo.fromBinary(meshPacket.payloadVariant.decoded.payload)
+            data: User.fromBinary(meshPacket.payloadVariant.decoded.payload)
           });
           break;
 

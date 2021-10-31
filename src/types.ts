@@ -9,7 +9,8 @@ import type {
   MeshPacket,
   NodeInfo,
   Position,
-  Routing
+  Routing,
+  User
 } from "./generated/mesh.js";
 
 export enum DeviceStatusEnum {
@@ -73,6 +74,11 @@ export interface SerialConnectionParameters {
 export interface NodeInfoPacket {
   packet: MeshPacket;
   data: NodeInfo;
+}
+
+export interface UserPacket {
+  packet: MeshPacket;
+  data: User;
 }
 
 export interface AdminPacket {
