@@ -1,5 +1,5 @@
 import { Types } from "./index.js";
-import { IMeshDevice } from "./imeshdevice.js";
+import { IMeshDevice } from "./iMeshDevice.js";
 import type { SerialConnectionParameters } from "./types.js";
 
 /**

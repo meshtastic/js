@@ -1,10 +1,10 @@
 import { Client } from "./client.js";
-import { IMeshDevice } from "./imeshdevice.js";
-import { IBLEConnection } from "./ibleconnection.js";
-import { IHTTPConnection } from "./ihttpconnection.js";
-import { ISerialConnection } from "./iserialconnection.js";
+import { IMeshDevice } from "./iMeshDevice.js";
+import { IBLEConnection } from "./iBleConnection.js";
+import { IHTTPConnection } from "./iHttpConnection.js";
+import { ISerialConnection } from "./iSerialConnection.js";
 import * as Protobuf from "./generated/index.js";
-import { SettingsManager } from "./settingsmanager.js";
+import { SettingsManager } from "./settingsManager.js";
 import * as Types from "./types.js";
 
 export {

@@ -340,6 +340,22 @@ export abstract class IMeshDevice {
         });
       }
 
+      await this.sendRaw(toRadio);
+    }
+  }
+
+  /**
+   * Sends raw packet over the radio
+   * @param toRadio binary data to send
+   */
+  public async sendRaw(toRadio: Uint8Array): Promise<void> {
+    if (toRadio.length > 512) {
+      log(
+        `IMeshDevice.sendPacket`,
+        `Message longer than 512 bytes, it will not be sent!`,
+        LogRecord_Level.WARNING
+      );
+    } else {
       await this.writeToRadio(toRadio);
     }
   }
@@ -763,15 +779,14 @@ export abstract class IMeshDevice {
           break;
 
         case PortNum.NODEINFO_APP:
-          log(
-            `IMeshDevice.handleMeshPacket`,
-            "Received onNodeInfoPacket",
-            LogRecord_Level.TRACE
-          );
           /**
            * @todo, workaround for NODEINFO_APP plugin sending a User protobuf instead of a NodeInfo protobuf
            */
-
+          log(
+            `IMeshDevice.handleMeshPacket`,
+            "Received onUserPacket",
+            LogRecord_Level.TRACE
+          );
           this.onUserPacket.emit({
             packet: meshPacket,
             data: User.fromBinary(meshPacket.payloadVariant.decoded.payload)

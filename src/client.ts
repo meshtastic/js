@@ -1,6 +1,6 @@
-import { IBLEConnection } from "./ibleconnection.js";
-import { IHTTPConnection } from "./ihttpconnection.js";
-import { ISerialConnection } from "./iserialconnection.js";
+import { IBLEConnection } from "./iBleConnection.js";
+import { IHTTPConnection } from "./iHttpConnection.js";
+import { ISerialConnection } from "./iSerialConnection.js";
 import type { DeviceInterface } from "./types.js";
 
 /**

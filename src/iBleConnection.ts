@@ -6,7 +6,7 @@ import {
   TORADIO_UUID
 } from "./constants.js";
 import { LogRecord_Level } from "./generated/mesh.js";
-import { IMeshDevice } from "./imeshdevice.js";
+import { IMeshDevice } from "./iMeshDevice.js";
 import type { BLEConnectionParameters } from "./types.js";
 import { typedArrayToBuffer } from "./utils/general.js";
 import { log } from "./utils/logging.js";
