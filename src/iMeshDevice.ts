@@ -72,10 +72,7 @@ export abstract class IMeshDevice {
 
     this.onMyNodeInfo.subscribe(async (myNodeInfo) => {
       this.myNodeInfo = myNodeInfo;
-
-      for (let i = 0; i <= this.myNodeInfo.maxChannels; i++) {
-        await this.getChannel(i);
-      }
+      await this.getAllChannels();
     });
 
     this.onAdminPacket.subscribe((adminPacket) => {
@@ -567,6 +564,22 @@ export abstract class IMeshDevice {
   }
 
   /**
+   * Gets devices ChannelSettings
+   * @param callback If wantAck is true, callback is called when the ack is received
+   */
+  public async getAllChannels(callback?: () => Promise<void>): Promise<void> {
+    const queue: Array<() => Promise<void>> = [];
+    for (let i = 0; i <= this.myNodeInfo.maxChannels; i++) {
+      queue.push(async (): Promise<void> => {
+        return await Promise.resolve();
+      });
+      await this.getChannel(i, queue[i]);
+    }
+    await Promise.all(queue);
+    callback && callback();
+  }
+
+  /**
    * Gets devices RadioConfig
    */
   public async getPreferences(): Promise<void> {
@@ -737,6 +750,9 @@ export abstract class IMeshDevice {
     }
 
     if (meshPacket.payloadVariant.oneofKind === "decoded") {
+      await this.responseQueue.process(
+        meshPacket.payloadVariant.decoded.requestId
+      );
       switch (meshPacket.payloadVariant.decoded.portnum) {
         case PortNum.TEXT_MESSAGE_APP:
           log(
@@ -803,9 +819,6 @@ export abstract class IMeshDevice {
             packet: meshPacket,
             data: Routing.fromBinary(meshPacket.payloadVariant.decoded.payload)
           });
-          await this.responseQueue.process(
-            meshPacket.payloadVariant.decoded.requestId
-          );
           break;
 
         case PortNum.ADMIN_APP:
