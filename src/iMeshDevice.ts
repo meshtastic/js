@@ -420,9 +420,13 @@ export abstract class IMeshDevice {
 
   /**
    * Sets devices owner data
-   * @param owner
+   * @param owner Owner data to apply to the device
+   * @param callback If wantAck is true, callback is called when the ack is received
    */
-  public async setOwner(owner: User): Promise<void> {
+  public async setOwner(
+    owner: User,
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
     const setOwner = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -437,7 +441,13 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
-      true
+      true,
+      false,
+      async (id: number) => {
+        // @todo call getOwner once implemented
+        await Promise.resolve();
+        callback && callback(id);
+      }
     );
   }
 
@@ -537,7 +547,7 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Gets devices ChannelSettings
+   * Gets specified channel information from the radio
    * @param index Channel index to be retrieved
    * @param callback If wantAck is true, callback is called when the ack is received
    */
@@ -564,7 +574,7 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Gets devices ChannelSettings
+   * Gets all of the devices channels
    * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async getAllChannels(callback?: () => Promise<void>): Promise<void> {
@@ -687,9 +697,31 @@ export abstract class IMeshDevice {
         );
 
         this.onNodeInfoPacket.emit({
-          packet: MeshPacket.create(),
+          packet: MeshPacket.create({
+            id: decodedMessage.num
+          }),
           data: decodedMessage.payloadVariant.nodeInfo
         });
+
+        if (decodedMessage.payloadVariant.nodeInfo.position) {
+          this.onPositionPacket.emit({
+            packet: MeshPacket.create({
+              id: decodedMessage.num,
+              from: decodedMessage.payloadVariant.nodeInfo.num
+            }),
+            data: decodedMessage.payloadVariant.nodeInfo.position
+          });
+        }
+
+        if (decodedMessage.payloadVariant.nodeInfo.user) {
+          this.onUserPacket.emit({
+            packet: MeshPacket.create({
+              id: decodedMessage.num,
+              from: decodedMessage.payloadVariant.nodeInfo.num
+            }),
+            data: decodedMessage.payloadVariant.nodeInfo.user
+          });
+        }
         break;
 
       case "logRecord":

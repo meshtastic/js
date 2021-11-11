@@ -1,16 +1,9 @@
-import nodeFetch from "node-fetch";
-
 import { Types } from "./index.js";
 import { LogRecord_Level } from "./generated/mesh.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import type { HTTPConnectionParameters } from "./types.js";
 import { typedArrayToBuffer } from "./utils/general.js";
 import { log } from "./utils/logging.js";
-
-if (!globalThis.fetch) {
-  //@ts-ignore fetch polyfill
-  globalThis.fetch = nodeFetch;
-}
 
 /**
  * Allows to connect to a Meshtastic device over HTTP(S)
@@ -152,6 +145,7 @@ export class IHTTPConnection extends IMeshDevice {
       headers: {
         "Content-Type": "application/x-protobuf"
       },
+      //@ts-ignore fetch polyfill
       body: typedArrayToBuffer(data)
     })
       .then(async () => {
@@ -165,99 +159,5 @@ export class IHTTPConnection extends IMeshDevice {
         log(`IHTTPConnection.writeToRadio`, message, LogRecord_Level.ERROR);
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
-  }
-
-  /**
-   * Web API method: Restart device
-   */
-  public async restartDevice(): Promise<void> {
-    return fetch(`${this.url}/restart`, {
-      method: "POST"
-    })
-      .then(() => {
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RESTARTING);
-      })
-      .catch(({ message }: { message: string }) => {
-        log(`IHTTPConnection.restartDevice`, message, LogRecord_Level.ERROR);
-      });
-  }
-
-  /**
-   * Web API method: Get airtime statistics
-   */
-  public async getStatistics(): Promise<void | Types.WebStatisticsResponse> {
-    return fetch(`${this.url}/json/report`, {
-      method: "GET"
-    })
-      .then(async (response) => {
-        return (await response.json()) as Types.WebStatisticsResponse;
-      })
-      .catch(({ message }: { message: string }) => {
-        log(`IHTTPConnection.getStatistics`, message, LogRecord_Level.ERROR);
-      });
-  }
-
-  /**
-   * Web API method: Scan for WiFi AP's
-   */
-  public async getNetworks(): Promise<void | Types.WebNetworkResponse> {
-    return fetch(`${this.url}/json/scanNetworks`, {
-      method: "GET"
-    })
-      .then(async (response) => {
-        return (await response.json()) as Types.WebNetworkResponse;
-      })
-      .catch(({ message }: { message: string }) => {
-        log(`IHTTPConnection.getNetworks`, message, LogRecord_Level.ERROR);
-      });
-  }
-
-  /**
-   * Web API method: Fetch SPIFFS contents
-   */
-  public async getSPIFFS(): Promise<void | Types.WebSPIFFSResponse> {
-    return fetch(`${this.url}/json/spiffs/browse/static`, {
-      method: "GET"
-    })
-      .then(async (response) => {
-        return (await response.json()) as Types.WebSPIFFSResponse;
-      })
-      .catch(({ message }: { message: string }) => {
-        log(`IHTTPConnection.getSPIFFS`, message, LogRecord_Level.ERROR);
-      });
-  }
-
-  /**
-   * Web API method: Delete SPIFFS file
-   */
-  public async deleteSPIFFS(
-    file: string
-  ): Promise<void | Types.WebSPIFFSResponse> {
-    return fetch(
-      `${this.url}/json/spiffs/delete/static?${new URLSearchParams({
-        delete: file
-      }).toString()}`,
-      {
-        method: "DELETE"
-      }
-    )
-      .then(async (response) => {
-        return (await response.json()) as Types.WebSPIFFSResponse;
-      })
-      .catch(({ message }: { message: string }) => {
-        log(`IHTTPConnection.deleteSPIFFS`, message, LogRecord_Level.ERROR);
-      });
-  }
-
-  /**
-   * Web API method: Make device LED blink
-   * @todo, strongly type response
-   */
-  public async blinkLED(): Promise<void | Response> {
-    return fetch(`${this.url}/json/blink`, {
-      method: "POST"
-    }).catch(({ message }: { message: string }) => {
-      log(`IHTTPConnection.blinkLED`, message, LogRecord_Level.ERROR);
-    });
   }
 }

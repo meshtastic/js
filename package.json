@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.6.25",
+  "version": "0.6.26",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "sideEffects": false,
@@ -25,11 +25,10 @@
   },
   "dependencies": {
     "@protobuf-ts/runtime": "^2.0.7",
-    "node-fetch": "^3.0.0",
     "sub-events": "^1.8.9"
   },
   "devDependencies": {
-    "@babel/core": "^7.15.8",
+    "@babel/core": "^7.16.0",
     "@protobuf-ts/plugin": "2.0.7",
     "@types/w3c-web-serial": "^1.0.2",
     "@types/web-bluetooth": "^0.0.11",
