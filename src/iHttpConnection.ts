@@ -19,12 +19,16 @@ export class IHTTPConnection extends IMeshDevice {
    */
   receiveBatchRequests: boolean | undefined;
 
+  readLoop: NodeJS.Timer | undefined;
+
   constructor() {
     super();
 
     this.url = undefined;
 
     this.receiveBatchRequests = false;
+
+    this.readLoop = undefined;
   }
 
   /**
@@ -48,7 +52,7 @@ export class IHTTPConnection extends IMeshDevice {
         LogRecord_Level.DEBUG
       );
       await this.configure();
-      setInterval(
+      this.readLoop = setInterval(
         () => {
           this.readFromRadio().catch((e: Error) => {
             log(`IHTTPConnection`, e.message, LogRecord_Level.ERROR);
@@ -72,8 +76,11 @@ export class IHTTPConnection extends IMeshDevice {
    * Disconnects from the Meshtastic device
    */
   public disconnect(): void {
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
-    this.complete();
+    if (this.readLoop) {
+      clearInterval(this.readLoop);
+      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+      this.complete();
+    }
   }
 
   /**
