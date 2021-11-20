@@ -258,6 +258,7 @@ export abstract class IMeshDevice {
     text: string,
     destinationNum?: number,
     wantAck = false,
+    channel = 0,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     const enc = new TextEncoder();
@@ -267,8 +268,10 @@ export abstract class IMeshDevice {
       PortNum.TEXT_MESSAGE_APP,
       destinationNum,
       wantAck,
+      channel,
       undefined,
       true,
+
       callback
     );
   }
@@ -288,6 +291,8 @@ export abstract class IMeshDevice {
     portNum: PortNum,
     destinationNum?: number,
     wantAck = false,
+    channel = 0,
+
     wantResponse = false,
     echoResponse = false,
     callback?: (id: number) => Promise<void>
@@ -307,7 +312,8 @@ export abstract class IMeshDevice {
       from: this.myNodeInfo.myNodeNum,
       to: destinationNum ? destinationNum : BROADCAST_NUM,
       id: this.generateRandId(),
-      wantAck: wantAck
+      wantAck: wantAck,
+      channel
     });
 
     const toRadio = ToRadio.toBinary(
@@ -382,6 +388,7 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
+      0,
       true,
       false,
       async (id: number) => {
@@ -412,6 +419,7 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
+      0,
       true,
       false,
       callback
@@ -441,6 +449,7 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
+      0,
       true,
       false,
       async (id: number) => {
@@ -474,6 +483,7 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
+      0,
       true,
       false,
       async (id: number) => {
@@ -504,6 +514,7 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
+      0,
       true,
       false,
       callback
@@ -537,6 +548,7 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
+      0,
       true,
       false,
       async (id: number) => {
@@ -567,6 +579,7 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
+      0,
       true,
       false,
       callback
@@ -605,6 +618,7 @@ export abstract class IMeshDevice {
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
+      0,
       true
     );
   }

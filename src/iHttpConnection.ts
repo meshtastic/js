@@ -21,6 +21,8 @@ export class IHTTPConnection extends IMeshDevice {
 
   readLoop: NodeJS.Timer | undefined;
 
+  peningRequest: boolean;
+
   constructor() {
     super();
 
@@ -29,6 +31,8 @@ export class IHTTPConnection extends IMeshDevice {
     this.receiveBatchRequests = false;
 
     this.readLoop = undefined;
+
+    this.peningRequest = false;
   }
 
   /**
@@ -112,9 +116,13 @@ export class IHTTPConnection extends IMeshDevice {
    * Reads any avaliable protobuf messages from the radio
    */
   protected async readFromRadio(): Promise<void> {
+    if (this.peningRequest) {
+      return;
+    }
     let readBuffer = new ArrayBuffer(1);
 
     while (readBuffer.byteLength > 0) {
+      this.peningRequest = true;
       await fetch(
         `${this.url}/api/v1/fromradio?all=${
           this.receiveBatchRequests ? "true" : "false"
@@ -127,6 +135,7 @@ export class IHTTPConnection extends IMeshDevice {
         }
       )
         .then(async (response) => {
+          this.peningRequest = false;
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
           readBuffer = await response.arrayBuffer();
@@ -136,6 +145,7 @@ export class IHTTPConnection extends IMeshDevice {
           }
         })
         .catch(({ message }: { message: string }) => {
+          this.peningRequest = false;
           log(`IHTTPConnection.readFromRadio`, message, LogRecord_Level.ERROR);
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);

@@ -118,8 +118,8 @@ export class ISerialConnection extends IMeshDevice {
   /**
    * Disconnects from the serial port
    */
-  public disconnect(): void {
-    this.port?.close();
+  public async disconnect(): Promise<void> {
+    await this.port?.close();
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
   }
