@@ -23,6 +23,8 @@ export class IHTTPConnection extends IMeshDevice {
 
   peningRequest: boolean;
 
+  abortController: AbortController;
+
   constructor() {
     super();
 
@@ -33,6 +35,8 @@ export class IHTTPConnection extends IMeshDevice {
     this.readLoop = undefined;
 
     this.peningRequest = false;
+
+    this.abortController = new AbortController();
   }
 
   /**
@@ -80,6 +84,7 @@ export class IHTTPConnection extends IMeshDevice {
    * Disconnects from the Meshtastic device
    */
   public disconnect(): void {
+    this.abortController.abort();
     if (this.readLoop) {
       clearInterval(this.readLoop);
       this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
@@ -97,9 +102,11 @@ export class IHTTPConnection extends IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
+    const { signal } = this.abortController;
+
     let pingSuccessful = false;
 
-    await fetch(`${this.url}/hotspot-detect.html`, {})
+    await fetch(`${this.url}/hotspot-detect.html`, { signal })
       .then(() => {
         pingSuccessful = true;
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
@@ -120,6 +127,7 @@ export class IHTTPConnection extends IMeshDevice {
       return;
     }
     let readBuffer = new ArrayBuffer(1);
+    const { signal } = this.abortController;
 
     while (readBuffer.byteLength > 0) {
       this.peningRequest = true;
@@ -128,6 +136,7 @@ export class IHTTPConnection extends IMeshDevice {
           this.receiveBatchRequests ? "true" : "false"
         }`,
         {
+          signal,
           method: "GET",
           headers: {
             Accept: "application/x-protobuf"
@@ -157,7 +166,10 @@ export class IHTTPConnection extends IMeshDevice {
    * Sends supplied protobuf message to the radio
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
+    const { signal } = this.abortController;
+
     await fetch(`${this.url}/api/v1/toradio`, {
+      signal,
       method: "PUT",
       headers: {
         "Content-Type": "application/x-protobuf"
