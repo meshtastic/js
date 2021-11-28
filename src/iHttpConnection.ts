@@ -53,7 +53,10 @@ export class IHTTPConnection extends IMeshDevice {
         parameters.address
       }`;
     }
-    if (await this.ping()) {
+    if (
+      this.deviceStatus === Types.DeviceStatusEnum.DEVICE_CONNECTING &&
+      (await this.ping())
+    ) {
       log(
         `IHTTPConnection.connect`,
         `Ping succeeded, starting configuration and request timer.`,
