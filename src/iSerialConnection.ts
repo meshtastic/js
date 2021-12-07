@@ -1,6 +1,8 @@
 import { Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import type { SerialConnectionParameters } from "./types.js";
+import { LogRecord_Level } from "./generated/mesh.js";
+import { log } from "./utils/logging.js";
 
 /**
  * Allows to connect to a Meshtastic device over WebSerial
@@ -34,16 +36,30 @@ export class ISerialConnection extends IMeshDevice {
    * Reads packets from transformed serial port steam and processes them.
    */
   private async readFromRadio(): Promise<void> {
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const { value, done } = await this.reader.read();
-      if (value) {
-        void this.handleFromRadio(value);
-      }
+    while (this.port?.readable) {
+      try {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { value, done } = await this.reader.read();
+          if (value) {
+            void this.handleFromRadio(value);
+          }
 
-      if (done) {
-        this.reader.releaseLock();
-        break;
+          if (done) {
+            console.log("done");
+
+            this.reader.releaseLock();
+            break;
+          }
+        }
+      } catch (error) {
+        log(
+          `ISerialCOnnection.readFromRadio`,
+          `Device errored or disconnected: ${error as string}`,
+          LogRecord_Level.CRITICAL
+        );
+        await this.disconnect();
+        // TODO: Handle non-fatal read error.
       }
     }
   }
