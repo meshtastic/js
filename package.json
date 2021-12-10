@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.6.32",
+  "version": "0.6.33",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "sideEffects": false,
@@ -49,7 +49,7 @@
     "prettier": "^2.5.1",
     "tslib": "^2.3.1",
     "typedoc": "^0.22.10",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.3"
   },
   "scripts": {
     "build": "tsc",
