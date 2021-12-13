@@ -3,7 +3,8 @@ name: CI
 on: push
 
 jobs:
-  publish:
+  build:
+    name: Build Library
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code & submodules
@@ -32,11 +33,19 @@ jobs:
 
       - run: pnpm generate:protobufs
       - run: pnpm run build
+
+  publish-npm:
+    name: Publish to NPM
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
 
   publish-docs:
+    name: Publish Docs
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

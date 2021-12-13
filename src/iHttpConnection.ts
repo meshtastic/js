@@ -72,14 +72,16 @@ export class IHTTPConnection extends IMeshDevice {
         parameters.fetchInterval ? parameters.fetchInterval : 5000
       );
     } else {
-      setTimeout(() => {
-        void this.connect({
-          address: parameters.address,
-          fetchInterval: parameters.fetchInterval,
-          receiveBatchRequests: parameters.receiveBatchRequests,
-          tls: parameters.tls
-        });
-      }, 10000);
+      if (this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_DISCONNECTED) {
+        setTimeout(() => {
+          void this.connect({
+            address: parameters.address,
+            fetchInterval: parameters.fetchInterval,
+            receiveBatchRequests: parameters.receiveBatchRequests,
+            tls: parameters.tls
+          });
+        }, 10000);
+      }
     }
   }
 
@@ -88,9 +90,9 @@ export class IHTTPConnection extends IMeshDevice {
    */
   public disconnect(): void {
     this.abortController.abort();
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     if (this.readLoop) {
       clearInterval(this.readLoop);
-      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
       this.complete();
     }
   }
