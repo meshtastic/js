@@ -50,7 +50,7 @@ export abstract class IMeshDevice {
   private userPreferences: RadioConfig_UserPreferences;
 
   /**
-   * @TODO desc
+   * Keeps track of all requests sent to the radio that have callbacks
    */
   private responseQueue: responseQueue;
 
@@ -70,9 +70,8 @@ export abstract class IMeshDevice {
         this.isConfigured = false;
     });
 
-    this.onMyNodeInfo.subscribe(async (myNodeInfo) => {
+    this.onMyNodeInfo.subscribe((myNodeInfo) => {
       this.myNodeInfo = myNodeInfo;
-      await this.getAllChannels();
     });
 
     this.onAdminPacket.subscribe((adminPacket) => {
@@ -261,6 +260,12 @@ export abstract class IMeshDevice {
     channel = 0,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
+    log(
+      `IMeshDevice.sendText`,
+      `Sending message to ${destinationNum} with text ${text}`,
+      LogRecord_Level.DEBUG
+    );
+
     const enc = new TextEncoder();
 
     return this.sendPacket(
@@ -271,7 +276,6 @@ export abstract class IMeshDevice {
       channel,
       undefined,
       true,
-
       callback
     );
   }
@@ -297,6 +301,12 @@ export abstract class IMeshDevice {
     echoResponse = false,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
+    log(
+      `IMeshDevice.sendPacket`,
+      `Sending ${Protobuf.PortNum[portNum]} to ${destinationNum}`,
+      LogRecord_Level.TRACE
+    );
+
     const meshPacket = MeshPacket.create({
       payloadVariant: {
         decoded: {
@@ -354,7 +364,7 @@ export abstract class IMeshDevice {
   public async sendRaw(toRadio: Uint8Array): Promise<void> {
     if (toRadio.length > 512) {
       log(
-        `IMeshDevice.sendPacket`,
+        `IMeshDevice.sendRaw`,
         `Message longer than 512 bytes, it will not be sent!`,
         LogRecord_Level.WARNING
       );
@@ -372,6 +382,12 @@ export abstract class IMeshDevice {
     preferences: Partial<RadioConfig_UserPreferences>,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
+    log(
+      `IMeshDevice.setPreferences`,
+      `Setting preferences ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
     const setRadio = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -405,6 +421,12 @@ export abstract class IMeshDevice {
   public async confirmSetPreferences(
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
+    log(
+      `IMeshDevice.confirmSetPreferences`,
+      `Confirming preferences ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
     const confirmSetRadio = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -435,6 +457,12 @@ export abstract class IMeshDevice {
     owner: User,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
+    log(
+      `IMeshDevice.setOwner`,
+      `Setting owner ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
     const setOwner = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -453,8 +481,7 @@ export abstract class IMeshDevice {
       true,
       false,
       async (id: number) => {
-        // @todo call getOwner once implemented
-        await Promise.resolve();
+        await this.getOwner();
         callback && callback(id);
       }
     );
@@ -469,6 +496,14 @@ export abstract class IMeshDevice {
     channel: Channel,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
+    log(
+      `IMeshDevice.setChannel`,
+      `Setting Channel: ${channel.index} ${
+        callback ? "with" : "without"
+      } callback`,
+      LogRecord_Level.DEBUG
+    );
+
     const setChannel = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -500,6 +535,12 @@ export abstract class IMeshDevice {
   public async confirmSetChannel(
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
+    log(
+      `IMeshDevice.confirmSetChannel`,
+      `Confirming Channel config ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
     const confirmSetChannel = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
@@ -530,11 +571,17 @@ export abstract class IMeshDevice {
     index: number,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
+    log(
+      `IMeshDevice.deleteChannel`,
+      `Deleting Channel ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
     const channel = Protobuf.Channel.create({
       index,
       role: Protobuf.Channel_Role.DISABLED
     });
-    const deleteChannel = AdminMessage.toBinary(
+    const setChannel = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
           setChannel: channel,
@@ -544,7 +591,7 @@ export abstract class IMeshDevice {
     );
 
     await this.sendPacket(
-      deleteChannel,
+      setChannel,
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
@@ -567,15 +614,23 @@ export abstract class IMeshDevice {
     index: number,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
+    log(
+      `IMeshDevice.getChannel`,
+      `Requesting Channel: ${index} ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
+    const getChannelRequest = AdminMessage.toBinary(
+      AdminMessage.create({
+        variant: {
+          getChannelRequest: index + 1,
+          oneofKind: "getChannelRequest"
+        }
+      })
+    );
+
     await this.sendPacket(
-      AdminMessage.toBinary(
-        AdminMessage.create({
-          variant: {
-            getChannelRequest: index + 1,
-            oneofKind: "getChannelRequest"
-          }
-        })
-      ),
+      getChannelRequest,
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
@@ -591,6 +646,12 @@ export abstract class IMeshDevice {
    * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async getAllChannels(callback?: () => Promise<void>): Promise<void> {
+    log(
+      `IMeshDevice.getAllChannels`,
+      `Requesting all Channels ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
     const queue: Array<() => Promise<void>> = [];
     for (let i = 0; i <= this.myNodeInfo.maxChannels; i++) {
       queue.push(async (): Promise<void> => {
@@ -604,22 +665,69 @@ export abstract class IMeshDevice {
 
   /**
    * Gets devices RadioConfig
+   * @param callback If wantAck is true, callback is called when the ack is received
    */
-  public async getPreferences(): Promise<void> {
+  public async getPreferences(
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
+    log(
+      `IMeshDevice.getPreferences`,
+      `Requesting preferences ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
+    const getRadioRequest = AdminMessage.toBinary(
+      AdminMessage.create({
+        variant: {
+          getRadioRequest: true,
+          oneofKind: "getRadioRequest"
+        }
+      })
+    );
+
     await this.sendPacket(
-      AdminMessage.toBinary(
-        AdminMessage.create({
-          variant: {
-            getRadioRequest: true,
-            oneofKind: "getRadioRequest"
-          }
-        })
-      ),
+      getRadioRequest,
       PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
-      true
+      true,
+      false,
+      callback
+    );
+  }
+
+  /**
+   * Gets devices Owner
+   * @param callback If wantAck is true, callback is called when the ack is received
+   */
+  public async getOwner(
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
+    log(
+      `IMeshDevice.getOwner`,
+      `Requesting owner ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
+    const getOwnerRequest = AdminMessage.toBinary(
+      AdminMessage.create({
+        variant: {
+          getOwnerRequest: true,
+          oneofKind: "getOwnerRequest"
+        }
+      })
+    );
+
+    await this.sendPacket(
+      getOwnerRequest,
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      0,
+      true,
+      false,
+      callback
     );
   }
 
@@ -644,10 +752,6 @@ export abstract class IMeshDevice {
         })
       )
     );
-
-    await this.getPreferences();
-
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
   }
 
   /**
@@ -755,6 +859,27 @@ export abstract class IMeshDevice {
             LogRecord_Level.ERROR
           );
         }
+        await this.writeToRadio(
+          ToRadio.toBinary(
+            ToRadio.create({
+              payloadVariant: {
+                peerInfo: {
+                  appVersion: 1,
+                  mqttGateway: false
+                },
+                oneofKind: "peerInfo"
+              }
+            })
+          )
+        );
+
+        await this.getPreferences(async () => {
+          await this.getAllChannels(async () => {
+            await Promise.resolve();
+          });
+        });
+
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
         break;
 
       case "rebooted":

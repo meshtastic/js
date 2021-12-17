@@ -59,7 +59,10 @@ export class ISerialConnection extends IMeshDevice {
           LogRecord_Level.CRITICAL
         );
         await this.disconnect();
-        // TODO: Handle non-fatal read error.
+
+        /**
+         * @todo, Handle non-fatal read error.
+         */
       }
     }
   }
@@ -135,6 +138,7 @@ export class ISerialConnection extends IMeshDevice {
    * Disconnects from the serial port
    */
   public async disconnect(): Promise<void> {
+    await this.reader.cancel();
     await this.port?.close();
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
@@ -151,6 +155,9 @@ export class ISerialConnection extends IMeshDevice {
    * Sends supplied protobuf message to the radio
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
+    while (this.writer.locked) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
     const writer = this.writer.getWriter();
 
     await writer.write(
