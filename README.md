@@ -49,3 +49,5 @@ The Bluetooth and Serial connections rely on the availability of the Web Bluetoo
 
 ![Web Bluetooth compatability matrix](https://caniuse.bitsofco.de/image/web-bluetooth.png)
 ![Web Serial compatability matrix](https://caniuse.bitsofco.de/image/web-serial.png)
+
+[![Powered by Vercel](https://raw.githubusercontent.com/abumalick/powered-by-vercel/master/powered-by-vercel.svg)](https://vercel.com?utm_source=meshtastic&utm_campaign=oss)
