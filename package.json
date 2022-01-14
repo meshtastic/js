@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.6.37",
+  "version": "0.6.38",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "sideEffects": false,
@@ -24,16 +24,16 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@protobuf-ts/runtime": "^2.1.0",
+    "@protobuf-ts/runtime": "^2.2.1",
     "sub-events": "^1.8.9"
   },
   "devDependencies": {
     "@babel/core": "^7.16.7",
-    "@protobuf-ts/plugin": "2.1.0",
+    "@protobuf-ts/plugin": "2.2.1",
     "@types/w3c-web-serial": "^1.0.2",
     "@types/web-bluetooth": "^0.0.12",
-    "@typescript-eslint/eslint-plugin": "^5.9.0",
-    "@typescript-eslint/parser": "^5.9.0",
+    "@typescript-eslint/eslint-plugin": "^5.9.1",
+    "@typescript-eslint/parser": "^5.9.1",
     "@verypossible/eslint-config": "^1.6.1",
     "babel-plugin-module-resolver": "^4.1.0",
     "eslint": "^8.6.0",
