@@ -1,9 +1,15 @@
+import serialport from 'serialport';
+
 import { Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import type { SerialConnectionParameters } from "./types.js";
 import { LogRecord_Level } from "./generated/mesh.js";
 import { log } from "./utils/logging.js";
-
+import {
+  ReadableStream,
+  WritableStream,
+  TransformStream,
+} from 'node:stream/web';
 /**
  * Allows to connect to a Meshtastic device over WebSerial
  */
@@ -16,7 +22,7 @@ export class ISerialConnection extends IMeshDevice {
   /**
    * Readable stream from serial port.
    */
-  private reader: ReadableStreamDefaultReader<Uint8Array>;
+  private reader
 
   /**
    * Writable stream to serial port.
@@ -28,7 +34,7 @@ export class ISerialConnection extends IMeshDevice {
 
     this.port = undefined;
 
-    this.reader = new ReadableStreamDefaultReader(new ReadableStream());
+    this.reader = new ReadableStream();
     this.writer = new WritableStream();
   }
 
@@ -71,14 +77,23 @@ export class ISerialConnection extends IMeshDevice {
    * Gets list of serial ports that can be passed to `connect`
    */
   public async getPorts(): Promise<SerialPort[]> {
-    return navigator.serial.getPorts();
+    // if (navigator) {
+    //   return navigator.serial.getPorts();
+    // }
+    return serialport.list();
   }
 
   /**
    * Gets list of serial ports that can be passed to `connect`
    */
   public async getPort(filter?: SerialPortRequestOptions): Promise<SerialPort> {
-    return navigator.serial.requestPort(filter);
+    // if (navigator) {
+    //   return navigator.serial.requestPort(filter);
+    // }
+    return serialport.list().then (
+      ports => ports.forEach(port =>console.log(port.path)),
+      err => console.log(err)
+    )
   }
 
   /**
@@ -89,9 +104,14 @@ export class ISerialConnection extends IMeshDevice {
     this.port = parameters.port ? parameters.port : await this.getPort();
 
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
-    await this.port.open({
-      baudRate: parameters.baudRate ?? 921600
-    });
+    let myPort = new serialport(this.port.path, this.port.baudRate);
+    let Readline = serialport.parsers.Readline; // make instance of Readline parser
+    let parser = new Readline(); // make a new parser to read ASCII lines
+    myPort.pipe(parser); // pipe the serial stream to the parser
+    myPort.on('open', console.log);
+    parser.on('data', console.log);
+    myPort.on('close', console.log);
+    myPort.on('error', console.log);
 
     let byteBuffer = new Uint8Array([]);
 
