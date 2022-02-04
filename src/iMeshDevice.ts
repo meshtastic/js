@@ -1,21 +1,21 @@
 import { SubEvent } from "sub-events";
 
-import { Protobuf, Types } from "./index.js";
 import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants.js";
 import { AdminMessage } from "./generated/admin.js";
 import type { Channel } from "./generated/channel.js";
 import {
-  Routing,
   FromRadio,
   LogRecord_Level,
   MeshPacket,
   MyNodeInfo,
   Position,
+  Routing,
   ToRadio,
   User
 } from "./generated/mesh.js";
 import { PortNum } from "./generated/portnums.js";
 import { RadioConfig_UserPreferences } from "./generated/radioconfig.js";
+import { Protobuf, Types } from "./index.js";
 import type { ConnectionParameters } from "./types.js";
 import { log } from "./utils/logging.js";
 import { responseQueue } from "./utils/responseQueue.js";
@@ -299,7 +299,9 @@ export abstract class IMeshDevice {
 
     wantResponse = false,
     echoResponse = false,
-    callback?: (id: number) => Promise<void>
+    callback?: (id: number) => Promise<void>,
+    isTapback = false,
+    replyId = 0
   ): Promise<void> {
     log(
       `IMeshDevice.sendPacket`,
@@ -313,6 +315,8 @@ export abstract class IMeshDevice {
           payload: byteData,
           portnum: portNum,
           wantResponse,
+          isTapback,
+          replyId,
           dest: 0, //change this!
           requestId: 0, //change this!
           source: 0 //change this!
