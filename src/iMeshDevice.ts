@@ -16,7 +16,7 @@ import {
 import { PortNum } from "./generated/portnums.js";
 import { RadioConfig_UserPreferences } from "./generated/radioconfig.js";
 import { Protobuf, Types } from "./index.js";
-import type { ConnectionParameters, LogEvent } from "./types.js";
+import type { ConnectionParameters, LogEventPacket } from "./types.js";
 import { log } from "./utils/logging.js";
 import { responseQueue } from "./utils/responseQueue.js";
 
@@ -124,8 +124,7 @@ export abstract class IMeshDevice {
    * Fires when a new FromRadio message has been received from the device
    * @event
    */
-  public readonly onLogEvent: SubEvent<LogEvent & { date: Date }> =
-    new SubEvent();
+  public readonly onLogEvent: SubEvent<LogEventPacket> = new SubEvent();
 
   /**
    * Fires when a new FromRadio message has been received from the device

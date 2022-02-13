@@ -73,6 +73,8 @@ export interface SerialConnectionParameters {
   port?: SerialPort;
 }
 
+export type LogEventPacket = LogEvent & { date: Date };
+
 export interface NodeInfoPacket {
   packet: MeshPacket;
   data: NodeInfo;
