@@ -66,7 +66,7 @@ export abstract class IMeshDevice {
   constructor() {
     this.log = (emitter, message, level) => {
       log(emitter, message, level);
-      this.onLogEvent.emit({ emitter, message, level });
+      this.onLogEvent.emit({ emitter, message, level, date: new Date() });
     };
 
     this.deviceStatus = Types.DeviceStatusEnum.DEVICE_DISCONNECTED;
@@ -124,7 +124,8 @@ export abstract class IMeshDevice {
    * Fires when a new FromRadio message has been received from the device
    * @event
    */
-  public readonly onLogEvent: SubEvent<LogEvent> = new SubEvent();
+  public readonly onLogEvent: SubEvent<LogEvent & { date: Date }> =
+    new SubEvent();
 
   /**
    * Fires when a new FromRadio message has been received from the device
