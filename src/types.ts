@@ -6,12 +6,14 @@ import type {
 } from "./index.js";
 import type { AdminMessage } from "./generated/admin.js";
 import type {
+  FromRadio,
   MeshPacket,
   NodeInfo,
   Position,
   Routing,
   User
 } from "./generated/mesh.js";
+import { PortNum } from "./generated/portnums.js";
 
 export enum DeviceStatusEnum {
   DEVICE_RESTARTING,
@@ -144,4 +146,19 @@ export interface AtakPacket {
 export interface RemoteHardwarePacket {
   packet: MeshPacket;
   data: Protobuf.HardwareMessage;
+}
+
+export interface LogEvent {
+  emitter: string;
+  message: string;
+  level: Protobuf.LogRecord_Level;
+}
+
+export interface DebugEventPacket {
+  id: number;
+  type:
+    | Exclude<FromRadio["payloadVariant"]["oneofKind"], "packet" | undefined>
+    | "encrypted"
+    | keyof typeof PortNum;
+  packet: any;
 }

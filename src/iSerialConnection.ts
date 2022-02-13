@@ -2,7 +2,6 @@ import { Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import type { SerialConnectionParameters } from "./types.js";
 import { LogRecord_Level } from "./generated/mesh.js";
-import { log } from "./utils/logging.js";
 
 /**
  * Allows to connect to a Meshtastic device over WebSerial
@@ -53,7 +52,7 @@ export class ISerialConnection extends IMeshDevice {
           }
         }
       } catch (error) {
-        log(
+        this.log(
           `ISerialConnection.readFromRadio`,
           `Device errored or disconnected: ${error as string}`,
           LogRecord_Level.CRITICAL

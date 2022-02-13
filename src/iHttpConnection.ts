@@ -3,7 +3,6 @@ import { LogRecord_Level } from "./generated/mesh.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import type { HTTPConnectionParameters } from "./types.js";
 import { typedArrayToBuffer } from "./utils/general.js";
-import { log } from "./utils/logging.js";
 
 /**
  * Allows to connect to a Meshtastic device over HTTP(S)
@@ -57,7 +56,7 @@ export class IHTTPConnection extends IMeshDevice {
       this.deviceStatus === Types.DeviceStatusEnum.DEVICE_CONNECTING &&
       (await this.ping())
     ) {
-      log(
+      this.log(
         `IHTTPConnection.connect`,
         `Ping succeeded, starting configuration and request timer.`,
         LogRecord_Level.DEBUG
@@ -66,7 +65,7 @@ export class IHTTPConnection extends IMeshDevice {
       this.readLoop = setInterval(
         () => {
           this.readFromRadio().catch((e: Error) => {
-            log(`IHTTPConnection`, e.message, LogRecord_Level.ERROR);
+            this.log(`IHTTPConnection`, e.message, LogRecord_Level.ERROR);
           });
         },
         parameters.fetchInterval ? parameters.fetchInterval : 5000
@@ -101,7 +100,7 @@ export class IHTTPConnection extends IMeshDevice {
    * Pings device to check if it is avaliable
    */
   public async ping(): Promise<boolean> {
-    log(
+    this.log(
       `IHTTPConnection.connect`,
       `Attempting device ping.`,
       LogRecord_Level.DEBUG
@@ -118,7 +117,7 @@ export class IHTTPConnection extends IMeshDevice {
       })
       .catch(({ message }: { message: string }) => {
         pingSuccessful = false;
-        log(`IHTTPConnection.connect`, message, LogRecord_Level.ERROR);
+        this.log(`IHTTPConnection.connect`, message, LogRecord_Level.ERROR);
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
     return pingSuccessful;
@@ -160,7 +159,11 @@ export class IHTTPConnection extends IMeshDevice {
         })
         .catch(({ message }: { message: string }) => {
           this.peningRequest = false;
-          log(`IHTTPConnection.readFromRadio`, message, LogRecord_Level.ERROR);
+          this.log(
+            `IHTTPConnection.readFromRadio`,
+            message,
+            LogRecord_Level.ERROR
+          );
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
         });
@@ -186,11 +189,15 @@ export class IHTTPConnection extends IMeshDevice {
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
         await this.readFromRadio().catch((e: Error) => {
-          log(`IHTTPConnection`, e.message, LogRecord_Level.ERROR);
+          this.log(`IHTTPConnection`, e.message, LogRecord_Level.ERROR);
         });
       })
       .catch(({ message }: { message: string }) => {
-        log(`IHTTPConnection.writeToRadio`, message, LogRecord_Level.ERROR);
+        this.log(
+          `IHTTPConnection.writeToRadio`,
+          message,
+          LogRecord_Level.ERROR
+        );
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
   }

@@ -5,15 +5,15 @@ import { SettingsManager } from "../settingsManager.js";
  * Global event logger
  * @param emitter Name of calling function
  * @param message Informative message
- * @param logLevel Desired logging level
+ * @param level Desired logging level
  */
 export const log = (
   emitter: string,
   message: string,
-  logLevel: LogRecord_Level
+  level: LogRecord_Level
 ): void => {
-  if (logLevel >= SettingsManager.debugMode) {
-    switch (logLevel) {
+  if (level >= SettingsManager.debugMode) {
+    switch (level) {
       case LogRecord_Level.TRACE:
         console.info(
           `%c[TRACE]%c ${emitter}\n%c${message}`,

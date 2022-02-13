@@ -9,7 +9,6 @@ import { LogRecord_Level } from "./generated/mesh.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import type { BLEConnectionParameters } from "./types.js";
 import { typedArrayToBuffer } from "./utils/general.js";
-import { log } from "./utils/logging.js";
 
 /**
  * Allows to connect to a Meshtastic device via bluetooth
@@ -104,7 +103,7 @@ export class IBLEConnection extends IMeshDevice {
       }
     );
     // .catch(({ message }: { message: string }) => {
-    //   log(`IBLEConnection.requestDevice`, message, LogRecord_Level.ERROR);
+    //   this.log(`IBLEConnection.requestDevice`, message, LogRecord_Level.ERROR);
     // });
   }
 
@@ -115,7 +114,7 @@ export class IBLEConnection extends IMeshDevice {
   public async connect(parameters: BLEConnectionParameters): Promise<void> {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
     if (!navigator.bluetooth) {
-      log(
+      this.log(
         `IBLEConnection.connect`,
         `This browser doesn't support the WebBluetooth API`,
         LogRecord_Level.WARNING
@@ -167,12 +166,16 @@ export class IBLEConnection extends IMeshDevice {
               await this.configure();
             })
             .catch(({ message }: { message: string }) => {
-              log(`IBLEConnection.getService`, message, LogRecord_Level.ERROR);
+              this.log(
+                `IBLEConnection.getService`,
+                message,
+                LogRecord_Level.ERROR
+              );
             });
           this.connection = connection;
         })
         .catch(({ message }: { message: string }) => {
-          log(`IBLEConnection.connect`, message, LogRecord_Level.ERROR);
+          this.log(`IBLEConnection.connect`, message, LogRecord_Level.ERROR);
         });
       this.device.addEventListener("gattserverdisconnected", () => {
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
@@ -233,7 +236,11 @@ export class IBLEConnection extends IMeshDevice {
         })
         .catch(({ message }: { message: string }) => {
           readBuffer = new ArrayBuffer(0);
-          log(`IBLEConnection.readFromRadio`, message, LogRecord_Level.ERROR);
+          this.log(
+            `IBLEConnection.readFromRadio`,
+            message,
+            LogRecord_Level.ERROR
+          );
         });
     }
     this.pendingRead = false;
@@ -257,7 +264,7 @@ export class IBLEConnection extends IMeshDevice {
                 this.writeQueue.shift();
               })
               .catch(({ message }: { message: string }) => {
-                log(
+                this.log(
                   `IBLEConnection.writeToRadio`,
                   message,
                   LogRecord_Level.ERROR
