@@ -28,9 +28,11 @@ export abstract class IMeshDevice {
    * Logs to the console and the logging event emitter
    */
   protected log: (
-    emitter: string,
+    scope: Types.EmitterScope,
+    emitter: Types.Emitter,
     message: string,
-    level: Protobuf.LogRecord_Level
+    level: Protobuf.LogRecord_Level,
+    packet?: Uint8Array
   ) => void;
 
   /**
@@ -64,9 +66,15 @@ export abstract class IMeshDevice {
   private responseQueue: responseQueue;
 
   constructor() {
-    this.log = (emitter, message, level) => {
-      log(emitter, message, level);
-      this.onLogEvent.emit({ emitter, message, level, date: new Date() });
+    this.log = (scope, emitter, message, level): void => {
+      log(scope, emitter, message, level);
+      this.onLogEvent.emit({
+        scope,
+        emitter,
+        message,
+        level,
+        date: new Date()
+      });
     };
 
     this.deviceStatus = Types.DeviceStatusEnum.DEVICE_DISCONNECTED;
@@ -281,7 +289,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.sendText`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.sendText,
       `Sending message to ${destinationNum} with text ${text}`,
       LogRecord_Level.DEBUG
     );
@@ -324,7 +333,8 @@ export abstract class IMeshDevice {
     replyId = 0
   ): Promise<void> {
     this.log(
-      `IMeshDevice.sendPacket`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.sendPacket,
       `Sending ${Protobuf.PortNum[portNum]} to ${destinationNum}`,
       LogRecord_Level.TRACE
     );
@@ -361,7 +371,8 @@ export abstract class IMeshDevice {
 
     if (toRadio.length > 512) {
       this.log(
-        `IMeshDevice.sendPacket`,
+        Types.EmitterScope.iMeshDevice,
+        Types.Emitter.sendPacket,
         `Message longer than 512 characters, it will not be sent!`,
         LogRecord_Level.WARNING
       );
@@ -388,7 +399,8 @@ export abstract class IMeshDevice {
   public async sendRaw(toRadio: Uint8Array): Promise<void> {
     if (toRadio.length > 512) {
       this.log(
-        `IMeshDevice.sendRaw`,
+        Types.EmitterScope.iMeshDevice,
+        Types.Emitter.sendRaw,
         `Message longer than 512 bytes, it will not be sent!`,
         LogRecord_Level.WARNING
       );
@@ -407,7 +419,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.setPreferences`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.setPreferences,
       `Setting preferences ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -446,7 +459,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.confirmSetPreferences`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.confirmSetPreferences,
       `Confirming preferences ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -482,7 +496,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.setOwner`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.setOwner,
       `Setting owner ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -521,7 +536,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.setChannel`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.setChannel,
       `Setting Channel: ${channel.index} ${
         callback ? "with" : "without"
       } callback`,
@@ -560,7 +576,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.confirmSetChannel`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.confirmSetChannel,
       `Confirming Channel config ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -596,7 +613,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.deleteChannel`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.deleteChannel,
       `Deleting Channel ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -639,7 +657,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.getChannel`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.getChannel,
       `Requesting Channel: ${index} ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -671,7 +690,8 @@ export abstract class IMeshDevice {
    */
   public async getAllChannels(callback?: () => Promise<void>): Promise<void> {
     this.log(
-      `IMeshDevice.getAllChannels`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.getAllChannels,
       `Requesting all Channels ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -695,7 +715,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.getPreferences`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.getPreferences,
       `Requesting preferences ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -729,7 +750,8 @@ export abstract class IMeshDevice {
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
-      `IMeshDevice.getOwner`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.getOwner,
       `Requesting owner ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -760,7 +782,8 @@ export abstract class IMeshDevice {
    */
   public async configure(): Promise<void> {
     this.log(
-      `IMeshDevice.configure`,
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.configure,
       `Reading device configuration`,
       LogRecord_Level.DEBUG
     );
@@ -818,14 +841,16 @@ export abstract class IMeshDevice {
           MIN_FW_VERSION
         ) {
           this.log(
-            `IMeshDevice.handleFromRadio`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleFromRadio,
             `Device firmware outdated. Min supported: ${MIN_FW_VERSION} got : ${decodedMessage.payloadVariant.myInfo.firmwareVersion}`,
             LogRecord_Level.CRITICAL
           );
         }
         this.onMyNodeInfo.emit(decodedMessage.payloadVariant.myInfo);
         this.log(
-          `IMeshDevice.handleFromRadio`,
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleFromRadio,
           "Received onMyNodeInfo",
           LogRecord_Level.TRACE
         );
@@ -833,7 +858,8 @@ export abstract class IMeshDevice {
 
       case "nodeInfo":
         this.log(
-          `IMeshDevice.handleFromRadio`,
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleFromRadio,
           "Received onNodeInfoPacket",
           LogRecord_Level.TRACE
         );
@@ -868,7 +894,8 @@ export abstract class IMeshDevice {
 
       case "logRecord":
         this.log(
-          `IMeshDevice.handleFromRadio`,
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleFromRadio,
           "Received onLogRecord",
           LogRecord_Level.TRACE
         );
@@ -878,7 +905,8 @@ export abstract class IMeshDevice {
       case "configCompleteId":
         if (decodedMessage.payloadVariant.configCompleteId !== this.configId) {
           this.log(
-            `IMeshDevice.handleFromRadio`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleFromRadio,
             `Invalid config id reveived from device, exptected ${this.configId} but received ${decodedMessage.payloadVariant.configCompleteId}`,
             LogRecord_Level.ERROR
           );
@@ -951,9 +979,11 @@ export abstract class IMeshDevice {
       switch (meshPacket.payloadVariant.decoded.portnum) {
         case PortNum.TEXT_MESSAGE_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onTextPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onTextPacket.emit({
             packet: meshPacket,
@@ -965,9 +995,11 @@ export abstract class IMeshDevice {
 
         case PortNum.REMOTE_HARDWARE_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onRemoteHardwarePacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onRemoteHardwarePacket.emit({
             packet: meshPacket,
@@ -979,9 +1011,11 @@ export abstract class IMeshDevice {
 
         case PortNum.POSITION_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onPositionPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onPositionPacket.emit({
             packet: meshPacket,
@@ -994,9 +1028,11 @@ export abstract class IMeshDevice {
            * @todo, workaround for NODEINFO_APP plugin sending a User protobuf instead of a NodeInfo protobuf
            */
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onUserPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onUserPacket.emit({
             packet: meshPacket,
@@ -1006,9 +1042,11 @@ export abstract class IMeshDevice {
 
         case PortNum.ROUTING_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onRoutingPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onRoutingPacket.emit({
             packet: meshPacket,
@@ -1018,9 +1056,11 @@ export abstract class IMeshDevice {
 
         case PortNum.ADMIN_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onAdminPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onAdminPacket.emit({
             packet: meshPacket,
@@ -1032,9 +1072,11 @@ export abstract class IMeshDevice {
 
         case PortNum.REPLY_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onPingPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onPingPacket.emit({
             packet: meshPacket,
@@ -1044,9 +1086,11 @@ export abstract class IMeshDevice {
 
         case PortNum.IP_TUNNEL_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onIpTunnelPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onIpTunnelPacket.emit({
             packet: meshPacket,
@@ -1056,9 +1100,11 @@ export abstract class IMeshDevice {
 
         case PortNum.SERIAL_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onSerialPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onSerialPacket.emit({
             packet: meshPacket,
@@ -1068,9 +1114,11 @@ export abstract class IMeshDevice {
 
         case PortNum.STORE_FORWARD_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onStoreForwardPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onStoreForwardPacket.emit({
             packet: meshPacket,
@@ -1080,9 +1128,11 @@ export abstract class IMeshDevice {
 
         case PortNum.RANGE_TEST_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onRangeTestPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onRangeTestPacket.emit({
             packet: meshPacket,
@@ -1092,9 +1142,11 @@ export abstract class IMeshDevice {
 
         case PortNum.ENVIRONMENTAL_MEASUREMENT_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onEnvironmentPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onEnvironmentPacket.emit({
             packet: meshPacket,
@@ -1106,9 +1158,11 @@ export abstract class IMeshDevice {
 
         case PortNum.PRIVATE_APP:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onPrivatePacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onPrivatePacket.emit({
             packet: meshPacket,
@@ -1118,9 +1172,11 @@ export abstract class IMeshDevice {
 
         case PortNum.ATAK_FORWARDER:
           this.log(
-            `IMeshDevice.handleMeshPacket`,
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             "Received onAtakPacket",
-            LogRecord_Level.TRACE
+            LogRecord_Level.TRACE,
+            meshPacket.payloadVariant.decoded.payload
           );
           this.onAtakPacket.emit({
             packet: meshPacket,
@@ -1130,17 +1186,20 @@ export abstract class IMeshDevice {
 
         default:
           this.log(
-            "IMeshDevice.handleMeshPacket",
+            Types.EmitterScope.iMeshDevice,
+            Types.Emitter.handleMeshPacket,
             `Unhandled PortNum: ${
               PortNum[meshPacket.payloadVariant.decoded.portnum]
             }`,
-            LogRecord_Level.WARNING
+            LogRecord_Level.WARNING,
+            meshPacket.payloadVariant.decoded.payload
           );
           break;
       }
     } else {
       this.log(
-        `IMeshDevice.handleMeshPacket`,
+        Types.EmitterScope.iMeshDevice,
+        Types.Emitter.handleMeshPacket,
         "Device received encrypted or empty data packet, ignoring.",
         LogRecord_Level.DEBUG
       );

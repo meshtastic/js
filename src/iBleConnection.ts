@@ -115,7 +115,8 @@ export class IBLEConnection extends IMeshDevice {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
     if (!navigator.bluetooth) {
       this.log(
-        `IBLEConnection.connect`,
+        Types.EmitterScope.iBleConnection,
+        Types.Emitter.connect,
         `This browser doesn't support the WebBluetooth API`,
         LogRecord_Level.WARNING
       );
@@ -167,7 +168,8 @@ export class IBLEConnection extends IMeshDevice {
             })
             .catch(({ message }: { message: string }) => {
               this.log(
-                `IBLEConnection.getService`,
+                Types.EmitterScope.iBleConnection,
+                Types.Emitter.connect,
                 message,
                 LogRecord_Level.ERROR
               );
@@ -175,7 +177,12 @@ export class IBLEConnection extends IMeshDevice {
           this.connection = connection;
         })
         .catch(({ message }: { message: string }) => {
-          this.log(`IBLEConnection.connect`, message, LogRecord_Level.ERROR);
+          this.log(
+            Types.EmitterScope.iBleConnection,
+            Types.Emitter.connect,
+            message,
+            LogRecord_Level.ERROR
+          );
         });
       this.device.addEventListener("gattserverdisconnected", () => {
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
@@ -237,7 +244,8 @@ export class IBLEConnection extends IMeshDevice {
         .catch(({ message }: { message: string }) => {
           readBuffer = new ArrayBuffer(0);
           this.log(
-            `IBLEConnection.readFromRadio`,
+            Types.EmitterScope.iBleConnection,
+            Types.Emitter.readFromRadio,
             message,
             LogRecord_Level.ERROR
           );
@@ -265,7 +273,8 @@ export class IBLEConnection extends IMeshDevice {
               })
               .catch(({ message }: { message: string }) => {
                 this.log(
-                  `IBLEConnection.writeToRadio`,
+                  Types.EmitterScope.iBleConnection,
+                  Types.Emitter.writeToRadio,
                   message,
                   LogRecord_Level.ERROR
                 );

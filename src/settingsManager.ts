@@ -1,4 +1,5 @@
 import { LogRecord_Level } from "./generated/mesh.js";
+import { Types } from "./index.js";
 import { log } from "./utils/logging.js";
 
 /**
@@ -17,7 +18,8 @@ export class SettingsManager {
   static setDebugMode(level: LogRecord_Level): void {
     if (!(level in LogRecord_Level)) {
       log(
-        `SettingsManager.setDebugMode`,
+        Types.EmitterScope.SettingsManager,
+        Types.Emitter.setDebugMode,
         `Specified log level must be a member of LogRecord_Level.`,
         LogRecord_Level.WARNING
       );

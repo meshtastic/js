@@ -1,4 +1,5 @@
 import { LogRecord_Level } from "../generated/index.js";
+import { Types } from "../index.js";
 import { SettingsManager } from "../settingsManager.js";
 
 /**
@@ -8,7 +9,8 @@ import { SettingsManager } from "../settingsManager.js";
  * @param level Desired logging level
  */
 export const log = (
-  emitter: string,
+  scope: Types.EmitterScope,
+  emitter: Types.Emitter,
   message: string,
   level: LogRecord_Level
 ): void => {
@@ -16,7 +18,7 @@ export const log = (
     switch (level) {
       case LogRecord_Level.TRACE:
         console.info(
-          `%c[TRACE]%c ${emitter}\n%c${message}`,
+          `%c[TRACE]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
           "color:grey",
           "color:darkgrey",
           "color:white"
@@ -25,7 +27,7 @@ export const log = (
 
       case LogRecord_Level.DEBUG:
         console.info(
-          `%c[DEBUG]%c ${emitter}\n%c${message}`,
+          `%c[DEBUG]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
           "color:lightcyan",
           "color:darkgrey",
           "color:white"
@@ -34,7 +36,7 @@ export const log = (
 
       case LogRecord_Level.INFO:
         console.info(
-          `%c[INFO]%c ${emitter}\n%c${message}`,
+          `%c[INFO]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
           "color:darkgrey",
           "color:cyan",
           "color:white"
@@ -42,7 +44,7 @@ export const log = (
         break;
       case LogRecord_Level.WARNING:
         console.warn(
-          `%c[WARNING]%c ${emitter}\n%c${message}`,
+          `%c[WARNING]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
           "color:yellow",
           "color:darkgrey",
           "color:white"
@@ -51,7 +53,7 @@ export const log = (
 
       case LogRecord_Level.ERROR:
         console.error(
-          `%c[ERROR]%c ${emitter}\n%c${message}`,
+          `%c[ERROR]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
           "color:orangered",
           "color:darkgrey",
           "color:white"
@@ -60,7 +62,7 @@ export const log = (
 
       case LogRecord_Level.CRITICAL:
         console.error(
-          `%c[CRITICAL]%c ${emitter}\n%c${message}`,
+          `%c[CRITICAL]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
           "color:red",
           "color:darkgrey",
           "color:white"

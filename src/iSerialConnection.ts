@@ -53,7 +53,8 @@ export class ISerialConnection extends IMeshDevice {
         }
       } catch (error) {
         this.log(
-          `ISerialConnection.readFromRadio`,
+          Types.EmitterScope.iSerialConnection,
+          Types.Emitter.readFromRadio,
           `Device errored or disconnected: ${error as string}`,
           LogRecord_Level.CRITICAL
         );

@@ -6,14 +6,12 @@ import type {
 } from "./index.js";
 import type { AdminMessage } from "./generated/admin.js";
 import type {
-  FromRadio,
   MeshPacket,
   NodeInfo,
   Position,
   Routing,
   User
 } from "./generated/mesh.js";
-import { PortNum } from "./generated/portnums.js";
 
 export enum DeviceStatusEnum {
   DEVICE_RESTARTING,
@@ -150,17 +148,42 @@ export interface RemoteHardwarePacket {
   data: Protobuf.HardwareMessage;
 }
 
-export interface LogEvent {
-  emitter: string;
-  message: string;
-  level: Protobuf.LogRecord_Level;
+export enum EmitterScope {
+  "iMeshDevice",
+  "iSerialConnection",
+  "iBleConnection",
+  "iHttpConnection",
+  "SettingsManager"
 }
 
-export interface DebugEventPacket {
-  id: number;
-  type:
-    | Exclude<FromRadio["payloadVariant"]["oneofKind"], "packet" | undefined>
-    | "encrypted"
-    | keyof typeof PortNum;
-  packet: any;
+export enum Emitter {
+  "sendText",
+  "sendPacket",
+  "sendRaw",
+  "setPreferences",
+  "confirmSetPreferences",
+  "setOwner",
+  "setChannel",
+  "confirmSetChannel",
+  "deleteChannel",
+  "getChannel",
+  "getAllChannels",
+  "getPreferences",
+  "getOwner",
+  "configure",
+  "handleFromRadio",
+  "handleMeshPacket",
+  "connect",
+  "ping",
+  "readFromRadio",
+  "writeToRadio",
+  "setDebugMode"
+}
+
+export interface LogEvent {
+  scope: EmitterScope;
+  emitter: Emitter;
+  message: string;
+  level: Protobuf.LogRecord_Level;
+  packet?: Uint8Array;
 }
