@@ -66,13 +66,14 @@ export abstract class IMeshDevice {
   private responseQueue: responseQueue;
 
   constructor() {
-    this.log = (scope, emitter, message, level): void => {
+    this.log = (scope, emitter, message, level, packet): void => {
       log(scope, emitter, message, level);
       this.onLogEvent.emit({
         scope,
         emitter,
         message,
         level,
+        packet,
         date: new Date()
       });
     };
