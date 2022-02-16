@@ -291,7 +291,9 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.sendText,
-      `Sending message to ${destinationNum} with text ${text}`,
+      `Sending message to ${
+        destinationNum ?? "broadcast"
+      } on channel ${channel}`,
       LogRecord_Level.DEBUG
     );
 
@@ -335,7 +337,9 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.sendPacket,
-      `Sending ${Protobuf.PortNum[portNum]} to ${destinationNum}`,
+      `Sending ${Protobuf.PortNum[portNum]} to ${
+        destinationNum ?? "broadcast"
+      }`,
       LogRecord_Level.TRACE
     );
 
