@@ -338,7 +338,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.sendPacket,
-      `Sending ${Protobuf.PortNum[portNum]} to ${
+      `Sending ${Protobuf.PortNum[portNum] ?? "Unknown"} to ${
         destinationNum ?? "broadcast"
       }`,
       LogRecord_Level.TRACE
@@ -1194,7 +1194,7 @@ export abstract class IMeshDevice {
             Types.EmitterScope.iMeshDevice,
             Types.Emitter.handleMeshPacket,
             `Unhandled PortNum: ${
-              PortNum[meshPacket.payloadVariant.decoded.portnum]
+              PortNum[meshPacket.payloadVariant.decoded.portnum] ?? "Unknown"
             }`,
             LogRecord_Level.WARNING,
             meshPacket.payloadVariant.decoded.payload

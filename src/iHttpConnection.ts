@@ -11,14 +11,14 @@ export class IHTTPConnection extends IMeshDevice {
   /**
    * URL of the device that is to be connected to.
    */
-  url: string | undefined;
+  url: string;
 
   /**
    * Enables receiving messages all at once, versus one per request
    */
-  receiveBatchRequests: boolean | undefined;
+  receiveBatchRequests: boolean;
 
-  readLoop: NodeJS.Timer | undefined;
+  readLoop: NodeJS.Timer | null;
 
   peningRequest: boolean;
 
@@ -27,11 +27,11 @@ export class IHTTPConnection extends IMeshDevice {
   constructor() {
     super();
 
-    this.url = undefined;
+    this.url = "http://meshtastic.local";
 
     this.receiveBatchRequests = false;
 
-    this.readLoop = undefined;
+    this.readLoop = null;
 
     this.peningRequest = false;
 
@@ -45,7 +45,7 @@ export class IHTTPConnection extends IMeshDevice {
   public async connect(parameters: HTTPConnectionParameters): Promise<void> {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
-    this.receiveBatchRequests = parameters.receiveBatchRequests;
+    this.receiveBatchRequests = !!parameters.receiveBatchRequests;
 
     if (!this.url) {
       this.url = `${parameters.tls ? "https://" : "http://"}${
@@ -195,7 +195,6 @@ export class IHTTPConnection extends IMeshDevice {
       headers: {
         "Content-Type": "application/x-protobuf"
       },
-      //@ts-ignore fetch polyfill
       body: typedArrayToBuffer(data)
     })
       .then(async () => {
