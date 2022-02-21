@@ -113,6 +113,11 @@ export interface IpTunnelPacket {
   data: Uint8Array;
 }
 
+export interface GroupPacket {
+  packet: MeshPacket;
+  data: Protobuf.GroupInfo;
+}
+
 export interface SerialPacket {
   packet: MeshPacket;
   data: Uint8Array;
