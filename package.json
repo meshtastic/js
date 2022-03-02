@@ -39,7 +39,6 @@
   },
   "scripts": {
     "build": "tsc",
-    // remote old generated files
     "generate:protobufs": "protoc --ts_out src/generated/ --ts_opt long_type_string --proto_path protobufs protobufs/*.proto",
     "generate:docs": "typedoc src/index.ts",
     "update:protobufs": "cd protobufs && git pull origin master",
