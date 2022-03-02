@@ -56,13 +56,9 @@ export class ISerialConnection extends IMeshDevice {
           Types.EmitterScope.iSerialConnection,
           Types.Emitter.readFromRadio,
           `Device errored or disconnected: ${error as string}`,
-          LogRecord_Level.CRITICAL
+          LogRecord_Level.INFO
         );
         await this.disconnect();
-
-        /**
-         * @todo, Handle non-fatal read error.
-         */
       }
     }
   }
