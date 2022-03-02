@@ -191,12 +191,6 @@ export abstract class IMeshDevice {
     new SubEvent();
 
   /**
-   * Fires when a new MeshPacket message containing a Group packet has been received from device
-   * @event
-   */
-  public readonly onGroupPacket: SubEvent<Types.GroupPacket> = new SubEvent();
-
-  /**
    * Fires when a new MeshPacket message containing a Serial packet has been received from device
    * @event
    */
@@ -360,8 +354,7 @@ export abstract class IMeshDevice {
           replyId,
           dest: 0, //change this!
           requestId: 0, //change this!
-          source: 0, //change this!
-          groupId: 0
+          source: 0 //change this!
         },
         oneofKind: "decoded"
       },
@@ -1110,22 +1103,6 @@ export abstract class IMeshDevice {
           });
           break;
 
-        case PortNum.GROUP_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onGroupPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onGroupPacket.emit({
-            packet: meshPacket,
-            data: Protobuf.GroupInfo.fromBinary(
-              meshPacket.payloadVariant.decoded.payload
-            )
-          });
-          break;
-
         case PortNum.SERIAL_APP:
           this.log(
             Types.EmitterScope.iMeshDevice,
@@ -1168,7 +1145,7 @@ export abstract class IMeshDevice {
           });
           break;
 
-        case PortNum.ENVIRONMENTAL_MEASUREMENT_APP:
+        case PortNum.TELEMETRY_APP:
           this.log(
             Types.EmitterScope.iMeshDevice,
             Types.Emitter.handleMeshPacket,
