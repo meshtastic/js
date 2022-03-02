@@ -210,10 +210,10 @@ export abstract class IMeshDevice {
     new SubEvent();
 
   /**
-   * Fires when a new MeshPacket message containing a Environmental Meassurement packet has been received from device
+   * Fires when a new MeshPacket message containing a Telemetry packet has been received from device
    * @event
    */
-  public readonly onEnvironmentPacket: SubEvent<Types.EnvironmentPacket> =
+  public readonly onTelemetryPacket: SubEvent<Types.TelemetryPacket> =
     new SubEvent();
 
   /**
@@ -1149,13 +1149,13 @@ export abstract class IMeshDevice {
           this.log(
             Types.EmitterScope.iMeshDevice,
             Types.Emitter.handleMeshPacket,
-            "Received onEnvironmentPacket",
+            "Received onTelemetryPacket",
             LogRecord_Level.TRACE,
             meshPacket.payloadVariant.decoded.payload
           );
-          this.onEnvironmentPacket.emit({
+          this.onTelemetryPacket.emit({
             packet: meshPacket,
-            data: Protobuf.EnvironmentalMeasurement.fromBinary(
+            data: Protobuf.Telemetry.fromBinary(
               meshPacket.payloadVariant.decoded.payload
             )
           });

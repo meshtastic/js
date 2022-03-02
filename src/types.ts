@@ -128,9 +128,9 @@ export interface RangeTestPacket {
   data: Uint8Array;
 }
 
-export interface EnvironmentPacket {
+export interface TelemetryPacket {
   packet: MeshPacket;
-  data: Protobuf.EnvironmentalMeasurement;
+  data: Protobuf.Telemetry;
 }
 
 export interface PrivatePacket {
