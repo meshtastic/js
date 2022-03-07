@@ -47,11 +47,10 @@ export class IHTTPConnection extends IMeshDevice {
 
     this.receiveBatchRequests = !!parameters.receiveBatchRequests;
 
-    if (!this.url) {
-      this.url = `${parameters.tls ? "https://" : "http://"}${
-        parameters.address
-      }`;
-    }
+    this.url = `${parameters.tls ? "https://" : "http://"}${
+      parameters.address
+    }`;
+
     if (
       this.deviceStatus === Types.DeviceStatusEnum.DEVICE_CONNECTING &&
       (await this.ping())
