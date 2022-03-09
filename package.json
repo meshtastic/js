@@ -24,7 +24,7 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@meshtastic/eslint-config": "^1.0.6",
+    "@meshtastic/eslint-config": "^1.0.7",
     "@protobuf-ts/runtime": "^2.2.2",
     "prettier": "^2.5.1",
     "sub-events": "^1.8.9"
