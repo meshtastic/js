@@ -871,7 +871,7 @@ export abstract class IMeshDevice {
 
         this.onNodeInfoPacket.emit({
           packet: MeshPacket.create({
-            id: decodedMessage.num
+            id: decodedMessage.id
           }),
           data: decodedMessage.payloadVariant.nodeInfo
         });
@@ -879,7 +879,7 @@ export abstract class IMeshDevice {
         if (decodedMessage.payloadVariant.nodeInfo.position) {
           this.onPositionPacket.emit({
             packet: MeshPacket.create({
-              id: decodedMessage.num,
+              id: decodedMessage.id,
               from: decodedMessage.payloadVariant.nodeInfo.num
             }),
             data: decodedMessage.payloadVariant.nodeInfo.position
@@ -889,7 +889,7 @@ export abstract class IMeshDevice {
         if (decodedMessage.payloadVariant.nodeInfo.user) {
           this.onUserPacket.emit({
             packet: MeshPacket.create({
-              id: decodedMessage.num,
+              id: decodedMessage.id,
               from: decodedMessage.payloadVariant.nodeInfo.num
             }),
             data: decodedMessage.payloadVariant.nodeInfo.user
