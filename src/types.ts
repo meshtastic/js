@@ -158,6 +158,7 @@ export enum EmitterScope {
 
 export enum Emitter {
   "sendText",
+  "sendLocation",
   "sendPacket",
   "sendRaw",
   "setPreferences",

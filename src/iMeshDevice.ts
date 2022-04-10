@@ -313,6 +313,43 @@ export abstract class IMeshDevice {
   }
 
   /**
+   * Sends a text over the radio
+   * @param location Location to send
+   * @param destinationNum Node number of the destination node
+   * @param wantAck Whether or not acknowledgement is wanted
+   * @param callback If wantAck is true, callback is called when the ack is received
+   */
+  public sendLocation(
+    location: Protobuf.Location,
+    destinationNum?: number,
+    wantAck = false,
+    channel = 0,
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
+    this.log(
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.sendLocation,
+      `Sending location to ${
+        destinationNum ?? "broadcast"
+      } on channel ${channel}`,
+      LogRecord_Level.DEBUG
+    );
+
+    return this.sendPacket(
+      new Uint8Array(),
+      PortNum.TEXT_MESSAGE_APP,
+      destinationNum,
+      wantAck,
+      channel,
+      undefined,
+      true,
+      callback,
+      undefined,
+      location
+    );
+  }
+
+  /**
    * Sends packet over the radio
    * @param byteData
    * @param portNum dataType Enum of protobuf data type
@@ -328,11 +365,11 @@ export abstract class IMeshDevice {
     destinationNum?: number,
     wantAck = false,
     channel = 0,
-
     wantResponse = false,
     echoResponse = false,
     callback?: (id: number) => Promise<void>,
-    isTapback = false,
+    emoji = 0,
+    location?: Protobuf.Location,
     replyId = 0
   ): Promise<void> {
     this.log(
@@ -350,7 +387,8 @@ export abstract class IMeshDevice {
           payload: byteData,
           portnum: portNum,
           wantResponse,
-          isTapback,
+          location,
+          emoji,
           replyId,
           dest: 0, //change this!
           requestId: 0, //change this!
