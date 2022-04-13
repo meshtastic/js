@@ -4,6 +4,7 @@ import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants.js";
 import { AdminMessage } from "./generated/admin.js";
 import type { Channel } from "./generated/channel.js";
 import {
+  Data,
   FromRadio,
   LogRecord_Level,
   MeshPacket,
@@ -384,7 +385,10 @@ export abstract class IMeshDevice {
     const meshPacket = MeshPacket.create({
       payloadVariant: {
         decoded: {
-          payload: byteData,
+          payloadVariant: {
+            oneofKind: "payload",
+            payload: byteData
+          },
           portnum: portNum,
           wantResponse,
           location,
@@ -1015,237 +1019,253 @@ export abstract class IMeshDevice {
       this.onMeshHeartbeat.emit(new Date());
     }
 
-    if (meshPacket.payloadVariant.oneofKind === "decoded") {
-      await this.responseQueue.process(
-        meshPacket.payloadVariant.decoded.requestId
-      );
-      switch (meshPacket.payloadVariant.decoded.portnum) {
-        case PortNum.TEXT_MESSAGE_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onTextPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onTextPacket.emit({
-            packet: meshPacket,
-            data: new TextDecoder().decode(
-              meshPacket.payloadVariant.decoded.payload
-            )
-          });
-          break;
+    switch (meshPacket.payloadVariant.oneofKind) {
+      case "decoded":
+        await this.responseQueue.process(
+          meshPacket.payloadVariant.decoded.requestId
+        );
+        this.handleDataPacket(meshPacket.payloadVariant.decoded, meshPacket);
+        break;
 
-        case PortNum.REMOTE_HARDWARE_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onRemoteHardwarePacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onRemoteHardwarePacket.emit({
-            packet: meshPacket,
-            data: Protobuf.HardwareMessage.fromBinary(
-              meshPacket.payloadVariant.decoded.payload
-            )
-          });
-          break;
+      case "encrypted":
+        this.log(
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleMeshPacket,
+          "Device received encrypted data packet, ignoring.",
+          LogRecord_Level.DEBUG
+        );
+        break;
+    }
+  }
 
-        case PortNum.POSITION_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onPositionPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onPositionPacket.emit({
-            packet: meshPacket,
-            data: Position.fromBinary(meshPacket.payloadVariant.decoded.payload)
-          });
-          break;
+  private handleDataPacket(dataPacket: Data, meshPacket: MeshPacket) {
+    switch (dataPacket.payloadVariant.oneofKind) {
+      case "payload":
+        switch (dataPacket.portnum) {
+          case PortNum.TEXT_MESSAGE_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onTextPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onTextPacket.emit({
+              packet: meshPacket,
+              data: new TextDecoder().decode(dataPacket.payloadVariant.payload)
+            });
+            break;
 
-        case PortNum.NODEINFO_APP:
-          /**
-           * @todo, workaround for NODEINFO_APP plugin sending a User protobuf instead of a NodeInfo protobuf
-           */
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onUserPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onUserPacket.emit({
-            packet: meshPacket,
-            data: User.fromBinary(meshPacket.payloadVariant.decoded.payload)
-          });
-          break;
+          case PortNum.REMOTE_HARDWARE_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onRemoteHardwarePacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onRemoteHardwarePacket.emit({
+              packet: meshPacket,
+              data: Protobuf.HardwareMessage.fromBinary(
+                dataPacket.payloadVariant.payload
+              )
+            });
+            break;
 
-        case PortNum.ROUTING_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onRoutingPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onRoutingPacket.emit({
-            packet: meshPacket,
-            data: Routing.fromBinary(meshPacket.payloadVariant.decoded.payload)
-          });
-          break;
+          case PortNum.POSITION_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onPositionPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onPositionPacket.emit({
+              packet: meshPacket,
+              data: Position.fromBinary(dataPacket.payloadVariant.payload)
+            });
+            break;
 
-        case PortNum.ADMIN_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onAdminPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onAdminPacket.emit({
-            packet: meshPacket,
-            data: AdminMessage.fromBinary(
-              meshPacket.payloadVariant.decoded.payload
-            )
-          });
-          break;
+          case PortNum.NODEINFO_APP:
+            /**
+             * @todo, workaround for NODEINFO_APP plugin sending a User protobuf instead of a NodeInfo protobuf
+             */
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onUserPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onUserPacket.emit({
+              packet: meshPacket,
+              data: User.fromBinary(dataPacket.payloadVariant.payload)
+            });
+            break;
 
-        case PortNum.REPLY_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onPingPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onPingPacket.emit({
-            packet: meshPacket,
-            data: meshPacket.payloadVariant.decoded.payload
-          });
-          break;
+          case PortNum.ROUTING_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onRoutingPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onRoutingPacket.emit({
+              packet: meshPacket,
+              data: Routing.fromBinary(dataPacket.payloadVariant.payload)
+            });
+            break;
 
-        case PortNum.IP_TUNNEL_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onIpTunnelPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onIpTunnelPacket.emit({
-            packet: meshPacket,
-            data: meshPacket.payloadVariant.decoded.payload
-          });
-          break;
+          case PortNum.ADMIN_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onAdminPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onAdminPacket.emit({
+              packet: meshPacket,
+              data: AdminMessage.fromBinary(dataPacket.payloadVariant.payload)
+            });
+            break;
 
-        case PortNum.SERIAL_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onSerialPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onSerialPacket.emit({
-            packet: meshPacket,
-            data: meshPacket.payloadVariant.decoded.payload
-          });
-          break;
+          case PortNum.REPLY_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onPingPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onPingPacket.emit({
+              packet: meshPacket,
+              data: dataPacket.payloadVariant.payload
+            });
+            break;
 
-        case PortNum.STORE_FORWARD_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onStoreForwardPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onStoreForwardPacket.emit({
-            packet: meshPacket,
-            data: meshPacket.payloadVariant.decoded.payload
-          });
-          break;
+          case PortNum.IP_TUNNEL_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onIpTunnelPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onIpTunnelPacket.emit({
+              packet: meshPacket,
+              data: dataPacket.payloadVariant.payload
+            });
+            break;
 
-        case PortNum.RANGE_TEST_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onRangeTestPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onRangeTestPacket.emit({
-            packet: meshPacket,
-            data: meshPacket.payloadVariant.decoded.payload
-          });
-          break;
+          case PortNum.SERIAL_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onSerialPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onSerialPacket.emit({
+              packet: meshPacket,
+              data: dataPacket.payloadVariant.payload
+            });
+            break;
 
-        case PortNum.TELEMETRY_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onTelemetryPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onTelemetryPacket.emit({
-            packet: meshPacket,
-            data: Protobuf.Telemetry.fromBinary(
-              meshPacket.payloadVariant.decoded.payload
-            )
-          });
-          break;
+          case PortNum.STORE_FORWARD_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onStoreForwardPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onStoreForwardPacket.emit({
+              packet: meshPacket,
+              data: dataPacket.payloadVariant.payload
+            });
+            break;
 
-        case PortNum.PRIVATE_APP:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onPrivatePacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onPrivatePacket.emit({
-            packet: meshPacket,
-            data: meshPacket.payloadVariant.decoded.payload
-          });
-          break;
+          case PortNum.RANGE_TEST_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onRangeTestPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onRangeTestPacket.emit({
+              packet: meshPacket,
+              data: dataPacket.payloadVariant.payload
+            });
+            break;
 
-        case PortNum.ATAK_FORWARDER:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            "Received onAtakPacket",
-            LogRecord_Level.TRACE,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          this.onAtakPacket.emit({
-            packet: meshPacket,
-            data: meshPacket.payloadVariant.decoded.payload
-          });
-          break;
+          case PortNum.TELEMETRY_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onTelemetryPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onTelemetryPacket.emit({
+              packet: meshPacket,
+              data: Protobuf.Telemetry.fromBinary(
+                dataPacket.payloadVariant.payload
+              )
+            });
+            break;
 
-        default:
-          this.log(
-            Types.EmitterScope.iMeshDevice,
-            Types.Emitter.handleMeshPacket,
-            `Unhandled PortNum: ${
-              PortNum[meshPacket.payloadVariant.decoded.portnum] ?? "Unknown"
-            }`,
-            LogRecord_Level.WARNING,
-            meshPacket.payloadVariant.decoded.payload
-          );
-          break;
-      }
-    } else {
-      this.log(
-        Types.EmitterScope.iMeshDevice,
-        Types.Emitter.handleMeshPacket,
-        "Device received encrypted or empty data packet, ignoring.",
-        LogRecord_Level.DEBUG
-      );
+          case PortNum.PRIVATE_APP:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onPrivatePacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onPrivatePacket.emit({
+              packet: meshPacket,
+              data: dataPacket.payloadVariant.payload
+            });
+            break;
+
+          case PortNum.ATAK_FORWARDER:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              "Received onAtakPacket",
+              LogRecord_Level.TRACE,
+              dataPacket.payloadVariant.payload
+            );
+            this.onAtakPacket.emit({
+              packet: meshPacket,
+              data: dataPacket.payloadVariant.payload
+            });
+            break;
+
+          default:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              `Unhandled PortNum: ${PortNum[dataPacket.portnum] ?? "Unknown"}`,
+              LogRecord_Level.WARNING,
+              dataPacket.payloadVariant.payload
+            );
+            break;
+        }
+
+        break;
+
+      case "payloadCompressed":
+        this.log(
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleMeshPacket,
+          "Device received compressed data packet, ignoring.",
+          LogRecord_Level.DEBUG
+        );
+        break;
     }
   }
 }

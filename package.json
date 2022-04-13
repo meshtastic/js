@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.6.55",
+  "version": "0.6.56",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "sideEffects": false,
@@ -24,7 +24,7 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@meshtastic/eslint-config": "^1.0.7",
+    "@meshtastic/eslint-config": "^1.0.8",
     "@protobuf-ts/runtime": "^2.4.0",
     "prettier": "^2.6.2",
     "sub-events": "^1.8.9"
@@ -34,7 +34,7 @@
     "@types/w3c-web-serial": "^1.0.2",
     "@types/web-bluetooth": "^0.0.14",
     "node-protoc": "^1.0.3",
-    "typedoc": "^0.22.14",
+    "typedoc": "^0.22.15",
     "typescript": "^4.6.3"
   },
   "scripts": {
