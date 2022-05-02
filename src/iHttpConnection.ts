@@ -18,7 +18,7 @@ export class IHTTPConnection extends IMeshDevice {
    */
   receiveBatchRequests: boolean;
 
-  readLoop: NodeJS.Timer | null;
+  readLoop: ReturnType<typeof setInterval> | null;
 
   peningRequest: boolean;
 
