@@ -451,27 +451,27 @@ export abstract class IMeshDevice {
     let configType: Protobuf.AdminMessage_ConfigType;
 
     switch (config.payloadVariant.oneofKind) {
-      case "deviceConfig":
+      case "device":
         configType = Protobuf.AdminMessage_ConfigType.DEVICE_CONFIG;
         break;
 
-      case "displayConfig":
+      case "display":
         configType = Protobuf.AdminMessage_ConfigType.DISPLAY_CONFIG;
         break;
 
-      case "loraConfig":
+      case "lora":
         configType = Protobuf.AdminMessage_ConfigType.LORA_CONFIG;
         break;
 
-      case "positionConfig":
+      case "position":
         configType = Protobuf.AdminMessage_ConfigType.POSITION_CONFIG;
         break;
 
-      case "powerConfig":
+      case "power":
         configType = Protobuf.AdminMessage_ConfigType.POWER_CONFIG;
         break;
 
-      case "wifiConfig":
+      case "wifi":
         configType = Protobuf.AdminMessage_ConfigType.WIFI_CONFIG;
         break;
     }
@@ -519,31 +519,31 @@ export abstract class IMeshDevice {
     let configType: Protobuf.AdminMessage_ModuleConfigType;
 
     switch (config.payloadVariant.oneofKind) {
-      case "mqttConfig":
+      case "mqtt":
         configType = Protobuf.AdminMessage_ModuleConfigType.MQTT_CONFIG;
         break;
 
-      case "serialConfig":
+      case "serial":
         configType = Protobuf.AdminMessage_ModuleConfigType.SERIAL_CONFIG;
         break;
 
-      case "externalNotificationConfig":
+      case "externalNotification":
         configType = Protobuf.AdminMessage_ModuleConfigType.EXTNOTIF_CONFIG;
         break;
 
-      case "storeForwardConfig":
+      case "storeForward":
         configType = Protobuf.AdminMessage_ModuleConfigType.STOREFORWARD_CONFIG;
         break;
 
-      case "rangeTestConfig":
+      case "rangeTest":
         configType = Protobuf.AdminMessage_ModuleConfigType.RANGETEST_CONFIG;
         break;
 
-      case "telemetryConfig":
+      case "telemetry":
         configType = Protobuf.AdminMessage_ModuleConfigType.TELEMETRY_CONFIG;
         break;
 
-      case "cannedMessageConfig":
+      case "cannedMessage":
         configType = Protobuf.AdminMessage_ModuleConfigType.CANNEDMSG_CONFIG;
         break;
     }
