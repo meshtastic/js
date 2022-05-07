@@ -15,7 +15,6 @@ import {
   User
 } from "./generated/mesh.js";
 import { PortNum } from "./generated/portnums.js";
-import { RadioConfig_UserPreferences } from "./generated/radioconfig.js";
 import { Protobuf, Types } from "./index.js";
 import type { ConnectionParameters, LogEventPacket } from "./types.js";
 import { log } from "./utils/logging.js";
@@ -57,11 +56,6 @@ export abstract class IMeshDevice {
   private configId: number;
 
   /**
-   * Device's preferences
-   */
-  private userPreferences: RadioConfig_UserPreferences;
-
-  /**
    * Keeps track of all requests sent to the radio that have callbacks
    */
   private responseQueue: responseQueue;
@@ -83,7 +77,6 @@ export abstract class IMeshDevice {
     this.isConfigured = false;
     this.myNodeInfo = MyNodeInfo.create();
     this.configId = this.generateRandId();
-    this.userPreferences = RadioConfig_UserPreferences.create();
     this.responseQueue = new responseQueue();
 
     this.onDeviceStatus.subscribe((status) => {
@@ -96,17 +89,6 @@ export abstract class IMeshDevice {
 
     this.onMyNodeInfo.subscribe((myNodeInfo) => {
       this.myNodeInfo = myNodeInfo;
-    });
-
-    this.onAdminPacket.subscribe((adminPacket) => {
-      switch (adminPacket.data.variant.oneofKind) {
-        case "getRadioResponse":
-          if (adminPacket.data.variant.getRadioResponse.preferences) {
-            this.userPreferences =
-              adminPacket.data.variant.getRadioResponse.preferences;
-          }
-          break;
-      }
     });
   }
 
@@ -461,24 +443,50 @@ export abstract class IMeshDevice {
    * @param preferences Radio UserPreferences
    * @param callback If wantAck is true, callback is called when the ack is received
    */
-  public async setPreferences(
-    preferences: Partial<RadioConfig_UserPreferences>,
+  public async setConfig(
+    config: Protobuf.Config,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
-      Types.Emitter.setPreferences,
+      Types.Emitter.setConfig,
       `Setting preferences ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
 
+    let configType: Protobuf.AdminMessage_ConfigType;
+
+    switch (config.payloadVariant.oneofKind) {
+      case "deviceConfig":
+        configType = Protobuf.AdminMessage_ConfigType.DEVICE_CONFIG;
+        break;
+
+      case "displayConfig":
+        configType = Protobuf.AdminMessage_ConfigType.DISPLAY_CONFIG;
+        break;
+
+      case "loraConfig":
+        configType = Protobuf.AdminMessage_ConfigType.LORA_CONFIG;
+        break;
+
+      case "positionConfig":
+        configType = Protobuf.AdminMessage_ConfigType.POSITION_CONFIG;
+        break;
+
+      case "powerConfig":
+        configType = Protobuf.AdminMessage_ConfigType.POWER_CONFIG;
+        break;
+
+      case "wifiConfig":
+        configType = Protobuf.AdminMessage_ConfigType.WIFI_CONFIG;
+        break;
+    }
+
     const setRadio = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
-          setRadio: {
-            preferences: { ...this.userPreferences, ...preferences }
-          },
-          oneofKind: "setRadio"
+          oneofKind: "setConfig",
+          setConfig: config
         }
       })
     );
@@ -492,7 +500,7 @@ export abstract class IMeshDevice {
       true,
       false,
       async (id: number) => {
-        await this.getPreferences();
+        await this.getConfig(configType);
         callback && callback(id);
       }
     );
@@ -502,12 +510,12 @@ export abstract class IMeshDevice {
    * Confirms the currently set preferences, and prevents changes from reverting after 10 minutes.
    * @param callback If wantAck is true, callback is called when the ack is received
    */
-  public async confirmSetPreferences(
+  public async confirmSetConfig(
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
-      Types.Emitter.confirmSetPreferences,
+      Types.Emitter.confirmSetConfig,
       `Confirming preferences ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -758,12 +766,13 @@ export abstract class IMeshDevice {
    * Gets devices RadioConfig
    * @param callback If wantAck is true, callback is called when the ack is received
    */
-  public async getPreferences(
+  public async getConfig(
+    configType: Protobuf.AdminMessage_ConfigType,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
-      Types.Emitter.getPreferences,
+      Types.Emitter.getConfig,
       `Requesting preferences ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
@@ -771,8 +780,8 @@ export abstract class IMeshDevice {
     const getRadioRequest = AdminMessage.toBinary(
       AdminMessage.create({
         variant: {
-          getRadioRequest: true,
-          oneofKind: "getRadioRequest"
+          oneofKind: "getConfigRequest",
+          getConfigRequest: configType
         }
       })
     );
@@ -972,11 +981,11 @@ export abstract class IMeshDevice {
           )
         );
 
-        await this.getPreferences(async () => {
-          await this.getAllChannels(async () => {
-            await Promise.resolve();
-          });
+        // await this.getConfig(async () => {
+        await this.getAllChannels(async () => {
+          await Promise.resolve();
         });
+        // });
 
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
         break;
