@@ -433,8 +433,8 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Writes radio config to device
-   * @param preferences Radio UserPreferences
+   * Writes config to device
+   * @param config config object
    * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async setConfig(
@@ -444,7 +444,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.setConfig,
-      `Setting preferences ${callback ? "with" : "without"} callback`,
+      `Setting config ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
 
@@ -501,7 +501,79 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Confirms the currently set preferences, and prevents changes from reverting after 10 minutes.
+   * Writes module config to device
+   * @param config module config object
+   * @param callback If wantAck is true, callback is called when the ack is received
+   */
+  public async setModuleConfig(
+    config: Protobuf.ModuleConfig,
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
+    this.log(
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.setModuleConfig,
+      `Setting module config ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
+    let configType: Protobuf.AdminMessage_ModuleConfigType;
+
+    switch (config.payloadVariant.oneofKind) {
+      case "mqttConfig":
+        configType = Protobuf.AdminMessage_ModuleConfigType.MQTT_CONFIG;
+        break;
+
+      case "serialConfig":
+        configType = Protobuf.AdminMessage_ModuleConfigType.SERIAL_CONFIG;
+        break;
+
+      case "externalNotificationConfig":
+        configType = Protobuf.AdminMessage_ModuleConfigType.EXTNOTIF_CONFIG;
+        break;
+
+      case "storeForwardConfig":
+        configType = Protobuf.AdminMessage_ModuleConfigType.STOREFORWARD_CONFIG;
+        break;
+
+      case "rangeTestConfig":
+        configType = Protobuf.AdminMessage_ModuleConfigType.RANGETEST_CONFIG;
+        break;
+
+      case "telemetryConfig":
+        configType = Protobuf.AdminMessage_ModuleConfigType.TELEMETRY_CONFIG;
+        break;
+
+      case "cannedMessageConfig":
+        configType = Protobuf.AdminMessage_ModuleConfigType.CANNEDMSG_CONFIG;
+        break;
+    }
+
+    const setRadio = AdminMessage.toBinary(
+      AdminMessage.create({
+        variant: {
+          oneofKind: "setModuleConfig",
+          setModuleConfig: config
+        }
+      })
+    );
+
+    await this.sendPacket(
+      setRadio,
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      0,
+      true,
+      false,
+      async (id: number) => {
+        await this.getModuleConfig(configType);
+        callback && callback(id);
+      }
+    );
+  }
+
+  /**
+   * Confirms the currently set config, and prevents changes from reverting after 10 minutes.
    * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async confirmSetConfig(
@@ -510,7 +582,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.confirmSetConfig,
-      `Confirming preferences ${callback ? "with" : "without"} callback`,
+      `Confirming config ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
 
@@ -767,7 +839,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.getConfig,
-      `Requesting preferences ${callback ? "with" : "without"} callback`,
+      `Requesting config ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
 
@@ -776,6 +848,42 @@ export abstract class IMeshDevice {
         variant: {
           oneofKind: "getConfigRequest",
           getConfigRequest: configType
+        }
+      })
+    );
+
+    await this.sendPacket(
+      getRadioRequest,
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      0,
+      true,
+      false,
+      callback
+    );
+  }
+
+  /**
+   * Gets devices config
+   * @param callback If wantAck is true, callback is called when the ack is received
+   */
+  public async getModuleConfig(
+    configType: Protobuf.AdminMessage_ModuleConfigType,
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
+    this.log(
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.getModuleConfig,
+      `Requesting module config ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
+    const getRadioRequest = AdminMessage.toBinary(
+      AdminMessage.create({
+        variant: {
+          oneofKind: "getModuleConfigRequest",
+          getModuleConfigRequest: configType
         }
       })
     );
