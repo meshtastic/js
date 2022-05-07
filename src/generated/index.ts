@@ -8,7 +8,6 @@ export * from "./mesh.js";
 export * from "./module_config.js";
 export * from "./mqtt.js";
 export * from "./portnums.js";
-export * from "./radioconfig.js";
 export * from "./remote_hardware.js";
 export * from "./storeforward.js";
 export * from "./telemetry.js";

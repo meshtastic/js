@@ -136,12 +136,6 @@ export abstract class IMeshDevice {
   public readonly onMyNodeInfo: SubEvent<Protobuf.MyNodeInfo> = new SubEvent();
 
   /**
-   * Fires when a new RadioConfig message has been received from the device
-   */
-  public readonly onRadioConfig: SubEvent<Protobuf.RadioConfig> =
-    new SubEvent();
-
-  /**
    * Fires when a new MeshPacket message containing a NodeInfo packet has been received from device
    * @event
    */
@@ -763,7 +757,7 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Gets devices RadioConfig
+   * Gets devices config
    * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async getConfig(
@@ -1003,7 +997,6 @@ export abstract class IMeshDevice {
     this.onFromRadio.cancelAll();
     this.onMeshPacket.cancelAll();
     this.onMyNodeInfo.cancelAll();
-    this.onRadioConfig.cancelAll();
     this.onNodeInfoPacket.cancelAll();
     this.onAdminPacket.cancelAll();
     this.onRoutingPacket.cancelAll();
