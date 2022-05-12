@@ -2,8 +2,8 @@
 
 [![NPM](https://badgen.net/npm/v/@meshtastic/meshtasticjs)](https://www.npmjs.com/package/@meshtastic/meshtasticjs)
 [![Downloads](https://badgen.net/npm/dt/@meshtastic/meshtasticjs)](https://www.npmjs.com/package/@meshtastic/meshtasticjs)
-[![CI](https://img.shields.io/github/workflow/status/meshtastic/meshtastic.js/CI?label=actions&logo=github&color=yellow)](https://github.com/meshtastic/repo/actions/workflows/ci.yml)
-[![CLA assistant](https://cla-assistant.io/readme/badge/meshtastic/repo)](https://cla-assistant.io/meshtastic/repo)
+[![CI](https://img.shields.io/github/workflow/status/meshtastic/meshtastic.js/CI?label=actions&logo=github&color=yellow)](https://github.com/meshtastic/meshtastic.js/actions/workflows/ci.yml)
+[![CLA assistant](https://cla-assistant.io/readme/badge/meshtastic/meshtastic.js)](https://cla-assistant.io/meshtastic/meshtastic.js)
 [![Fiscal Contributors](https://opencollective.com/meshtastic/tiers/badge.svg?label=Fiscal%20Contributors&color=deeppink)](https://opencollective.com/meshtastic/)
 [![Vercel](https://img.shields.io/static/v1?label=Powered%20by&message=Vercel&style=flat&logo=vercel&color=000000)](https://vercel.com?utm_source=meshtastic&utm_campaign=oss)
 
