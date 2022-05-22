@@ -71,7 +71,7 @@ export class ISerialConnection extends IMeshDevice {
   }
 
   /**
-   * Gets list of serial ports that can be passed to `connect`
+   * Opens browsers connection dialogue to select a serial port
    */
   public async getPort(filter?: SerialPortRequestOptions): Promise<SerialPort> {
     return navigator.serial.requestPort(filter);
