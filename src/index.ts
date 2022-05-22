@@ -1,4 +1,4 @@
-import { Client } from "./client.js";
+import { Client, IConnection } from "./client.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import { IBLEConnection } from "./iBleConnection.js";
 import { IHTTPConnection } from "./iHttpConnection.js";
@@ -13,6 +13,7 @@ export {
   IBLEConnection,
   IHTTPConnection,
   ISerialConnection,
+  IConnection,
   SettingsManager,
   Types,
   Protobuf
