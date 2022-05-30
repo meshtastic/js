@@ -53,7 +53,7 @@ export abstract class IMeshDevice {
   /**
    * Randomly generated number to ensure confiuration lockstep
    */
-  private configId: number;
+  public configId: number;
 
   /**
    * Keeps track of all requests sent to the radio that have callbacks
