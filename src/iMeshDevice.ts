@@ -60,7 +60,7 @@ export abstract class IMeshDevice {
    */
   private responseQueue: responseQueue;
 
-  constructor() {
+  constructor(configId?: number) {
     this.log = (scope, emitter, message, level, packet): void => {
       log(scope, emitter, message, level);
       this.onLogEvent.emit({
@@ -76,7 +76,7 @@ export abstract class IMeshDevice {
     this.deviceStatus = Types.DeviceStatusEnum.DEVICE_DISCONNECTED;
     this.isConfigured = false;
     this.myNodeInfo = MyNodeInfo.create();
-    this.configId = this.generateRandId();
+    this.configId = configId ?? this.generateRandId();
     this.responseQueue = new responseQueue();
 
     this.onDeviceStatus.subscribe((status) => {

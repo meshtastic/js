@@ -22,8 +22,8 @@ export class ISerialConnection extends IMeshDevice {
    */
   private writer: WritableStream<ArrayBuffer>;
 
-  constructor() {
-    super();
+  constructor(configId?: number) {
+    super(configId);
 
     this.port = undefined;
 

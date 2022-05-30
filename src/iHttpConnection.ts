@@ -24,8 +24,8 @@ export class IHTTPConnection extends IMeshDevice {
 
   abortController: AbortController;
 
-  constructor() {
-    super();
+  constructor(configId?: number) {
+    super(configId);
 
     this.url = "http://meshtastic.local";
 
