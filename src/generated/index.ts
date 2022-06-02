@@ -4,6 +4,7 @@ export * from "./cannedmessages.js";
 export * from "./config.js";
 export * from "./channel.js";
 export * from "./deviceonly.js";
+export * from "./localonly.js";
 export * from "./mesh.js";
 export * from "./module_config.js";
 export * from "./mqtt.js";
