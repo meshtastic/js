@@ -32,8 +32,8 @@ export class Client {
   /**
    * Creates a new HTTP(S) connection interface
    */
-  public createHTTPConnection(): IHTTPConnection {
-    const iHTTPConnection = new IHTTPConnection();
+  public createHTTPConnection(configId: number): IHTTPConnection {
+    const iHTTPConnection = new IHTTPConnection(configId);
     this.deviceInterfaces.push(iHTTPConnection);
     return iHTTPConnection;
   }
@@ -41,8 +41,8 @@ export class Client {
   /**
    * Creates a new Serial connection interface
    */
-  public createSerialConnection(): ISerialConnection {
-    const iSerialConnection = new ISerialConnection();
+  public createSerialConnection(configId: number): ISerialConnection {
+    const iSerialConnection = new ISerialConnection(configId);
     this.deviceInterfaces.push(iSerialConnection);
     return iSerialConnection;
   }
