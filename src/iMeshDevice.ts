@@ -18,7 +18,7 @@ import { PortNum } from "./generated/portnums.js";
 import { Protobuf, Types } from "./index.js";
 import type { ConnectionParameters, LogEventPacket } from "./types.js";
 import { log } from "./utils/logging.js";
-import { responseQueue } from "./utils/responseQueue.js";
+import { Queue } from "./utils/queue.js";
 
 /**
  * Base class for connection methods to extend
@@ -57,8 +57,9 @@ export abstract class IMeshDevice {
 
   /**
    * Keeps track of all requests sent to the radio that have callbacks
+   * TODO: Update description
    */
-  private responseQueue: responseQueue;
+  public queue: Queue;
 
   constructor(configId?: number) {
     this.log = (scope, emitter, message, level, packet): void => {
@@ -77,7 +78,7 @@ export abstract class IMeshDevice {
     this.isConfigured = false;
     this.myNodeInfo = MyNodeInfo.create();
     this.configId = configId ?? this.generateRandId();
-    this.responseQueue = new responseQueue();
+    this.queue = new Queue();
 
     this.onDeviceStatus.subscribe((status) => {
       this.deviceStatus = status;
@@ -389,34 +390,21 @@ export abstract class IMeshDevice {
       })
     );
 
-    if (toRadio.length > 512) {
-      this.log(
-        Types.EmitterScope.iMeshDevice,
-        Types.Emitter.sendPacket,
-        `Message longer than 512 characters, it will not be sent!`,
-        LogRecord_Level.WARNING
-      );
-    } else {
-      if (echoResponse) {
-        await this.handleMeshPacket(meshPacket);
-      }
-
-      if (typeof callback === "function") {
-        this.responseQueue.push({
-          id: meshPacket.id,
-          callback
-        });
-      }
-
-      await this.sendRaw(toRadio);
+    if (echoResponse) {
+      await this.handleMeshPacket(meshPacket);
     }
+    await this.sendRaw(meshPacket.id, toRadio, callback);
   }
 
   /**
    * Sends raw packet over the radio
    * @param toRadio binary data to send
    */
-  public async sendRaw(toRadio: Uint8Array): Promise<void> {
+  public async sendRaw(
+    id: number,
+    toRadio: Uint8Array,
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
     if (toRadio.length > 512) {
       this.log(
         Types.EmitterScope.iMeshDevice,
@@ -425,7 +413,20 @@ export abstract class IMeshDevice {
         LogRecord_Level.WARNING
       );
     } else {
-      await this.writeToRadio(toRadio);
+      this.queue.push({
+        id,
+        data: toRadio,
+        callback:
+          callback ??
+          (async () => {
+            return Promise.resolve();
+          }),
+        waitingAck: false
+      });
+
+      await this.queue.processQueue(async (data) => {
+        await this.writeToRadio(data);
+      });
     }
   }
 
@@ -814,6 +815,7 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
+    // TODO: Use device queue now.
     const queue: Array<() => Promise<void>> = [];
     for (let i = 0; i <= this.myNodeInfo.maxChannels; i++) {
       queue.push(async (): Promise<void> => {
@@ -944,16 +946,16 @@ export abstract class IMeshDevice {
     );
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
-    await this.writeToRadio(
-      ToRadio.toBinary(
-        ToRadio.create({
-          payloadVariant: {
-            wantConfigId: this.configId,
-            oneofKind: "wantConfigId"
-          }
-        })
-      )
+    const toRadio = ToRadio.toBinary(
+      ToRadio.create({
+        payloadVariant: {
+          wantConfigId: this.configId,
+          oneofKind: "wantConfigId"
+        }
+      })
     );
+
+    await this.sendRaw(0, toRadio);
   }
 
   /**
@@ -1066,7 +1068,9 @@ export abstract class IMeshDevice {
             LogRecord_Level.ERROR
           );
         }
-        await this.writeToRadio(
+
+        await this.sendRaw(
+          0,
           ToRadio.toBinary(
             ToRadio.create({
               payloadVariant: {
@@ -1110,7 +1114,7 @@ export abstract class IMeshDevice {
     this.onDeviceStatus.cancelAll();
     this.onLogRecord.cancelAll();
     this.onMeshHeartbeat.cancelAll();
-    this.responseQueue.clear();
+    this.queue.clear();
   }
 
   /**
@@ -1128,7 +1132,7 @@ export abstract class IMeshDevice {
 
     switch (meshPacket.payloadVariant.oneofKind) {
       case "decoded":
-        await this.responseQueue.process(
+        await this.queue.processAck(
           meshPacket.payloadVariant.decoded.requestId
         );
         this.handleDataPacket(meshPacket.payloadVariant.decoded, meshPacket);
