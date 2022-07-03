@@ -1049,6 +1049,27 @@ export abstract class IMeshDevice {
         }
         break;
 
+      case "config":
+        this.log(
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleFromRadio,
+          "Received onAdminPacket",
+          LogRecord_Level.TRACE
+        );
+
+        this.onAdminPacket.emit({
+          packet: MeshPacket.create({
+            id: decodedMessage.id
+          }),
+          data: {
+            variant: {
+              oneofKind: "getConfigResponse",
+              getConfigResponse: decodedMessage.payloadVariant.config
+            }
+          }
+        });
+        break;
+
       case "logRecord":
         this.log(
           Types.EmitterScope.iMeshDevice,
@@ -1095,6 +1116,28 @@ export abstract class IMeshDevice {
 
       case "rebooted":
         await this.configure();
+        break;
+
+      case "moduleConfig":
+        this.log(
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleFromRadio,
+          "Received onAdminPacket",
+          LogRecord_Level.TRACE
+        );
+
+        this.onAdminPacket.emit({
+          packet: MeshPacket.create({
+            id: decodedMessage.id
+          }),
+          data: {
+            variant: {
+              oneofKind: "getModuleConfigResponse",
+              getModuleConfigResponse:
+                decodedMessage.payloadVariant.moduleConfig
+            }
+          }
+        });
         break;
     }
   }
