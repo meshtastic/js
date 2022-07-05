@@ -150,10 +150,24 @@ export abstract class IMeshDevice {
   public readonly onUserPacket: SubEvent<Types.UserPacket> = new SubEvent();
 
   /**
-   * Fires when a new MeshPacket message containing an AdminMessage packet has been received from device
+   * Fires when a new Channel message is recieved
    * @event
    */
-  public readonly onAdminPacket: SubEvent<Types.AdminPacket> = new SubEvent();
+  public readonly onChannelPacket: SubEvent<Types.ChannelPacket> =
+    new SubEvent();
+
+  /**
+   * Fires when a new Config message is recieved
+   * @event
+   */
+  public readonly onConfigPacket: SubEvent<Types.ConfigPacket> = new SubEvent();
+
+  /**
+   * Fires when a new ModuleConfig message is recieved
+   * @event
+   */
+  public readonly onModuleConfigPacket: SubEvent<Types.ModuleConfigPacket> =
+    new SubEvent();
 
   /**
    * Fires when a new MeshPacket message containing a Ping packet has been received from device
@@ -954,8 +968,12 @@ export abstract class IMeshDevice {
         }
       })
     );
-
-    await this.sendRaw(0, toRadio);
+    setTimeout(async () => {
+      await this.sendRaw(0, toRadio, async () => {
+        console.log("got Callback");
+        return Promise.resolve();
+      });
+    }, 2000);
   }
 
   /**
@@ -1053,20 +1071,15 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
-          "Received onAdminPacket",
+          "Received onConfigPacket",
           LogRecord_Level.TRACE
         );
 
-        this.onAdminPacket.emit({
+        this.onConfigPacket.emit({
           packet: MeshPacket.create({
             id: decodedMessage.id
           }),
-          data: {
-            variant: {
-              oneofKind: "getConfigResponse",
-              getConfigResponse: decodedMessage.payloadVariant.config
-            }
-          }
+          data: decodedMessage.payloadVariant.config
         });
         break;
 
@@ -1122,21 +1135,15 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
-          "Received onAdminPacket",
+          "Received onModuleConfigPacket",
           LogRecord_Level.TRACE
         );
 
-        this.onAdminPacket.emit({
+        this.onModuleConfigPacket.emit({
           packet: MeshPacket.create({
             id: decodedMessage.id
           }),
-          data: {
-            variant: {
-              oneofKind: "getModuleConfigResponse",
-              getModuleConfigResponse:
-                decodedMessage.payloadVariant.moduleConfig
-            }
-          }
+          data: decodedMessage.payloadVariant.moduleConfig
         });
         break;
     }
@@ -1146,14 +1153,27 @@ export abstract class IMeshDevice {
    * Completes all SubEvents
    */
   public complete(): void {
+    this.onLogEvent.cancelAll();
     this.onFromRadio.cancelAll();
     this.onMeshPacket.cancelAll();
     this.onMyNodeInfo.cancelAll();
     this.onNodeInfoPacket.cancelAll();
-    this.onAdminPacket.cancelAll();
+    this.onUserPacket.cancelAll();
+    this.onChannelPacket.cancelAll();
+    this.onConfigPacket.cancelAll();
+    this.onModuleConfigPacket.cancelAll();
+    this.onPingPacket.cancelAll();
+    this.onIpTunnelPacket.cancelAll();
+    this.onSerialPacket.cancelAll();
+    this.onStoreForwardPacket.cancelAll();
+    this.onRangeTestPacket.cancelAll();
+    this.onTelemetryPacket.cancelAll();
+    this.onPrivatePacket.cancelAll();
+    this.onAtakPacket.cancelAll();
     this.onRoutingPacket.cancelAll();
     this.onPositionPacket.cancelAll();
     this.onTextPacket.cancelAll();
+    this.onRemoteHardwarePacket.cancelAll();
     this.onDeviceStatus.cancelAll();
     this.onLogRecord.cancelAll();
     this.onMeshHeartbeat.cancelAll();
@@ -1275,10 +1295,33 @@ export abstract class IMeshDevice {
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
-        this.onAdminPacket.emit({
-          packet: meshPacket,
-          data: AdminMessage.fromBinary(dataPacket.payload)
-        });
+        const adminMessage = AdminMessage.fromBinary(dataPacket.payload);
+        switch (adminMessage.variant.oneofKind) {
+          case "getChannelResponse":
+            this.onChannelPacket.emit({
+              packet: meshPacket,
+              data: adminMessage.variant.getChannelResponse
+            });
+            break;
+          case "getOwnerResponse":
+            this.onUserPacket.emit({
+              packet: meshPacket,
+              data: adminMessage.variant.getOwnerResponse
+            });
+            break;
+          case "getConfigResponse":
+            this.onConfigPacket.emit({
+              packet: meshPacket,
+              data: adminMessage.variant.getConfigResponse
+            });
+            break;
+          case "getModuleConfigResponse":
+            this.onModuleConfigPacket.emit({
+              packet: meshPacket,
+              data: adminMessage.variant.getModuleConfigResponse
+            });
+            break;
+        }
         break;
 
       case PortNum.REPLY_APP:

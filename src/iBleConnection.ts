@@ -20,11 +20,6 @@ export class IBLEConnection extends IMeshDevice {
   device: BluetoothDevice | void;
 
   /**
-   * Connection interface to currently connected BLE device
-   */
-  connection: BluetoothRemoteGATTServer | void;
-
-  /**
    * Short Description
    */
   service: BluetoothRemoteGATTService | undefined;
@@ -64,11 +59,10 @@ export class IBLEConnection extends IMeshDevice {
    */
   pendingRead: boolean;
 
-  constructor() {
-    super();
+  constructor(configId?: number) {
+    super(configId);
 
     this.device = undefined;
-    this.connection = undefined;
     this.service = undefined;
     this.toRadioCharacteristic = undefined;
     this.fromRadioCharacteristic = undefined;
@@ -102,9 +96,6 @@ export class IBLEConnection extends IMeshDevice {
         filters: [{ services: [SERVICE_UUID] }]
       }
     );
-    // .catch(({ message }: { message: string }) => {
-    //   this.log(`IBLEConnection.requestDevice`, message, LogRecord_Level.ERROR);
-    // });
   }
 
   /**
@@ -128,74 +119,46 @@ export class IBLEConnection extends IMeshDevice {
       this.device = await this.getDevice();
     }
 
-    if (this.device) {
-      this.device.gatt
-        ?.connect()
-        .then(async (connection): Promise<void> => {
-          await connection
-            .getPrimaryService(SERVICE_UUID)
-            .then(async (service) => {
-              this.service = service;
+    await this.device.gatt?.connect();
 
-              this.toRadioCharacteristic = await service.getCharacteristic(
-                TORADIO_UUID
-              );
-              this.fromRadioCharacteristic = await service.getCharacteristic(
-                FROMRADIO_UUID
-              );
-              this.fromNumCharacteristic = await service.getCharacteristic(
-                FROMNUM_UUID
-              );
+    this.service = await this.device.gatt?.getPrimaryService(SERVICE_UUID);
 
-              if (this.fromNumCharacteristic) {
-                await this.fromNumCharacteristic.startNotifications();
+    this.toRadioCharacteristic = await this.service?.getCharacteristic(
+      TORADIO_UUID
+    );
 
-                this.fromNumCharacteristic.addEventListener(
-                  "characteristicvaluechanged",
-                  /**
-                   * @todo fix
-                   */
-                  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                  async () => {
-                    await this.readFromRadio();
-                  }
-                );
-              }
+    this.fromRadioCharacteristic = await this.service?.getCharacteristic(
+      FROMRADIO_UUID
+    );
 
-              this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+    this.fromNumCharacteristic = await this.service?.getCharacteristic(
+      FROMNUM_UUID
+    );
 
-              await this.configure();
-            })
-            .catch(({ message }: { message: string }) => {
-              this.log(
-                Types.EmitterScope.iBleConnection,
-                Types.Emitter.connect,
-                message,
-                LogRecord_Level.ERROR
-              );
-            });
-          this.connection = connection;
-        })
-        .catch(({ message }: { message: string }) => {
-          this.log(
-            Types.EmitterScope.iBleConnection,
-            Types.Emitter.connect,
-            message,
-            LogRecord_Level.ERROR
-          );
-        });
-      this.device.addEventListener("gattserverdisconnected", () => {
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    await this.fromNumCharacteristic?.startNotifications();
 
-        if (!this.userInitiatedDisconnect) {
-          if (
-            this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
-          ) {
-            this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
-          }
-        }
-      });
-    }
+    this.fromNumCharacteristic?.addEventListener(
+      "characteristicvaluechanged",
+      () => {
+        void this.readFromRadio();
+      }
+    );
+
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+
+    await this.configure();
+
+    //   this.device.addEventListener("gattserverdisconnected", () => {
+    //     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+
+    //     if (!this.userInitiatedDisconnect) {
+    //       if (
+    //         this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
+    //       ) {
+    //         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
+    //       }
+    //     }
+    //   });
   }
 
   /**
@@ -203,9 +166,7 @@ export class IBLEConnection extends IMeshDevice {
    */
   public disconnect(): void {
     this.userInitiatedDisconnect = true;
-    if (this.connection) {
-      this.connection.disconnect();
-    }
+    this.device?.gatt?.disconnect();
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
   }
@@ -258,30 +219,32 @@ export class IBLEConnection extends IMeshDevice {
    * Sends supplied protobuf message to the radio
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
-    this.writeQueue.push(data);
-    if (this.writeLock) {
-      return Promise.resolve();
-    } else {
-      this.writeLock = true;
-      if (this.toRadioCharacteristic) {
-        while (this.writeQueue.length) {
-          if (this.writeQueue[0]) {
-            await this.toRadioCharacteristic
-              .writeValue(typedArrayToBuffer(this.writeQueue[0]))
-              .then(() => {
-                this.writeQueue.shift();
-              })
-              .catch(({ message }: { message: string }) => {
-                this.log(
-                  Types.EmitterScope.iBleConnection,
-                  Types.Emitter.writeToRadio,
-                  message,
-                  LogRecord_Level.ERROR
-                );
-              });
-          }
-        }
-      }
-    }
+    await this.toRadioCharacteristic?.writeValue(typedArrayToBuffer(data));
+    await this.readFromRadio();
+    // this.writeQueue.push(data);
+    // if (this.writeLock) {
+    //   return Promise.resolve();
+    // } else {
+    //   this.writeLock = true;
+    //   if (this.toRadioCharacteristic) {
+    //     while (this.writeQueue.length) {
+    //       if (this.writeQueue[0]) {
+    //         await this.toRadioCharacteristic
+    //           .writeValue(typedArrayToBuffer(this.writeQueue[0]))
+    //           .then(() => {
+    //             this.writeQueue.shift();
+    //           })
+    //           .catch(({ message }: { message: string }) => {
+    //             this.log(
+    //               Types.EmitterScope.iBleConnection,
+    //               Types.Emitter.writeToRadio,
+    //               message,
+    //               LogRecord_Level.ERROR
+    //             );
+    //           });
+    //       }
+    //     }
+    //   }
+    // }
   }
 }

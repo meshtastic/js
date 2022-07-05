@@ -4,7 +4,6 @@ import type {
   ISerialConnection,
   Protobuf
 } from "./index.js";
-import type { AdminMessage } from "./generated/admin.js";
 import type {
   MeshPacket,
   NodeInfo,
@@ -83,11 +82,6 @@ export interface UserPacket {
   data: User;
 }
 
-export interface AdminPacket {
-  packet: MeshPacket;
-  data: AdminMessage;
-}
-
 export interface RoutingPacket {
   packet: MeshPacket;
   data: Routing;
@@ -146,6 +140,21 @@ export interface AtakPacket {
 export interface RemoteHardwarePacket {
   packet: MeshPacket;
   data: Protobuf.HardwareMessage;
+}
+
+export interface ChannelPacket {
+  packet: MeshPacket;
+  data: Protobuf.Channel;
+}
+
+export interface ConfigPacket {
+  packet: MeshPacket;
+  data: Protobuf.Config;
+}
+
+export interface ModuleConfigPacket {
+  packet: MeshPacket;
+  data: Protobuf.ModuleConfig;
 }
 
 export enum EmitterScope {

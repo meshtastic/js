@@ -84,6 +84,17 @@ export class ISerialConnection extends IMeshDevice {
   public async connect(parameters: SerialConnectionParameters): Promise<void> {
     this.port = parameters.port ? parameters.port : await this.getPort();
 
+    this.port.addEventListener("disconnect", (e) => {
+      this.log(
+        Types.EmitterScope.iSerialConnection,
+        Types.Emitter.connect,
+        `Device disconnected: ${e}`,
+        LogRecord_Level.INFO
+      );
+      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+      this.complete();
+    });
+
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
     await this.port.open({
       baudRate: parameters.baudRate ?? 921600
@@ -102,14 +113,11 @@ export class ISerialConnection extends IMeshDevice {
             const msb = byteBuffer[index + 2] ?? 0;
             const lsb = byteBuffer[index + 3] ?? 0;
 
-            if (
-              startBit2 === 0xc3 &&
-              byteBuffer.length >= index + 4 + lsb + msb
-            ) {
-              controller.enqueue(
-                byteBuffer.subarray(index + 4, index + 4 + lsb + msb)
-              );
-              byteBuffer = byteBuffer.slice(index + 4 + lsb + msb);
+            const len = index + 4 + lsb + msb;
+
+            if (startBit2 === 0xc3 && byteBuffer.length >= len) {
+              controller.enqueue(byteBuffer.subarray(index + 4, len));
+              byteBuffer = byteBuffer.slice(len);
             }
           }
         }

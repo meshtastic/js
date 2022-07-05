@@ -6,6 +6,7 @@ import { ISerialConnection } from "./iSerialConnection.js";
 import * as Protobuf from "./generated/index.js";
 import { SettingsManager } from "./settingsManager.js";
 import * as Types from "./types.js";
+import * as Constants from "./constants.js";
 
 export {
   Client,
@@ -16,5 +17,6 @@ export {
   IConnection,
   SettingsManager,
   Types,
+  Constants,
   Protobuf
 };
