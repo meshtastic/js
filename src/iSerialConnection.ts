@@ -8,6 +8,11 @@ import { LogRecord_Level } from "./generated/mesh.js";
  */
 export class ISerialConnection extends IMeshDevice {
   /**
+   * Defines the connection type as serial
+   */
+  connType: string;
+
+  /**
    * Serial port used to communicate with device.
    */
   private port: SerialPort | undefined;
@@ -25,8 +30,8 @@ export class ISerialConnection extends IMeshDevice {
   constructor(configId?: number) {
     super(configId);
 
+    this.connType = "serial";
     this.port = undefined;
-
     this.reader = new ReadableStreamDefaultReader(new ReadableStream());
     this.writer = new WritableStream();
   }

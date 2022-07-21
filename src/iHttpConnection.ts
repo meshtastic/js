@@ -9,6 +9,11 @@ import { typedArrayToBuffer } from "./utils/general.js";
  */
 export class IHTTPConnection extends IMeshDevice {
   /**
+   * Defines the connection type as http
+   */
+  connType: string;
+
+  /**
    * URL of the device that is to be connected to.
    */
   url: string;
@@ -27,14 +32,11 @@ export class IHTTPConnection extends IMeshDevice {
   constructor(configId?: number) {
     super(configId);
 
+    this.connType = "http";
     this.url = "http://meshtastic.local";
-
     this.receiveBatchRequests = false;
-
     this.readLoop = null;
-
     this.peningRequest = false;
-
     this.abortController = new AbortController();
   }
 

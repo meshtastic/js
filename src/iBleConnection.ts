@@ -15,6 +15,11 @@ import { typedArrayToBuffer } from "./utils/general.js";
  */
 export class IBLEConnection extends IMeshDevice {
   /**
+   * Defines the connection type as ble
+   */
+  connType: string;
+
+  /**
    * Currently connected BLE device
    */
   device: BluetoothDevice | void;
@@ -62,6 +67,7 @@ export class IBLEConnection extends IMeshDevice {
   constructor(configId?: number) {
     super(configId);
 
+    this.connType = "ble";
     this.device = undefined;
     this.service = undefined;
     this.toRadioCharacteristic = undefined;

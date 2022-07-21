@@ -25,6 +25,11 @@ import { Queue } from "./utils/queue.js";
  */
 export abstract class IMeshDevice {
   /**
+   * Abstract property that states the connection type
+   */
+  protected abstract connType: string;
+
+  /**
    * Logs to the console and the logging event emitter
    */
   protected log: (
