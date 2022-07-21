@@ -26,7 +26,9 @@
   "dependencies": {
     "@meshtastic/eslint-config": "^1.0.8",
     "@protobuf-ts/runtime": "^2.7.0",
+    "@serialport/stream": "^10.3.0",
     "prettier": "^2.7.1",
+    "serialport": "^10.4.0",
     "sub-events": "^1.8.9"
   },
   "devDependencies": {
