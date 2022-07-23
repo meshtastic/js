@@ -33,7 +33,7 @@ export class INodeSerialConnection extends IMeshDevice {
     this.port.pipe(new MeshtasticStreamParser({}));
   }
 
-  public async getPorts(): Promise<INodeSerialPort[]> {
+  public static async getPorts(): Promise<INodeSerialPort[]> {
     const portInfos = await SerialPort.list();
     return portInfos.map(p => <INodeSerialPort> { 
       path: p.path, 
