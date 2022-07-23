@@ -160,7 +160,7 @@ export interface ModuleConfigPacket {
 export enum EmitterScope {
   "iMeshDevice",
   "iSerialConnection",
-  "iConsoleSerialConnection",
+  "iNodeSerialConnection",
   "iBleConnection",
   "iHttpConnection",
   "SettingsManager"

@@ -1,17 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import { LogRecord_Level } from "./generated/mesh.js";
+import { MeshtasticStreamParser } from "./utils/meshtasticStreamParser.js";
 
-import { SerialPortStream, StreamOptions } from '@serialport/stream';
-import { SerialPort } from 'serialport';
+import { SerialPort } from "serialport";
 
 /**
- * Allows to connect to a Meshtastic device over WebSerial
+ * Allows connection to a Meshtastic device over NodeJS SerialPort
  */
-export class IConsolSerialConnection extends IMeshDevice {
+export class INodeSerialConnection extends IMeshDevice {
   /**
    * Defines the connection type as serial
    */
@@ -22,17 +19,18 @@ export class IConsolSerialConnection extends IMeshDevice {
    */
   private port: SerialPort | undefined;
 
-  constructor(configId?: number) {
+  constructor(path: string, configId?: number) {
     super(configId);
 
     this.connType = "serial";
     this.port = undefined;
     this.port = new SerialPort({
-      path: 'COM6',
+      path: path,
       baudRate: 115200,
       autoOpen: false,
-      lock
     });
+
+    this.port.pipe(new MeshtasticStreamParser({}));
   }
 
   /**
@@ -43,10 +41,12 @@ export class IConsolSerialConnection extends IMeshDevice {
       try {
         // eslint-disable-next-line no-constant-condition
         while (true) {
-          const { value, done } = await this.port?.read();
-          if (value) {
-            void this.handleFromRadio(value);
-          }
+          let done = false;
+
+          this.port?.on('readable', (buffer: Buffer) => {
+            void this.handleFromRadio(new Uint8Array(buffer.buffer));
+            done = true;
+          });
 
           if (done) {
             console.log("done");
@@ -55,7 +55,7 @@ export class IConsolSerialConnection extends IMeshDevice {
         }
       } catch (error) {
         this.log(
-          Types.EmitterScope.iSerialConnection,
+          Types.EmitterScope.iNodeSerialConnection,
           Types.Emitter.readFromRadio,
           `Device errored or disconnected: ${error as string}`,
           LogRecord_Level.INFO
@@ -72,7 +72,7 @@ export class IConsolSerialConnection extends IMeshDevice {
   public async connect(): Promise<void> {
     this.port?.on("disconnect", (e) => {
       this.log(
-        Types.EmitterScope.iSerialConnection,
+        Types.EmitterScope.iNodeSerialConnection,
         Types.Emitter.connect,
         `Device disconnected: ${e}`,
         LogRecord_Level.INFO
@@ -85,38 +85,13 @@ export class IConsolSerialConnection extends IMeshDevice {
     this.port?.open((e) => {
       if (e) {
         this.log(
-          Types.EmitterScope.iSerialConnection,
+          Types.EmitterScope.iNodeSerialConnection,
           Types.Emitter.connect,
           `Conn: ${e.message}`,
           LogRecord_Level.ERROR
         );
       }
     });
-
-    let byteBuffer = new Uint8Array([]);
-
-    if (this.port?.isOpen && this.port.writable) {
-      const transformer = new TransformStream<Uint8Array, Uint8Array>({
-        transform(chunk: Uint8Array, controller): void {
-          byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
-
-          if (byteBuffer.includes(0x94)) {
-            const index = byteBuffer.findIndex((byte) => byte === 0x94);
-            const startBit2 = byteBuffer[index + 1];
-            const msb = byteBuffer[index + 2] ?? 0;
-            const lsb = byteBuffer[index + 3] ?? 0;
-
-            const len = index + 4 + lsb + msb;
-
-            if (startBit2 === 0xc3 && byteBuffer.length >= len) {
-              controller.enqueue(byteBuffer.subarray(index + 4, len));
-              byteBuffer = byteBuffer.slice(len);
-            }
-          }
-        }
-      });
-      this.port.get.pipeThrough(transformer).getReader();
-    }
 
     void this.readFromRadio();
 
@@ -159,7 +134,7 @@ export class IConsolSerialConnection extends IMeshDevice {
       'binary',
       (e) => {
         this.log(
-          Types.EmitterScope.iConsoleSerialConnection,
+          Types.EmitterScope.iNodeSerialConnection,
           Types.Emitter.writeToRadio,
           `Conn: ${e}`,
           LogRecord_Level.ERROR
