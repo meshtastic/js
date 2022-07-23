@@ -21,4 +21,6 @@ node_modules
 # Application Files
 src/generated/*.ts
 !src/generated/index.ts
+
+# Misc
 .DS_Store
