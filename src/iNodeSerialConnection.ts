@@ -33,6 +33,14 @@ export class INodeSerialConnection extends IMeshDevice {
     this.port.pipe(new MeshtasticStreamParser({}));
   }
 
+  public async getPorts(): Promise<INodeSerialPort[]> {
+    const portInfos = await SerialPort.list();
+    return portInfos.map(p => <INodeSerialPort> { 
+      path: p.path, 
+      description: p.manufacturer 
+    });
+  }
+  
   /**
    * Reads packets from transformed serial port steam and processes them.
    */
@@ -142,4 +150,9 @@ export class INodeSerialConnection extends IMeshDevice {
       }
     );
   }
+}
+
+interface INodeSerialPort {
+  path: string,
+  description: string,
 }
