@@ -30,7 +30,7 @@ export class INodeSerialConnection extends IMeshDevice {
       autoOpen: false,
     });
 
-    this.port.pipe(new MeshtasticStreamParser({}));
+    this.port.pipe(new MeshtasticStreamParser({ defaultEncoding: 'binary' }));
   }
 
   public static async getPorts(): Promise<INodeSerialPort[]> {
@@ -45,21 +45,11 @@ export class INodeSerialConnection extends IMeshDevice {
    * Reads packets from transformed serial port steam and processes them.
    */
   private async readFromRadio(): Promise<void> {
-    while (this.port?.readable) {
+    if (this.port?.readable) {
       try {
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          let done = false;
-
-          this.port?.on('readable', (buffer: Buffer) => {
-            void this.handleFromRadio(new Uint8Array(buffer.buffer));
-            done = true;
-          });
-
-          if (done) {
-            console.log("done");
-            break;
-          }
+        const buffer = await this.port.read() as Buffer;
+        if (buffer && buffer.length > 0) {
+          void this.handleFromRadio(new Uint8Array(buffer.buffer));
         }
       } catch (error) {
         this.log(
@@ -99,17 +89,18 @@ export class INodeSerialConnection extends IMeshDevice {
           LogRecord_Level.ERROR
         );
       }
+      else {
+        void this.readFromRadio();
+
+        /**
+         * @todo, implement device keep-awake loop
+         */
+
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+
+        void this.configure();
+      }
     });
-
-    void this.readFromRadio();
-
-    /**
-     * @todo, implement device keep-awake loop
-     */
-
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
-
-    await this.configure();
   }
 
   /**
@@ -140,13 +131,15 @@ export class INodeSerialConnection extends IMeshDevice {
     this.port.write(
       new Uint8Array([0x94, 0xc3, 0x00, data.length, ...data]),
       'binary',
-      (e) => {
-        this.log(
-          Types.EmitterScope.iNodeSerialConnection,
-          Types.Emitter.writeToRadio,
-          `Conn: ${e}`,
-          LogRecord_Level.ERROR
-        );
+      (e: Error | null | undefined) => {
+        if (e) {
+          this.log(
+            Types.EmitterScope.iNodeSerialConnection,
+            Types.Emitter.writeToRadio,
+            `Conn: ${e.message}`,
+            LogRecord_Level.ERROR
+          );
+        }
       }
     );
   }
