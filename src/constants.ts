@@ -27,4 +27,4 @@ export const BROADCAST_NUM = 0xffffffff;
 /**
  * Minimum device firmware version supported by this version of the library.
  */
-export const MIN_FW_VERSION = 1.2;
+export const MIN_FW_VERSION = 1.3;

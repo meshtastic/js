@@ -2,6 +2,7 @@ import { Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import type { SerialConnectionParameters } from "./types.js";
 import { LogRecord_Level } from "./generated/mesh.js";
+import { transformHandler } from "./utils/transformHandler.js";
 
 /**
  * Allows to connect to a Meshtastic device over WebSerial
@@ -89,11 +90,11 @@ export class ISerialConnection extends IMeshDevice {
   public async connect(parameters: SerialConnectionParameters): Promise<void> {
     this.port = parameters.port ? parameters.port : await this.getPort();
 
-    this.port.addEventListener("disconnect", (e) => {
+    this.port.addEventListener("disconnect", () => {
       this.log(
         Types.EmitterScope.iSerialConnection,
         Types.Emitter.connect,
-        `Device disconnected: ${e}`,
+        "Device disconnected",
         LogRecord_Level.INFO
       );
       this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
@@ -105,26 +106,12 @@ export class ISerialConnection extends IMeshDevice {
       baudRate: parameters.baudRate ?? 921600
     });
 
-    let byteBuffer = new Uint8Array([]);
-
     if (this.port.readable && this.port.writable) {
       const transformer = new TransformStream<Uint8Array, Uint8Array>({
         transform(chunk: Uint8Array, controller): void {
-          byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
-
-          if (byteBuffer.includes(0x94)) {
-            const index = byteBuffer.findIndex((byte) => byte === 0x94);
-            const startBit2 = byteBuffer[index + 1];
-            const msb = byteBuffer[index + 2] ?? 0;
-            const lsb = byteBuffer[index + 3] ?? 0;
-
-            const len = index + 4 + lsb + msb;
-
-            if (startBit2 === 0xc3 && byteBuffer.length >= len) {
-              controller.enqueue(byteBuffer.subarray(index + 4, len));
-              byteBuffer = byteBuffer.slice(len);
-            }
-          }
+          transformHandler(new Uint8Array([]), chunk, (buffer) => {
+            controller.enqueue(buffer);
+          });
         }
       });
       this.reader = this.port.readable.pipeThrough(transformer).getReader();
