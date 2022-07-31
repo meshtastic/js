@@ -125,6 +125,10 @@ export class IBLEConnection extends IMeshDevice {
       this.device = await this.getDevice();
     }
 
+    this.device.addEventListener("gattserverdisconnected", () => {
+      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    });
+
     await this.device.gatt?.connect();
 
     this.service = await this.device.gatt?.getPrimaryService(SERVICE_UUID);
@@ -153,18 +157,6 @@ export class IBLEConnection extends IMeshDevice {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
     await this.configure();
-
-    //   this.device.addEventListener("gattserverdisconnected", () => {
-    //     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
-
-    //     if (!this.userInitiatedDisconnect) {
-    //       if (
-    //         this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_RECONNECTING
-    //       ) {
-    //         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
-    //       }
-    //     }
-    //   });
   }
 
   /**
