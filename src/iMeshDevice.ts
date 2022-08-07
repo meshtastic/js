@@ -956,7 +956,7 @@ export abstract class IMeshDevice {
   /**
    * Triggers the device configure process
    */
-  public async configure(): Promise<void> {
+  public configure(): void {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.configure,
@@ -973,12 +973,10 @@ export abstract class IMeshDevice {
         }
       })
     );
-    setTimeout(async () => {
-      await this.sendRaw(0, toRadio, async () => {
-        console.log("got Callback");
-        return Promise.resolve();
-      });
-    }, 2000);
+
+    setTimeout(() => {
+      void this.sendRaw(0, toRadio);
+    }, 500);
   }
 
   /**
@@ -1133,7 +1131,7 @@ export abstract class IMeshDevice {
         break;
 
       case "rebooted":
-        await this.configure();
+        this.configure();
         break;
 
       case "moduleConfig":
@@ -1218,6 +1216,7 @@ export abstract class IMeshDevice {
   }
 
   private handleDataPacket(dataPacket: Data, meshPacket: MeshPacket) {
+    let adminMessage: AdminMessage | undefined = undefined;
     switch (dataPacket.portnum) {
       case PortNum.TEXT_MESSAGE_APP:
         this.log(
@@ -1300,7 +1299,7 @@ export abstract class IMeshDevice {
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
-        const adminMessage = AdminMessage.fromBinary(dataPacket.payload);
+        adminMessage = AdminMessage.fromBinary(dataPacket.payload);
         switch (adminMessage.variant.oneofKind) {
           case "getChannelResponse":
             this.onChannelPacket.emit({

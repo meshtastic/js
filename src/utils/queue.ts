@@ -42,8 +42,7 @@ export class Queue {
     while (this.queue.filter((p) => !p.waitingAck).length > 0) {
       const item = this.queue.filter((p) => !p.waitingAck).shift();
       if (item) {
-        //delay 300ms
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 200));
         await writeToRadio(item.data);
         item.waitingAck = true;
         this.queue.push(item);

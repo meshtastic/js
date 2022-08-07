@@ -63,7 +63,7 @@ export class IHTTPConnection extends IMeshDevice {
         `Ping succeeded, starting configuration and request timer.`,
         LogRecord_Level.DEBUG
       );
-      await this.configure();
+      this.configure();
       this.readLoop = setInterval(
         () => {
           this.readFromRadio().catch((e: Error) => {

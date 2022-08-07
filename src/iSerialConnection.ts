@@ -127,7 +127,7 @@ export class ISerialConnection extends IMeshDevice {
 
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
-    await this.configure();
+    this.configure();
   }
 
   /**
