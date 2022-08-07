@@ -5,6 +5,7 @@ import type {
   Protobuf
 } from "./index.js";
 import type {
+  Location,
   MeshPacket,
   NodeInfo,
   Position,
@@ -92,9 +93,10 @@ export interface PositionPacket {
   data: Position;
 }
 
-export interface TextPacket {
+export interface MessagePacket {
   packet: MeshPacket;
-  data: string;
+  text: string;
+  location?: Location;
 }
 
 export interface PingPacket {

@@ -244,7 +244,8 @@ export abstract class IMeshDevice {
    * Fires when a new MeshPacket message containing a Text packet has been received from device
    * @event
    */
-  public readonly onTextPacket: SubEvent<Types.TextPacket> = new SubEvent();
+  public readonly onMessagePacket: SubEvent<Types.MessagePacket> =
+    new SubEvent();
 
   /**
    * Fires when a new MeshPacket message containing a Remote Hardware packet has been received from device
@@ -1175,7 +1176,7 @@ export abstract class IMeshDevice {
     this.onAtakPacket.cancelAll();
     this.onRoutingPacket.cancelAll();
     this.onPositionPacket.cancelAll();
-    this.onTextPacket.cancelAll();
+    this.onMessagePacket.cancelAll();
     this.onRemoteHardwarePacket.cancelAll();
     this.onDeviceStatus.cancelAll();
     this.onLogRecord.cancelAll();
@@ -1222,13 +1223,14 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onTextPacket",
+          "Received onMessagePacket",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
-        this.onTextPacket.emit({
+        this.onMessagePacket.emit({
           packet: meshPacket,
-          data: new TextDecoder().decode(dataPacket.payload)
+          text: new TextDecoder().decode(dataPacket.payload),
+          location: dataPacket.location
         });
         break;
 
