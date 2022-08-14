@@ -159,6 +159,11 @@ export interface ModuleConfigPacket {
   data: Protobuf.ModuleConfig;
 }
 
+export interface DeviceMetadataPacket {
+  packet: MeshPacket;
+  data: Protobuf.DeviceMetadata;
+}
+
 export enum EmitterScope {
   "iMeshDevice",
   "iSerialConnection",
@@ -192,7 +197,8 @@ export enum Emitter {
   "ping",
   "readFromRadio",
   "writeToRadio",
-  "setDebugMode"
+  "setDebugMode",
+  "getMetadata"
 }
 
 export interface LogEvent {

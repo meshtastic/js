@@ -274,6 +274,12 @@ export abstract class IMeshDevice {
   public readonly onMeshHeartbeat: SubEvent<Date> = new SubEvent();
 
   /**
+   * Fires when the device receives a Metadata packet
+   */
+  public readonly onDeviceMetadataPacket: SubEvent<Types.DeviceMetadataPacket> =
+    new SubEvent();
+
+  /**
    * Sends a text over the radio
    * @param text
    * @param destinationNum Node number of the destination node
@@ -955,6 +961,41 @@ export abstract class IMeshDevice {
   }
 
   /**
+   * Gets devices metadata
+   * @param callback If wantAck is true, callback is called when the ack is received
+   */
+  public async getMetadata(
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
+    this.log(
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.getMetadata,
+      `Requesting owner ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
+    const getDeviceMetricsRequest = AdminMessage.toBinary(
+      AdminMessage.create({
+        variant: {
+          getDeviceMetadataRequest: 0,
+          oneofKind: "getDeviceMetadataRequest"
+        }
+      })
+    );
+
+    await this.sendPacket(
+      getDeviceMetricsRequest,
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      0,
+      true,
+      false,
+      callback
+    );
+  }
+
+  /**
    * Triggers the device configure process
    */
   public configure(): void {
@@ -1325,6 +1366,12 @@ export abstract class IMeshDevice {
             this.onModuleConfigPacket.emit({
               packet: meshPacket,
               data: adminMessage.variant.getModuleConfigResponse
+            });
+            break;
+          case "getDeviceMetadataResponse":
+            this.onDeviceMetadataPacket.emit({
+              packet: meshPacket,
+              data: adminMessage.variant.getDeviceMetadataResponse
             });
             break;
         }

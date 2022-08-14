@@ -2,6 +2,7 @@ export * from "./admin.js";
 export * from "./apponly.js";
 export * from "./cannedmessages.js";
 export * from "./config.js";
+export * from "./device_metadata.js";
 export * from "./channel.js";
 export * from "./deviceonly.js";
 export * from "./localonly.js";
