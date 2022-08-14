@@ -1374,6 +1374,14 @@ export abstract class IMeshDevice {
               data: adminMessage.variant.getDeviceMetadataResponse
             });
             break;
+          default:
+            this.log(
+              Types.EmitterScope.iMeshDevice,
+              Types.Emitter.handleMeshPacket,
+              `Received unhandled AdminMessage, type ${adminMessage.variant.oneofKind}`,
+              LogRecord_Level.DEBUG,
+              dataPacket.payload
+            );
         }
         break;
 
