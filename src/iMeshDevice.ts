@@ -498,6 +498,10 @@ export abstract class IMeshDevice {
       case "wifi":
         configType = Protobuf.AdminMessage_ConfigType.WIFI_CONFIG;
         break;
+
+      case "bluetooth":
+        configType = Protobuf.AdminMessage_ConfigType.BLUETOOTH_CONFIG;
+        break;
     }
 
     const setRadio = AdminMessage.toBinary(
