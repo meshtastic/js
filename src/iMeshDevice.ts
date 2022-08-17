@@ -1382,7 +1382,9 @@ export abstract class IMeshDevice {
             this.log(
               Types.EmitterScope.iMeshDevice,
               Types.Emitter.handleMeshPacket,
-              `Received unhandled AdminMessage, type ${adminMessage.variant.oneofKind}`,
+              `Received unhandled AdminMessage, type ${
+                adminMessage.variant.oneofKind ?? "undefined"
+              }`,
               LogRecord_Level.DEBUG,
               dataPacket.payload
             );
