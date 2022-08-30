@@ -12,7 +12,8 @@ import {
   Position,
   Routing,
   ToRadio,
-  User
+  User,
+  Waypoint
 } from "./generated/mesh.js";
 import { PortNum } from "./generated/portnums.js";
 import { Protobuf, Types } from "./index.js";
@@ -318,13 +319,14 @@ export abstract class IMeshDevice {
 
   /**
    * Sends a text over the radio
-   * @param location Location to send
+   * @param waypoint Desired waypoint to send
    * @param destinationNum Node number of the destination node
    * @param wantAck Whether or not acknowledgement is wanted
+   * @param channel channel to send on default of 0
    * @param callback If wantAck is true, callback is called when the ack is received
    */
-  public sendLocation(
-    location: Protobuf.Location,
+  public sendWaypoint(
+    waypoint: Protobuf.Waypoint,
     destinationNum?: number,
     wantAck = false,
     channel = 0,
@@ -332,24 +334,23 @@ export abstract class IMeshDevice {
   ): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
-      Types.Emitter.sendLocation,
-      `Sending location to ${
+      Types.Emitter.sendWaypoint,
+      `Sending waypoint to ${
         destinationNum ?? "broadcast"
       } on channel ${channel}`,
       LogRecord_Level.DEBUG
     );
 
     return this.sendPacket(
-      new Uint8Array(),
-      PortNum.TEXT_MESSAGE_APP,
+      Waypoint.toBinary(waypoint),
+      PortNum.WAYPOINT_APP,
       destinationNum,
       wantAck,
       channel,
       undefined,
       true,
       callback,
-      undefined,
-      location
+      undefined
     );
   }
 
@@ -359,9 +360,12 @@ export abstract class IMeshDevice {
    * @param portNum dataType Enum of protobuf data type
    * @param destinationNum Node number of the destination node
    * @param wantAck Whether or not acknowledgement is wanted
+   * @param channel channel to send on default of 0
    * @param wantResponse Used for testing, requests recpipient to respond in kind with the same type of request
    * @param echoResponse Sends event back to client
    * @param callback If wantAck is true, callback is called when the ack is received
+   * @param emoji used for message reactions
+   * @param replyId used to reply to a message
    */
   public async sendPacket(
     byteData: Uint8Array,
@@ -373,7 +377,6 @@ export abstract class IMeshDevice {
     echoResponse = false,
     callback?: (id: number) => Promise<void>,
     emoji = 0,
-    location?: Protobuf.Location,
     replyId = 0
   ): Promise<void> {
     this.log(
@@ -391,7 +394,6 @@ export abstract class IMeshDevice {
           payload: byteData,
           portnum: portNum,
           wantResponse,
-          location,
           emoji,
           replyId,
           dest: 0, //change this!
@@ -1274,8 +1276,7 @@ export abstract class IMeshDevice {
         );
         this.onMessagePacket.emit({
           packet: meshPacket,
-          text: new TextDecoder().decode(dataPacket.payload),
-          location: dataPacket.location
+          text: new TextDecoder().decode(dataPacket.payload)
         });
         break;
 

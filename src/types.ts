@@ -5,7 +5,6 @@ import type {
   Protobuf
 } from "./index.js";
 import type {
-  Location,
   MeshPacket,
   NodeInfo,
   Position,
@@ -96,7 +95,6 @@ export interface PositionPacket {
 export interface MessagePacket {
   packet: MeshPacket;
   text: string;
-  location?: Location;
 }
 
 export interface PingPacket {
@@ -175,7 +173,7 @@ export enum EmitterScope {
 
 export enum Emitter {
   "sendText",
-  "sendLocation",
+  "sendWaypoint",
   "sendPacket",
   "sendRaw",
   "setConfig",
