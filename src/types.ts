@@ -1,16 +1,23 @@
 import type {
   IBLEConnection,
   IHTTPConnection,
-  ISerialConnection,
-  Protobuf
+  ISerialConnection
 } from "./index.js";
 import type {
+  LogRecord_Level,
   MeshPacket,
   NodeInfo,
   Position,
   Routing,
-  User
+  User,
+  Waypoint
 } from "./generated/mesh.js";
+import { DeviceMetadata } from "./generated/device_metadata.js";
+import { ModuleConfig } from "./generated/module_config.js";
+import { Config } from "./generated/config.js";
+import { Channel } from "./generated/channel.js";
+import { HardwareMessage } from "./generated/remote_hardware.js";
+import { Telemetry } from "./generated/telemetry.js";
 
 export enum DeviceStatusEnum {
   DEVICE_RESTARTING,
@@ -124,7 +131,7 @@ export interface RangeTestPacket {
 
 export interface TelemetryPacket {
   packet: MeshPacket;
-  data: Protobuf.Telemetry;
+  data: Telemetry;
 }
 
 export interface PrivatePacket {
@@ -139,27 +146,32 @@ export interface AtakPacket {
 
 export interface RemoteHardwarePacket {
   packet: MeshPacket;
-  data: Protobuf.HardwareMessage;
+  data: HardwareMessage;
 }
 
 export interface ChannelPacket {
   packet: MeshPacket;
-  data: Protobuf.Channel;
+  data: Channel;
 }
 
 export interface ConfigPacket {
   packet: MeshPacket;
-  data: Protobuf.Config;
+  data: Config;
 }
 
 export interface ModuleConfigPacket {
   packet: MeshPacket;
-  data: Protobuf.ModuleConfig;
+  data: ModuleConfig;
 }
 
 export interface DeviceMetadataPacket {
   packet: MeshPacket;
-  data: Protobuf.DeviceMetadata;
+  data: DeviceMetadata;
+}
+
+export interface WaypointPacket {
+  packet: MeshPacket;
+  data: Waypoint;
 }
 
 export enum EmitterScope {
@@ -203,6 +215,6 @@ export interface LogEvent {
   scope: EmitterScope;
   emitter: Emitter;
   message: string;
-  level: Protobuf.LogRecord_Level;
+  level: LogRecord_Level;
   packet?: Uint8Array;
 }

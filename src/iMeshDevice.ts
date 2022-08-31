@@ -256,6 +256,13 @@ export abstract class IMeshDevice {
     new SubEvent();
 
   /**
+   * Fires when a new MeshPacket message containing a Waypoint packet has been received from device
+   * @event
+   */
+  public readonly onWaypointPacket: SubEvent<Types.WaypointPacket> =
+    new SubEvent();
+
+  /**
    * Fires when the devices connection or configuration status changes
    * @event
    */
@@ -1390,6 +1397,30 @@ export abstract class IMeshDevice {
               dataPacket.payload
             );
         }
+        break;
+
+      case PortNum.TEXT_MESSAGE_COMPRESSED_APP:
+        this.log(
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleMeshPacket,
+          "Received compressed text packet",
+          LogRecord_Level.TRACE,
+          dataPacket.payload
+        );
+        break;
+
+      case PortNum.WAYPOINT_APP:
+        this.log(
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleMeshPacket,
+          "Received onWaypointPacket",
+          LogRecord_Level.TRACE,
+          dataPacket.payload
+        );
+        this.onWaypointPacket.emit({
+          packet: meshPacket,
+          data: Waypoint.fromBinary(dataPacket.payload)
+        });
         break;
 
       case PortNum.REPLY_APP:
