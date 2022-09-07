@@ -50,14 +50,9 @@ export class IBLEConnection extends IMeshDevice {
   userInitiatedDisconnect: boolean;
 
   /**
-   * Weather the we should currently write to the device or not, to prevent simultaneous writes
-   */
-  writeLock: boolean;
-
-  /**
    * Set when a read promise has yet to be resolved, to prevent simultaneous reads.
    */
-  pendingRead: boolean;
+  // pendingRead: boolean;
 
   constructor(configId?: number) {
     super(configId);
@@ -69,8 +64,7 @@ export class IBLEConnection extends IMeshDevice {
     this.fromRadioCharacteristic = undefined;
     this.fromNumCharacteristic = undefined;
     this.userInitiatedDisconnect = false;
-    this.writeLock = false;
-    this.pendingRead = false;
+    // this.pendingRead = false;
   }
 
   /**
@@ -102,8 +96,13 @@ export class IBLEConnection extends IMeshDevice {
    * Initiates the connect process to a Meshtastic device via Bluetooth
    * @param parameters ble connection parameters
    */
-  public async connect(parameters: BLEConnectionParameters): Promise<void> {
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+  public async connect({
+    device,
+    deviceFilter
+  }: BLEConnectionParameters): Promise<void> {
+    /**
+     * Check for API avaliability
+     */
     if (!navigator.bluetooth) {
       this.log(
         Types.EmitterScope.iBleConnection,
@@ -113,16 +112,33 @@ export class IBLEConnection extends IMeshDevice {
       );
     }
 
-    if (parameters.device) {
-      this.device = parameters.device;
-    } else {
-      this.device = await this.getDevice();
-    }
+    /**
+     * Set device state to connecting
+     */
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
+    /**
+     * Set device if specified, else request.
+     */
+    this.device = device ?? (await this.getDevice(deviceFilter));
+
+    /**
+     * Setup event listners
+     */
     this.device.addEventListener("gattserverdisconnected", () => {
+      this.log(
+        Types.EmitterScope.iBleConnection,
+        Types.Emitter.connect,
+        "Device disconnected",
+        LogRecord_Level.INFO
+      );
       this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+      this.complete();
     });
 
+    /**
+     * Connect to device
+     */
     await this.device.gatt?.connect();
 
     this.service = await this.device.gatt?.getPrimaryService(SERVICE_UUID);
@@ -175,10 +191,10 @@ export class IBLEConnection extends IMeshDevice {
    * Short description
    */
   protected async readFromRadio(): Promise<void> {
-    if (this.pendingRead) {
-      return Promise.resolve();
-    }
-    this.pendingRead = true;
+    // if (this.pendingRead) {
+    //   return Promise.resolve();
+    // }
+    // this.pendingRead = true;
     let readBuffer = new ArrayBuffer(1);
 
     while (readBuffer.byteLength > 0 && this.fromRadioCharacteristic) {
@@ -204,7 +220,7 @@ export class IBLEConnection extends IMeshDevice {
           );
         });
     }
-    this.pendingRead = false;
+    // this.pendingRead = false;
   }
 
   /**
@@ -212,6 +228,7 @@ export class IBLEConnection extends IMeshDevice {
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     await this.toRadioCharacteristic?.writeValue(typedArrayToBuffer(data));
-    await this.readFromRadio();
+    // This should be automatic (onCharacteristicValueChanged)
+    // await this.readFromRadio();
   }
 }

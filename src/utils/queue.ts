@@ -48,6 +48,8 @@ export class Queue {
         this.queue.push(item);
       }
     }
-    this.locked = false;
+    setTimeout(() => {
+      this.locked = false;
+    }, 100);
   }
 }

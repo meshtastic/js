@@ -18,7 +18,9 @@ export const log = (
     switch (level) {
       case LogRecord_Level.TRACE:
         console.info(
-          `%c[TRACE]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
+          `%c[TRACE]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
+            Types.Emitter[emitter] ?? "UNK"
+          }\n%c${message}`,
           "color:grey",
           "color:darkgrey",
           "color:white"
@@ -27,7 +29,9 @@ export const log = (
 
       case LogRecord_Level.DEBUG:
         console.info(
-          `%c[DEBUG]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
+          `%c[DEBUG]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
+            Types.Emitter[emitter] ?? "UNK"
+          }\n%c${message}`,
           "color:lightcyan",
           "color:darkgrey",
           "color:white"
@@ -36,7 +40,9 @@ export const log = (
 
       case LogRecord_Level.INFO:
         console.info(
-          `%c[INFO]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
+          `%c[INFO]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
+            Types.Emitter[emitter] ?? "UNK"
+          }\n%c${message}`,
           "color:darkgrey",
           "color:cyan",
           "color:white"
@@ -44,7 +50,9 @@ export const log = (
         break;
       case LogRecord_Level.WARNING:
         console.warn(
-          `%c[WARNING]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
+          `%c[WARNING]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
+            Types.Emitter[emitter] ?? "UNK"
+          }\n%c${message}`,
           "color:yellow",
           "color:darkgrey",
           "color:white"
@@ -53,7 +61,9 @@ export const log = (
 
       case LogRecord_Level.ERROR:
         console.error(
-          `%c[ERROR]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
+          `%c[ERROR]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
+            Types.Emitter[emitter] ?? "UNK"
+          }\n%c${message}`,
           "color:orangered",
           "color:darkgrey",
           "color:white"
@@ -62,7 +72,9 @@ export const log = (
 
       case LogRecord_Level.CRITICAL:
         console.error(
-          `%c[CRITICAL]%c ${Types.EmitterScope[scope]}.${Types.Emitter[emitter]}\n%c${message}`,
+          `%c[CRITICAL]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
+            Types.Emitter[emitter] ?? "UNK"
+          }\n%c${message}`,
           "color:red",
           "color:darkgrey",
           "color:white"

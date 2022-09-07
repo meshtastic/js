@@ -87,9 +87,35 @@ export class ISerialConnection extends IMeshDevice {
    * Initiates the connect process to a Meshtastic device via Web Serial
    * @param parameters serial connection parameters
    */
-  public async connect(parameters: SerialConnectionParameters): Promise<void> {
-    this.port = parameters.port ? parameters.port : await this.getPort();
+  public async connect({
+    port,
+    baudRate
+  }: SerialConnectionParameters): Promise<void> {
+    /**
+     * Check for API avaliability
+     */
+    if (!navigator.serial) {
+      this.log(
+        Types.EmitterScope.iSerialConnection,
+        Types.Emitter.connect,
+        `This browser doesn't support the WebSerial API`,
+        LogRecord_Level.WARNING
+      );
+    }
 
+    /**
+     * Set device state to connecting
+     */
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+
+    /**
+     * Set device if specified, else request.
+     */
+    this.port = port ?? (await this.getPort());
+
+    /**
+     * Setup event listners
+     */
     this.port.addEventListener("disconnect", () => {
       this.log(
         Types.EmitterScope.iSerialConnection,
@@ -101,9 +127,11 @@ export class ISerialConnection extends IMeshDevice {
       this.complete();
     });
 
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+    /**
+     * Connect to device
+     */
     await this.port.open({
-      baudRate: parameters.baudRate ?? 921600
+      baudRate: baudRate ?? 115200
     });
 
     if (this.port.readable && this.port.writable) {
@@ -127,7 +155,7 @@ export class ISerialConnection extends IMeshDevice {
 
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
-    this.configure();
+    await this.configure();
   }
 
   /**

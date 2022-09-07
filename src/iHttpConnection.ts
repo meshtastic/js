@@ -44,14 +44,17 @@ export class IHTTPConnection extends IMeshDevice {
    * Initiates the connect process to a Meshtastic device via HTTP(S)
    * @param parameters http connection parameters
    */
-  public async connect(parameters: HTTPConnectionParameters): Promise<void> {
+  public async connect({
+    address,
+    fetchInterval,
+    receiveBatchRequests,
+    tls
+  }: HTTPConnectionParameters): Promise<void> {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
-    this.receiveBatchRequests = !!parameters.receiveBatchRequests;
+    this.receiveBatchRequests = !!receiveBatchRequests;
 
-    this.url = `${parameters.tls ? "https://" : "http://"}${
-      parameters.address
-    }`;
+    this.url = `${tls ? "https://" : "http://"}${address}`;
 
     if (
       this.deviceStatus === Types.DeviceStatusEnum.DEVICE_CONNECTING &&
@@ -75,16 +78,16 @@ export class IHTTPConnection extends IMeshDevice {
             );
           });
         },
-        parameters.fetchInterval ? parameters.fetchInterval : 5000
+        fetchInterval ? fetchInterval : 5000
       );
     } else {
       if (this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_DISCONNECTED) {
         setTimeout(() => {
           void this.connect({
-            address: parameters.address,
-            fetchInterval: parameters.fetchInterval,
-            receiveBatchRequests: parameters.receiveBatchRequests,
-            tls: parameters.tls
+            address: address,
+            fetchInterval: fetchInterval,
+            receiveBatchRequests: receiveBatchRequests,
+            tls: tls
           });
         }, 10000);
       }

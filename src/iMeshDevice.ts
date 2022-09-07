@@ -389,7 +389,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.sendPacket,
-      `Sending ${Protobuf.PortNum[portNum] ?? "Unknown"} to ${
+      `Sending ${Protobuf.PortNum[portNum] ?? "UNK"} to ${
         destinationNum ?? "broadcast"
       }`,
       LogRecord_Level.TRACE
@@ -696,7 +696,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.setChannel,
-      `Setting Channel: ${channel.index} ${
+      `📻 Setting Channel: ${channel.index} ${
         callback ? "with" : "without"
       } callback`,
       LogRecord_Level.DEBUG
@@ -736,7 +736,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.confirmSetChannel,
-      `Confirming Channel config ${callback ? "with" : "without"} callback`,
+      `📻 Confirming Channel config ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
 
@@ -762,6 +762,10 @@ export abstract class IMeshDevice {
   }
 
   /**
+   * @TODO
+   * Is this needed?
+   */
+  /**
    * Deletes specific channel via index
    * @param index Channel index to be deleted
    * @param callback If wantAck is true, callback is called when the ack is received
@@ -773,7 +777,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.deleteChannel,
-      `Deleting Channel ${callback ? "with" : "without"} callback`,
+      `📻 Deleting Channel ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
 
@@ -817,7 +821,9 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.getChannel,
-      `Requesting Channel: ${index} ${callback ? "with" : "without"} callback`,
+      `📻 Requesting Channel: ${index} ${
+        callback ? "with" : "without"
+      } callback`,
       LogRecord_Level.DEBUG
     );
 
@@ -850,7 +856,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.getAllChannels,
-      `Requesting all Channels ${callback ? "with" : "without"} callback`,
+      `📻 Requesting all Channels ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
 
@@ -1015,7 +1021,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.configure,
-      `Reading device configuration`,
+      `⚙️ Requesting device configuration`,
       LogRecord_Level.DEBUG
     );
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
@@ -1031,7 +1037,7 @@ export abstract class IMeshDevice {
 
     setTimeout(() => {
       void this.sendRaw(0, toRadio);
-    }, 500);
+    }, 200);
   }
 
   /**
@@ -1084,7 +1090,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
-          "Received onMyNodeInfo",
+          "📱 Received Node info for this device",
           LogRecord_Level.TRACE
         );
         break;
@@ -1093,7 +1099,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
-          "Received onNodeInfoPacket",
+          `📱 Received Node Info packet for node: ${decodedMessage.payloadVariant.nodeInfo.num}`,
           LogRecord_Level.TRACE
         );
 
@@ -1129,7 +1135,10 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
-          "Received onConfigPacket",
+          `💾 Received Config packet of variant: ${
+            decodedMessage.payloadVariant.config.payloadVariant.oneofKind ??
+            "UNK"
+          }`,
           LogRecord_Level.TRACE
         );
 
@@ -1156,7 +1165,7 @@ export abstract class IMeshDevice {
           this.log(
             Types.EmitterScope.iMeshDevice,
             Types.Emitter.handleFromRadio,
-            `Invalid config id reveived from device, exptected ${this.configId} but received ${decodedMessage.payloadVariant.configCompleteId}`,
+            `❌ Invalid config id reveived from device, exptected ${this.configId} but received ${decodedMessage.payloadVariant.configCompleteId}`,
             LogRecord_Level.ERROR
           );
         }
@@ -1176,11 +1185,9 @@ export abstract class IMeshDevice {
           )
         );
 
-        // await this.getConfig(async () => {
         await this.getAllChannels(async () => {
           await Promise.resolve();
         });
-        // });
 
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
         break;
@@ -1193,7 +1200,10 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
-          "Received onModuleConfigPacket",
+          `🧪 Received Module Config packet of variant: ${
+            decodedMessage.payloadVariant.moduleConfig.payloadVariant
+              .oneofKind ?? "UNK"
+          }`,
           LogRecord_Level.TRACE
         );
 
@@ -1347,14 +1357,16 @@ export abstract class IMeshDevice {
         break;
 
       case PortNum.ADMIN_APP:
+        adminMessage = AdminMessage.fromBinary(dataPacket.payload);
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onAdminPacket",
+          `🌟 Received Admin Packet of variant ${
+            adminMessage.variant.oneofKind ?? "UNK"
+          }`,
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
-        adminMessage = AdminMessage.fromBinary(dataPacket.payload);
         switch (adminMessage.variant.oneofKind) {
           case "getChannelResponse":
             this.onChannelPacket.emit({
