@@ -50,11 +50,6 @@ export class IBLEConnection extends IMeshDevice {
   userInitiatedDisconnect: boolean;
 
   /**
-   * Queue that holds data to be written to the device, to prevent simultaneous writes
-   */
-  writeQueue: Uint8Array[];
-
-  /**
    * Weather the we should currently write to the device or not, to prevent simultaneous writes
    */
   writeLock: boolean;
@@ -74,7 +69,6 @@ export class IBLEConnection extends IMeshDevice {
     this.fromRadioCharacteristic = undefined;
     this.fromNumCharacteristic = undefined;
     this.userInitiatedDisconnect = false;
-    this.writeQueue = [];
     this.writeLock = false;
     this.pendingRead = false;
   }
@@ -219,30 +213,5 @@ export class IBLEConnection extends IMeshDevice {
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     await this.toRadioCharacteristic?.writeValue(typedArrayToBuffer(data));
     await this.readFromRadio();
-    // this.writeQueue.push(data);
-    // if (this.writeLock) {
-    //   return Promise.resolve();
-    // } else {
-    //   this.writeLock = true;
-    //   if (this.toRadioCharacteristic) {
-    //     while (this.writeQueue.length) {
-    //       if (this.writeQueue[0]) {
-    //         await this.toRadioCharacteristic
-    //           .writeValue(typedArrayToBuffer(this.writeQueue[0]))
-    //           .then(() => {
-    //             this.writeQueue.shift();
-    //           })
-    //           .catch(({ message }: { message: string }) => {
-    //             this.log(
-    //               Types.EmitterScope.iBleConnection,
-    //               Types.Emitter.writeToRadio,
-    //               message,
-    //               LogRecord_Level.ERROR
-    //             );
-    //           });
-    //       }
-    //     }
-    //   }
-    // }
   }
 }
