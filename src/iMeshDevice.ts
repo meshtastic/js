@@ -504,8 +504,8 @@ export abstract class IMeshDevice {
         configType = Protobuf.AdminMessage_ConfigType.POWER_CONFIG;
         break;
 
-      case "wifi":
-        configType = Protobuf.AdminMessage_ConfigType.WIFI_CONFIG;
+      case "network":
+        configType = Protobuf.AdminMessage_ConfigType.NETWORK_CONFIG;
         break;
 
       case "bluetooth":
@@ -515,7 +515,7 @@ export abstract class IMeshDevice {
 
     const setRadio = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           oneofKind: "setConfig",
           setConfig: config
         }
@@ -587,7 +587,7 @@ export abstract class IMeshDevice {
 
     const setRadio = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           oneofKind: "setModuleConfig",
           setModuleConfig: config
         }
@@ -625,7 +625,7 @@ export abstract class IMeshDevice {
 
     const confirmSetRadio = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           confirmSetRadio: true,
           oneofKind: "confirmSetRadio"
         }
@@ -662,7 +662,7 @@ export abstract class IMeshDevice {
 
     const setOwner = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           setOwner: owner,
           oneofKind: "setOwner"
         }
@@ -704,7 +704,7 @@ export abstract class IMeshDevice {
 
     const setChannel = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           setChannel: channel,
           oneofKind: "setChannel"
         }
@@ -742,7 +742,7 @@ export abstract class IMeshDevice {
 
     const confirmSetChannel = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           confirmSetRadio: true,
           oneofKind: "confirmSetRadio"
         }
@@ -787,7 +787,7 @@ export abstract class IMeshDevice {
     });
     const setChannel = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           setChannel: channel,
           oneofKind: "setChannel"
         }
@@ -829,7 +829,7 @@ export abstract class IMeshDevice {
 
     const getChannelRequest = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           getChannelRequest: index + 1,
           oneofKind: "getChannelRequest"
         }
@@ -889,7 +889,7 @@ export abstract class IMeshDevice {
 
     const getRadioRequest = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           oneofKind: "getConfigRequest",
           getConfigRequest: configType
         }
@@ -925,7 +925,7 @@ export abstract class IMeshDevice {
 
     const getRadioRequest = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           oneofKind: "getModuleConfigRequest",
           getModuleConfigRequest: configType
         }
@@ -960,7 +960,7 @@ export abstract class IMeshDevice {
 
     const getOwnerRequest = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           getOwnerRequest: true,
           oneofKind: "getOwnerRequest"
         }
@@ -995,7 +995,7 @@ export abstract class IMeshDevice {
 
     const getDeviceMetricsRequest = AdminMessage.toBinary(
       AdminMessage.create({
-        variant: {
+        payloadVariant: {
           getDeviceMetadataRequest: 0,
           oneofKind: "getDeviceMetadataRequest"
         }
@@ -1362,40 +1362,40 @@ export abstract class IMeshDevice {
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           `🌟 Received Admin Packet of variant ${
-            adminMessage.variant.oneofKind ?? "UNK"
+            adminMessage.payloadVariant.oneofKind ?? "UNK"
           }`,
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
-        switch (adminMessage.variant.oneofKind) {
+        switch (adminMessage.payloadVariant.oneofKind) {
           case "getChannelResponse":
             this.onChannelPacket.emit({
               packet: meshPacket,
-              data: adminMessage.variant.getChannelResponse
+              data: adminMessage.payloadVariant.getChannelResponse
             });
             break;
           case "getOwnerResponse":
             this.onUserPacket.emit({
               packet: meshPacket,
-              data: adminMessage.variant.getOwnerResponse
+              data: adminMessage.payloadVariant.getOwnerResponse
             });
             break;
           case "getConfigResponse":
             this.onConfigPacket.emit({
               packet: meshPacket,
-              data: adminMessage.variant.getConfigResponse
+              data: adminMessage.payloadVariant.getConfigResponse
             });
             break;
           case "getModuleConfigResponse":
             this.onModuleConfigPacket.emit({
               packet: meshPacket,
-              data: adminMessage.variant.getModuleConfigResponse
+              data: adminMessage.payloadVariant.getModuleConfigResponse
             });
             break;
           case "getDeviceMetadataResponse":
             this.onDeviceMetadataPacket.emit({
               packet: meshPacket,
-              data: adminMessage.variant.getDeviceMetadataResponse
+              data: adminMessage.payloadVariant.getDeviceMetadataResponse
             });
             break;
           default:
@@ -1403,7 +1403,7 @@ export abstract class IMeshDevice {
               Types.EmitterScope.iMeshDevice,
               Types.Emitter.handleMeshPacket,
               `Received unhandled AdminMessage, type ${
-                adminMessage.variant.oneofKind ?? "undefined"
+                adminMessage.payloadVariant.oneofKind ?? "undefined"
               }`,
               LogRecord_Level.DEBUG,
               dataPacket.payload
