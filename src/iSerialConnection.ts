@@ -2,7 +2,6 @@ import { Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import type { SerialConnectionParameters } from "./types.js";
 import { LogRecord_Level } from "./generated/mesh.js";
-import { transformHandler } from "./utils/transformHandler.js";
 
 /**
  * Allows to connect to a Meshtastic device over WebSerial
@@ -134,17 +133,81 @@ export class ISerialConnection extends IMeshDevice {
       baudRate: baudRate ?? 115200
     });
 
+    let byteBuffer = new Uint8Array([]);
+
     if (this.port.readable && this.port.writable) {
+      const { log } = this;
       const transformer = new TransformStream<Uint8Array, Uint8Array>({
         transform(chunk: Uint8Array, controller): void {
-          transformHandler(new Uint8Array([]), chunk, (buffer) => {
-            controller.enqueue(buffer);
-          });
+          byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
+          let processingExhausted = false;
+          while (byteBuffer.length !== 0 && !processingExhausted) {
+            const framingIndex = byteBuffer.findIndex((byte) => byte === 0x94);
+            const framingByte2 = byteBuffer[framingIndex + 1];
+            if (framingByte2 === 0xc3) {
+              if (byteBuffer.subarray(0, framingIndex).length) {
+                log(
+                  Types.EmitterScope.iSerialConnection,
+                  Types.Emitter.connect,
+                  `⚠️ Found unneccesary message padding, removing: ${byteBuffer
+                    .subarray(0, framingIndex)
+                    .toString()}`,
+                  LogRecord_Level.WARNING
+                );
+                byteBuffer = byteBuffer.subarray(framingIndex);
+              }
+
+              const msb = byteBuffer[2];
+              const lsb = byteBuffer[3];
+
+              if (
+                msb !== undefined &&
+                lsb !== undefined &&
+                byteBuffer.length >= 4 + (msb << 8) + lsb
+              ) {
+                const packet = byteBuffer.subarray(4, 4 + (msb << 8) + lsb);
+
+                const malformedDetectorIndex = packet.findIndex(
+                  (byte) => byte === 0x94
+                );
+                if (
+                  malformedDetectorIndex !== -1 &&
+                  packet[malformedDetectorIndex + 1] == 0xc3
+                ) {
+                  log(
+                    Types.EmitterScope.iSerialConnection,
+                    Types.Emitter.connect,
+                    `⚠️ Malformed packet found, discarding: ${byteBuffer
+                      .subarray(0, malformedDetectorIndex - 1)
+                      .toString()}`,
+                    LogRecord_Level.WARNING
+                  );
+
+                  byteBuffer = byteBuffer.subarray(malformedDetectorIndex);
+                } else {
+                  byteBuffer = byteBuffer.subarray(3 + (msb << 8) + lsb + 1);
+                  controller.enqueue(packet);
+                }
+              } else {
+                /**
+                 * Only partioal message in buffer, wait for the rest
+                 */
+                processingExhausted = true;
+              }
+            } else if (byteBuffer.length === 1) {
+              /**
+               * Message not complete, only 1 byte in buffer
+               */
+              processingExhausted = true;
+            }
+          }
         }
       });
       this.reader = this.port.readable.pipeThrough(transformer).getReader();
 
       this.writer = this.port.writable;
+    } else {
+      console.log("not readable or writable");
     }
 
     void this.readFromRadio();

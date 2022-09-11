@@ -304,7 +304,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.sendText,
-      `Sending message to ${
+      `📤 Sending message to ${
         destinationNum ?? "broadcast"
       } on channel ${channel}`,
       LogRecord_Level.DEBUG
@@ -342,7 +342,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.sendWaypoint,
-      `Sending waypoint to ${
+      `📤 Sending waypoint to ${
         destinationNum ?? "broadcast"
       } on channel ${channel}`,
       LogRecord_Level.DEBUG
@@ -389,7 +389,7 @@ export abstract class IMeshDevice {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.sendPacket,
-      `Sending ${Protobuf.PortNum[portNum] ?? "UNK"} to ${
+      `📤 Sending ${Protobuf.PortNum[portNum] ?? "UNK"} to ${
         destinationNum ?? "broadcast"
       }`,
       LogRecord_Level.TRACE
@@ -1018,6 +1018,7 @@ export abstract class IMeshDevice {
    * Triggers the device configure process
    */
   public configure(): void {
+    // TODO: this not always logged
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.configure,
@@ -1135,11 +1136,17 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
-          `💾 Received Config packet of variant: ${
+          `${
+            decodedMessage.payloadVariant.config.payloadVariant.oneofKind
+              ? "💾"
+              : "⚠️"
+          } Received Config packet of variant: ${
             decodedMessage.payloadVariant.config.payloadVariant.oneofKind ??
             "UNK"
           }`,
-          LogRecord_Level.TRACE
+          decodedMessage.payloadVariant.config.payloadVariant.oneofKind
+            ? LogRecord_Level.TRACE
+            : LogRecord_Level.WARNING
         );
 
         this.onConfigPacket.emit({
@@ -1170,6 +1177,17 @@ export abstract class IMeshDevice {
           );
         }
 
+        this.log(
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleFromRadio,
+          `⚙️ Valid config id reveived from device: ${this.configId} but received ${decodedMessage.payloadVariant.configCompleteId}`,
+          LogRecord_Level.INFO
+        );
+
+        await this.getAllChannels(async () => {
+          await Promise.resolve();
+        });
+
         await this.sendRaw(
           0,
           ToRadio.toBinary(
@@ -1185,10 +1203,6 @@ export abstract class IMeshDevice {
           )
         );
 
-        await this.getAllChannels(async () => {
-          await Promise.resolve();
-        });
-
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
         break;
 
@@ -1200,11 +1214,17 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
-          `🧪 Received Module Config packet of variant: ${
+          `${
+            decodedMessage.payloadVariant.moduleConfig.payloadVariant.oneofKind
+              ? "💾"
+              : "⚠️"
+          } Received Module Config packet of variant: ${
             decodedMessage.payloadVariant.moduleConfig.payloadVariant
               .oneofKind ?? "UNK"
           }`,
-          LogRecord_Level.TRACE
+          decodedMessage.payloadVariant.moduleConfig.payloadVariant.oneofKind
+            ? LogRecord_Level.TRACE
+            : LogRecord_Level.WARNING
         );
 
         this.onModuleConfigPacket.emit({
@@ -1287,7 +1307,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onMessagePacket",
+          "📦 Received TEXT_MESSAGE_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1301,7 +1321,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onRemoteHardwarePacket",
+          "📦 Received REMOTE_HARDWARE_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1315,7 +1335,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onPositionPacket",
+          "📦 Received POSITION_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1332,7 +1352,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onUserPacket",
+          "📦 Received NODEINFO_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1346,7 +1366,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onRoutingPacket",
+          "📦 Received ROUTING_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1361,7 +1381,8 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          `🌟 Received Admin Packet of variant ${
+          `📦 Received ADMIN_APP packet of variant ${
+            //change
             adminMessage.payloadVariant.oneofKind ?? "UNK"
           }`,
           LogRecord_Level.TRACE,
@@ -1415,7 +1436,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received compressed text packet",
+          "📦 Received TEXT_MESSAGE_COMPRESSED_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1425,7 +1446,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onWaypointPacket",
+          "📦 Received WAYPOINT_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1439,7 +1460,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onPingPacket",
+          "📦 Received REPLY_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1453,7 +1474,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onIpTunnelPacket",
+          "📦 Received IP_TUNNEL_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1467,7 +1488,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onSerialPacket",
+          "📦 Received SERIAL_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1481,7 +1502,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onStoreForwardPacket",
+          "📦 Received STORE_FORWARD_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1495,7 +1516,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onRangeTestPacket",
+          "📦 Received RANGE_TEST_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1509,7 +1530,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onTelemetryPacket",
+          "📦 Received TELEMETRY_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1523,7 +1544,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onPrivatePacket",
+          "📦 Received PRIVATE_APP packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1537,7 +1558,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          "Received onAtakPacket",
+          "📦 Received ATAK_FORWARDER packet",
           LogRecord_Level.TRACE,
           dataPacket.payload
         );
@@ -1551,7 +1572,9 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
-          `Unhandled PortNum: ${PortNum[dataPacket.portnum] ?? "Unknown"}`,
+          `⚠️ Received unhandled PortNum: ${
+            PortNum[dataPacket.portnum] ?? "UNK"
+          }`, //warn
           LogRecord_Level.WARNING,
           dataPacket.payload
         );
