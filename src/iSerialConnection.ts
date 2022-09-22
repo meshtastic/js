@@ -48,10 +48,7 @@ export class ISerialConnection extends IMeshDevice {
           if (value) {
             void this.handleFromRadio(value);
           }
-
           if (done) {
-            console.log("done");
-
             this.reader.releaseLock();
             break;
           }
@@ -194,7 +191,7 @@ export class ISerialConnection extends IMeshDevice {
                  */
                 processingExhausted = true;
               }
-            } else if (byteBuffer.length === 1) {
+            } else {
               /**
                * Message not complete, only 1 byte in buffer
                */

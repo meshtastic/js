@@ -1180,7 +1180,7 @@ export abstract class IMeshDevice {
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
-          `⚙️ Valid config id reveived from device: ${this.configId} but received ${decodedMessage.payloadVariant.configCompleteId}`,
+          `⚙️ Valid config id reveived from device: ${this.configId}`,
           LogRecord_Level.INFO
         );
 
