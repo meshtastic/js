@@ -194,7 +194,7 @@ export enum Emitter {
   "setOwner",
   "setChannel",
   "confirmSetChannel",
-  "deleteChannel",
+  "clearChannel",
   "getChannel",
   "getAllChannels",
   "getConfig",
