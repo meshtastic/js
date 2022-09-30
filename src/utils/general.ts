@@ -1,5 +1,6 @@
 /**
  * Converts a `ArrayBuffer` to a hex string
+ *
  * @param arrayBuffer Input `ArrayBuffer` to be converted
  */
 export const bufferToHex = (arrayBuffer: ArrayBuffer): string => {
@@ -12,6 +13,7 @@ export const bufferToHex = (arrayBuffer: ArrayBuffer): string => {
 
 /**
  * Converts a `Uint8Array` to an `ArrayBuffer`
+ *
  * @param array Input `Uint8Array` to be converted
  */
 export const typedArrayToBuffer = (array: Uint8Array): ArrayBuffer => {

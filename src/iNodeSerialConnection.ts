@@ -2,23 +2,16 @@ import { Transform } from "node:stream";
 
 import { SerialPort } from "serialport";
 
-import { Types } from "./index.js";
+import { Protobuf, Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
-import { LogRecord_Level } from "./generated/mesh.js";
 import { transformHandler } from "./utils/transformHandler.js";
 
-/**
- * Allows connection to a Meshtastic device over NodeJS SerialPort
- */
+/** Allows connection to a Meshtastic device over NodeJS SerialPort */
 export class INodeSerialConnection extends IMeshDevice {
-  /**
-   * Defines the connection type as serial
-   */
+  /** Defines the connection type as serial */
   connType: string;
 
-  /**
-   * Serial port used to communicate with device.
-   */
+  /** Serial port used to communicate with device. */
   private port: SerialPort | undefined;
 
   constructor(path: string, configId?: number) {
@@ -32,13 +25,23 @@ export class INodeSerialConnection extends IMeshDevice {
       autoOpen: false
     });
 
+    const { log } = this;
+
     const transformer = new Transform({
-      transform(chunk: Buffer, _, callback) {
+      transform(chunk: Buffer, encoding, callback) {
+        if (encoding !== "binary") {
+          log(
+            Types.EmitterScope.iNodeSerialConnection,
+            Types.Emitter.constructor,
+            `❌ Invalid buffer encoding: ${encoding}`,
+            Protobuf.LogRecord_Level.ERROR
+          );
+        }
         transformHandler(new Uint8Array([]), chunk, (buffer) => {
           callback(null, buffer);
         });
-      }
-      // defaultEncoding: 'binary'
+      },
+      defaultEncoding: "binary"
     });
 
     this.port.pipe(transformer);
@@ -46,23 +49,20 @@ export class INodeSerialConnection extends IMeshDevice {
 
   public static async getPorts(): Promise<INodeSerialPort[]> {
     const portInfos = await SerialPort.list();
-    return portInfos.map(
-      (p) =>
-        <INodeSerialPort>{
-          path: p.path,
-          description: p.manufacturer
-        }
-    );
+    return portInfos.map((p) => {
+      return {
+        path: p.path,
+        description: p.manufacturer ?? "Unknown"
+      };
+    });
   }
 
-  /**
-   * Reads packets from transformed serial port steam and processes them.
-   */
+  /** Reads packets from transformed serial port steam and processes them. */
   private async readFromRadio(): Promise<void> {
     if (this.port?.readable) {
       try {
         const buffer = (await this.port.read()) as Buffer;
-        if (buffer && buffer.length > 0) {
+        if (buffer.length > 0) {
           void this.handleFromRadio(new Uint8Array(buffer.buffer));
         }
       } catch (error) {
@@ -70,17 +70,14 @@ export class INodeSerialConnection extends IMeshDevice {
           Types.EmitterScope.iNodeSerialConnection,
           Types.Emitter.readFromRadio,
           `Device errored or disconnected: ${error as string}`,
-          LogRecord_Level.INFO
+          Protobuf.LogRecord_Level.INFO
         );
         await this.disconnect();
       }
     }
   }
 
-  /**
-   * Initiates the connect process to a Meshtastic device via Web Serial
-   * @param parameters serial connection parameters
-   */
+  /** Initiates the connect process to a Meshtastic device via Web Serial */
   public async connect(): Promise<void> {
     await Promise.resolve();
     this.port?.on("disconnect", () => {
@@ -88,7 +85,7 @@ export class INodeSerialConnection extends IMeshDevice {
         Types.EmitterScope.iNodeSerialConnection,
         Types.Emitter.connect,
         "Device disconnected",
-        LogRecord_Level.INFO
+        Protobuf.LogRecord_Level.INFO
       );
       this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
       this.complete();
@@ -100,26 +97,22 @@ export class INodeSerialConnection extends IMeshDevice {
         this.log(
           Types.EmitterScope.iNodeSerialConnection,
           Types.Emitter.connect,
-          `Conn: ${e.message}`,
-          LogRecord_Level.ERROR
+          `❌ ${e.message}`,
+          Protobuf.LogRecord_Level.ERROR
         );
       } else {
         void this.readFromRadio();
 
-        /**
-         * @todo, implement device keep-awake loop
-         */
+        /** TODO: implement device keep-awake loop */
 
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
-        void this.configure();
+        this.configure();
       }
     });
   }
 
-  /**
-   * Disconnects from the serial port
-   */
+  /** Disconnects from the serial port */
   public async disconnect(): Promise<void> {
     await Promise.resolve();
     this.port?.close();
@@ -127,15 +120,15 @@ export class INodeSerialConnection extends IMeshDevice {
     this.complete();
   }
 
-  /**
-   * Pings device to check if it is avaliable
-   */
+  /** Pings device to check if it is avaliable */
   public async ping(): Promise<boolean> {
     return Promise.resolve(true);
   }
 
   /**
    * Sends supplied protobuf message to the radio
+   *
+   * @param {Uint8Array} data Raw data to send
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     while (!this.port?.isOpen) {
@@ -150,8 +143,8 @@ export class INodeSerialConnection extends IMeshDevice {
           this.log(
             Types.EmitterScope.iNodeSerialConnection,
             Types.Emitter.writeToRadio,
-            `Conn: ${e.message}`,
-            LogRecord_Level.ERROR
+            `❌ ${e.message}`,
+            Protobuf.LogRecord_Level.ERROR
           );
         }
       }

@@ -1,27 +1,23 @@
-import { LogRecord_Level } from "./generated/mesh.js";
-import { Types } from "./index.js";
+import { Protobuf, Types } from "./index.js";
 import { log } from "./utils/logging.js";
 
-/**
- * Handles library-wide settings
- */
+/** Handles library-wide settings */
 export class SettingsManager {
-  /**
-   * Logging level for the application
-   */
-  static debugMode: LogRecord_Level = LogRecord_Level.WARNING;
+  /** Logging level for the application */
+  static debugMode: Protobuf.LogRecord_Level = Protobuf.LogRecord_Level.WARNING;
 
   /**
    * Sets the library-wide logging level
-   * @param level Desired level of logging
+   *
+   * @param {Protobuf.LogRecord_Level} level Desired level of logging
    */
-  static setDebugMode(level: LogRecord_Level): void {
-    if (!(level in LogRecord_Level)) {
+  static setDebugMode(level: Protobuf.LogRecord_Level): void {
+    if (!(level in Protobuf.LogRecord_Level)) {
       log(
         Types.EmitterScope.SettingsManager,
         Types.Emitter.setDebugMode,
         `Specified log level must be a member of LogRecord_Level.`,
-        LogRecord_Level.WARNING
+        Protobuf.LogRecord_Level.WARNING
       );
     }
 

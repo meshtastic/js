@@ -1,26 +1,16 @@
-import { Types } from "./index.js";
-import { LogRecord_Level } from "./generated/mesh.js";
+import { Protobuf, Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
-import type { HTTPConnectionParameters } from "./types.js";
 import { typedArrayToBuffer } from "./utils/general.js";
 
-/**
- * Allows to connect to a Meshtastic device over HTTP(S)
- */
+/** Allows to connect to a Meshtastic device over HTTP(S) */
 export class IHTTPConnection extends IMeshDevice {
-  /**
-   * Defines the connection type as http
-   */
+  /** Defines the connection type as http */
   connType: string;
 
-  /**
-   * URL of the device that is to be connected to.
-   */
+  /** URL of the device that is to be connected to. */
   url: string;
 
-  /**
-   * Enables receiving messages all at once, versus one per request
-   */
+  /** Enables receiving messages all at once, versus one per request */
   receiveBatchRequests: boolean;
 
   readLoop: ReturnType<typeof setInterval> | null;
@@ -42,17 +32,26 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Initiates the connect process to a Meshtastic device via HTTP(S)
-   * @param parameters http connection parameters
+   *
+   * @param {Types.HTTPConnectionParameters} parameters Http connection
+   *   parameters
+   * @param {string} parameters.address IP/hostname to use
+   * @param {number} [parameters.fetchInterval=3000] How often to check for new
+   *   packets. Default is `3000`
+   * @param {boolean} [parameters.receiveBatchRequests=false] Should packets be
+   *   fetched individually or all at once. Default is `false`
+   * @param {boolean} [parameters.tls=false] Should TLS be used for requests.
+   *   Default is `false`
    */
   public async connect({
     address,
-    fetchInterval,
-    receiveBatchRequests,
-    tls
-  }: HTTPConnectionParameters): Promise<void> {
+    fetchInterval = 3000,
+    receiveBatchRequests = false,
+    tls = false
+  }: Types.HTTPConnectionParameters): Promise<void> {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
-    this.receiveBatchRequests = !!receiveBatchRequests;
+    this.receiveBatchRequests = receiveBatchRequests;
 
     this.url = `${tls ? "https://" : "http://"}${address}`;
 
@@ -64,22 +63,19 @@ export class IHTTPConnection extends IMeshDevice {
         Types.EmitterScope.iHttpConnection,
         Types.Emitter.connect,
         `Ping succeeded, starting configuration and request timer.`,
-        LogRecord_Level.DEBUG
+        Protobuf.LogRecord_Level.DEBUG
       );
       this.configure();
-      this.readLoop = setInterval(
-        () => {
-          this.readFromRadio().catch((e: Error) => {
-            this.log(
-              Types.EmitterScope.iHttpConnection,
-              Types.Emitter.connect,
-              e.message,
-              LogRecord_Level.ERROR
-            );
-          });
-        },
-        fetchInterval ? fetchInterval : 5000
-      );
+      this.readLoop = setInterval(() => {
+        this.readFromRadio().catch((e: Error) => {
+          this.log(
+            Types.EmitterScope.iHttpConnection,
+            Types.Emitter.connect,
+            `❌ ${e.message}`,
+            Protobuf.LogRecord_Level.ERROR
+          );
+        });
+      }, fetchInterval);
     } else {
       if (this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_DISCONNECTED) {
         setTimeout(() => {
@@ -94,9 +90,7 @@ export class IHTTPConnection extends IMeshDevice {
     }
   }
 
-  /**
-   * Disconnects from the Meshtastic device
-   */
+  /** Disconnects from the Meshtastic device */
   public disconnect(): void {
     this.abortController.abort();
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
@@ -106,15 +100,13 @@ export class IHTTPConnection extends IMeshDevice {
     }
   }
 
-  /**
-   * Pings device to check if it is avaliable
-   */
+  /** Pings device to check if it is avaliable */
   public async ping(): Promise<boolean> {
     this.log(
       Types.EmitterScope.iHttpConnection,
       Types.Emitter.ping,
       `Attempting device ping.`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const { signal } = this.abortController;
@@ -126,22 +118,20 @@ export class IHTTPConnection extends IMeshDevice {
         pingSuccessful = true;
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
       })
-      .catch(({ message }: { message: string }) => {
+      .catch((e: Error) => {
         pingSuccessful = false;
         this.log(
           Types.EmitterScope.iHttpConnection,
           Types.Emitter.ping,
-          message,
-          LogRecord_Level.ERROR
+          `❌ ${e.message}`,
+          Protobuf.LogRecord_Level.ERROR
         );
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
     return pingSuccessful;
   }
 
-  /**
-   * Reads any avaliable protobuf messages from the radio
-   */
+  /** Reads any avaliable protobuf messages from the radio */
   protected async readFromRadio(): Promise<void> {
     if (this.peningRequest) {
       return;
@@ -173,13 +163,13 @@ export class IHTTPConnection extends IMeshDevice {
             await this.handleFromRadio(new Uint8Array(readBuffer, 0));
           }
         })
-        .catch(({ message }: { message: string }) => {
+        .catch((e: Error) => {
           this.peningRequest = false;
           this.log(
             Types.EmitterScope.iHttpConnection,
             Types.Emitter.readFromRadio,
-            message,
-            LogRecord_Level.ERROR
+            `❌ ${e.message}`,
+            Protobuf.LogRecord_Level.ERROR
           );
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
@@ -189,6 +179,8 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Sends supplied protobuf message to the radio
+   *
+   * @param {Uint8Array} data Raw bytes to send
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     const { signal } = this.abortController;
@@ -208,17 +200,17 @@ export class IHTTPConnection extends IMeshDevice {
           this.log(
             Types.EmitterScope.iHttpConnection,
             Types.Emitter.writeToRadio,
-            e.message,
-            LogRecord_Level.ERROR
+            `❌ ${e.message}`,
+            Protobuf.LogRecord_Level.ERROR
           );
         });
       })
-      .catch(({ message }: { message: string }) => {
+      .catch((e: Error) => {
         this.log(
           Types.EmitterScope.iHttpConnection,
           Types.Emitter.writeToRadio,
-          message,
-          LogRecord_Level.ERROR
+          `❌ ${e.message}`,
+          Protobuf.LogRecord_Level.ERROR
         );
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });

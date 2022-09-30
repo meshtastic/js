@@ -1,36 +1,16 @@
 import { SubEvent } from "sub-events";
 
-import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants.js";
-import {
-  Data,
-  FromRadio,
-  LogRecord_Level,
-  MeshPacket,
-  MyNodeInfo,
-  Position,
-  Routing,
-  ToRadio,
-  User,
-  Waypoint
-} from "./generated/mesh.js";
-import { PortNum } from "./generated/portnums.js";
+import { broadCastNum, minFwVer } from "./constants.js";
 import { Protobuf, Types } from "./index.js";
-import type { ConnectionParameters, LogEventPacket } from "./types.js";
 import { log } from "./utils/logging.js";
 import { Queue } from "./utils/queue.js";
 
-/**
- * Base class for connection methods to extend
- */
+/** Base class for connection methods to extend */
 export abstract class IMeshDevice {
-  /**
-   * Abstract property that states the connection type
-   */
+  /** Abstract property that states the connection type */
   protected abstract connType: string;
 
-  /**
-   * Logs to the console and the logging event emitter
-   */
+  /** Logs to the console and the logging event emitter */
   protected log: (
     scope: Types.EmitterScope,
     emitter: Types.Emitter,
@@ -39,29 +19,21 @@ export abstract class IMeshDevice {
     packet?: Uint8Array
   ) => void;
 
-  /**
-   * Describes the current state of the device
-   */
+  /** Describes the current state of the device */
   protected deviceStatus: Types.DeviceStatusEnum;
 
-  /**
-   * Describes the current state of the device
-   */
+  /** Describes the current state of the device */
   protected isConfigured: boolean;
 
-  /**
-   * Device's node number
-   */
-  private myNodeInfo: MyNodeInfo;
+  /** Device's node number */
+  private myNodeInfo: Protobuf.MyNodeInfo;
 
-  /**
-   * Randomly generated number to ensure confiuration lockstep
-   */
+  /** Randomly generated number to ensure confiuration lockstep */
   public configId: number;
 
   /**
-   * Keeps track of all requests sent to the radio that have callbacks
-   * TODO: Update description
+   * Keeps track of all requests sent to the radio that have callbacks TODO:
+   * Update description
    */
   public queue: Queue;
 
@@ -80,7 +52,7 @@ export abstract class IMeshDevice {
 
     this.deviceStatus = Types.DeviceStatusEnum.DEVICE_DISCONNECTED;
     this.isConfigured = false;
-    this.myNodeInfo = MyNodeInfo.create();
+    this.myNodeInfo = Protobuf.MyNodeInfo.create();
     this.configId = configId ?? this.generateRandId();
     this.queue = new Queue();
 
@@ -97,206 +69,242 @@ export abstract class IMeshDevice {
     });
   }
 
-  /**
-   * Abstract method that writes data to the radio
-   */
+  /** Abstract method that writes data to the radio */
   protected abstract writeToRadio(data: Uint8Array): Promise<void>;
 
-  /**
-   * Abstract method that connects to the radio
-   */
-  protected abstract connect(parameters: ConnectionParameters): Promise<void>;
+  /** Abstract method that connects to the radio */
+  protected abstract connect(
+    parameters: Types.ConnectionParameters
+  ): Promise<void>;
 
-  /**
-   * Abstract method that disconnects from the radio
-   */
+  /** Abstract method that disconnects from the radio */
   protected abstract disconnect(): void;
 
-  /**
-   * Abstract method that pings the radio
-   */
+  /** Abstract method that pings the radio */
   protected abstract ping(): Promise<boolean>;
 
   /**
    * Fires when a new FromRadio message has been received from the device
-   * @event
+   *
+   * @event onLogEvent
    */
-  public readonly onLogEvent: SubEvent<LogEventPacket> = new SubEvent();
+  public readonly onLogEvent = new SubEvent<Types.LogEventPacket>();
 
   /**
    * Fires when a new FromRadio message has been received from the device
-   * @event
+   *
+   * @event onFromRadio
    */
-  public readonly onFromRadio: SubEvent<Protobuf.FromRadio> = new SubEvent();
+  public readonly onFromRadio = new SubEvent<Protobuf.FromRadio>();
 
   /**
-   * Fires when a new FromRadio message containing a Data packet has been received from the device
-   * @event
+   * Fires when a new FromRadio message containing a Data packet has been
+   * received from the device
+   *
+   * @event onMeshPacket
    */
-  public readonly onMeshPacket: SubEvent<Protobuf.MeshPacket> = new SubEvent();
+  public readonly onMeshPacket = new SubEvent<Protobuf.MeshPacket>();
 
   /**
    * Fires when a new MyNodeInfo message has been received from the device
+   *
+   * @event onMyNodeInfo
    */
-  public readonly onMyNodeInfo: SubEvent<Protobuf.MyNodeInfo> = new SubEvent();
+  public readonly onMyNodeInfo = new SubEvent<Protobuf.MyNodeInfo>();
 
   /**
-   * Fires when a new MeshPacket message containing a NodeInfo packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a NodeInfo packet has been
+   * received from device
+   *
+   * @event onNodeInfoPacket
    */
-  public readonly onNodeInfoPacket: SubEvent<Types.NodeInfoPacket> =
-    new SubEvent();
+  public readonly onNodeInfoPacket = new SubEvent<Types.NodeInfoPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a User packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a User packet has been
+   * received from device
+   *
+   * @event onUserPacket
    */
-  public readonly onUserPacket: SubEvent<Types.UserPacket> = new SubEvent();
+  public readonly onUserPacket = new SubEvent<Types.UserPacket>();
 
   /**
    * Fires when a new Channel message is recieved
-   * @event
+   *
+   * @event onChannelPacket
    */
-  public readonly onChannelPacket: SubEvent<Types.ChannelPacket> =
-    new SubEvent();
+  public readonly onChannelPacket = new SubEvent<Types.ChannelPacket>();
 
   /**
    * Fires when a new Config message is recieved
-   * @event
+   *
+   * @event onConfigPacket
    */
-  public readonly onConfigPacket: SubEvent<Types.ConfigPacket> = new SubEvent();
+  public readonly onConfigPacket = new SubEvent<Types.ConfigPacket>();
 
   /**
    * Fires when a new ModuleConfig message is recieved
-   * @event
+   *
+   * @event onModuleConfigPacket
    */
-  public readonly onModuleConfigPacket: SubEvent<Types.ModuleConfigPacket> =
-    new SubEvent();
+  public readonly onModuleConfigPacket =
+    new SubEvent<Types.ModuleConfigPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Ping packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Ping packet has been
+   * received from device
+   *
+   * @event onPingPacket
    */
-  public readonly onPingPacket: SubEvent<Types.PingPacket> = new SubEvent();
+  public readonly onPingPacket = new SubEvent<Types.PingPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a IP Tunnel packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a IP Tunnel packet has been
+   * received from device
+   *
+   * @event onIpTunnelPacket
    */
-  public readonly onIpTunnelPacket: SubEvent<Types.IpTunnelPacket> =
-    new SubEvent();
+
+  public readonly onIpTunnelPacket = new SubEvent<Types.IpTunnelPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Serial packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Serial packet has been
+   * received from device
+   *
+   * @event onSerialPacket
    */
-  public readonly onSerialPacket: SubEvent<Types.SerialPacket> = new SubEvent();
+
+  public readonly onSerialPacket = new SubEvent<Types.SerialPacket>();
   /**
-   * Fires when a new MeshPacket message containing a Store and Forward packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Store and Forward packet
+   * has been received from device
+   *
+   * @event onStoreForwardPacket
    */
-  public readonly onStoreForwardPacket: SubEvent<Types.StoreForwardPacket> =
-    new SubEvent();
+  public readonly onStoreForwardPacket =
+    new SubEvent<Types.StoreForwardPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Store and Forward packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Store and Forward packet
+   * has been received from device
+   *
+   * @event onRangeTestPacket
    */
-  public readonly onRangeTestPacket: SubEvent<Types.RangeTestPacket> =
-    new SubEvent();
+  public readonly onRangeTestPacket = new SubEvent<Types.RangeTestPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Telemetry packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Telemetry packet has been
+   * received from device
+   *
+   * @event onTelemetryPacket
    */
-  public readonly onTelemetryPacket: SubEvent<Types.TelemetryPacket> =
-    new SubEvent();
+  public readonly onTelemetryPacket = new SubEvent<Types.TelemetryPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Private packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Private packet has been
+   * received from device
+   *
+   * @event onPrivatePacket
    */
-  public readonly onPrivatePacket: SubEvent<Types.PrivatePacket> =
-    new SubEvent();
+  public readonly onPrivatePacket = new SubEvent<Types.PrivatePacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a ATAK packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a ATAK packet has been
+   * received from device
+   *
+   * @event onAtakPacket
    */
-  public readonly onAtakPacket: SubEvent<Types.AtakPacket> = new SubEvent();
+  public readonly onAtakPacket = new SubEvent<Types.AtakPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Routing packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Routing packet has been
+   * received from device
+   *
+   * @event onRoutingPacket
    */
-  public readonly onRoutingPacket: SubEvent<Types.RoutingPacket> =
-    new SubEvent();
+  public readonly onRoutingPacket = new SubEvent<Types.RoutingPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Position packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Position packet has been
+   * received from device
+   *
+   * @event onPositionPacket
    */
-  public readonly onPositionPacket: SubEvent<Types.PositionPacket> =
-    new SubEvent();
+  public readonly onPositionPacket = new SubEvent<Types.PositionPacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Text packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Text packet has been
+   * received from device
+   *
+   * @event onMessagePacket
    */
-  public readonly onMessagePacket: SubEvent<Types.MessagePacket> =
-    new SubEvent();
+  public readonly onMessagePacket = new SubEvent<Types.MessagePacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Remote Hardware packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Remote Hardware packet has
+   * been received from device
+   *
+   * @event onRemoteHardwarePacket
    */
-  public readonly onRemoteHardwarePacket: SubEvent<Types.RemoteHardwarePacket> =
-    new SubEvent();
+  public readonly onRemoteHardwarePacket =
+    new SubEvent<Types.RemoteHardwarePacket>();
 
   /**
-   * Fires when a new MeshPacket message containing a Waypoint packet has been received from device
-   * @event
+   * Fires when a new MeshPacket message containing a Waypoint packet has been
+   * received from device
+   *
+   * @event onWaypointPacket
    */
-  public readonly onWaypointPacket: SubEvent<Types.WaypointPacket> =
-    new SubEvent();
+  public readonly onWaypointPacket = new SubEvent<Types.WaypointPacket>();
 
   /**
    * Fires when the devices connection or configuration status changes
-   * @event
+   *
+   * @event onDeviceStatus
    */
-  public readonly onDeviceStatus: SubEvent<Types.DeviceStatusEnum> =
-    new SubEvent();
+  public readonly onDeviceStatus = new SubEvent<Types.DeviceStatusEnum>();
 
   /**
-   * Fires when a new FromRadio message containing a Text packet has been received from device
-   * @event
+   * Fires when a new FromRadio message containing a Text packet has been
+   * received from device
+   *
+   * @event onLogRecord
    */
-  public readonly onLogRecord: SubEvent<Protobuf.LogRecord> = new SubEvent();
+  public readonly onLogRecord = new SubEvent<Protobuf.LogRecord>();
 
   /**
    * Fires when the device receives a meshPacket, returns a timestamp
-   * @event
+   *
+   * @event onMeshHeartbeat
    */
-  public readonly onMeshHeartbeat: SubEvent<Date> = new SubEvent();
+  public readonly onMeshHeartbeat = new SubEvent<Date>();
 
   /**
    * Fires when the device receives a Metadata packet
+   *
+   * @event onDeviceMetadataPacket
    */
-  public readonly onDeviceMetadataPacket: SubEvent<Types.DeviceMetadataPacket> =
-    new SubEvent();
+  public readonly onDeviceMetadataPacket =
+    new SubEvent<Types.DeviceMetadataPacket>();
 
   /**
    * Sends a text over the radio
-   * @param text
-   * @param destinationNum Node number of the destination node
-   * @param wantAck Whether or not acknowledgement is wanted
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {string} text Message to send
+   * @param {number} [destinationNum] Node number of the destination node
+   * @param {boolean} [wantAck=false] Whether or not acknowledgement is wanted.
+   *   Default is `false`
+   * @param {Types.channelNumber} [channel=0] Channel number to send to. Default
+   *   is `0`. Default is `0`
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
+   * @returns {Promise<void>}
    */
   public sendText(
     text: string,
     destinationNum?: number,
     wantAck = false,
-    channel = 0,
+    channel: Types.ChannelNumber = 0,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
@@ -304,15 +312,15 @@ export abstract class IMeshDevice {
       Types.Emitter.sendText,
       `📤 Sending message to ${
         destinationNum ?? "broadcast"
-      } on channel ${channel}`,
-      LogRecord_Level.DEBUG
+      } on channel ${channel.toString()}`,
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const enc = new TextEncoder();
 
     return this.sendPacket(
       enc.encode(text),
-      PortNum.TEXT_MESSAGE_APP,
+      Protobuf.PortNum.TEXT_MESSAGE_APP,
       destinationNum,
       wantAck,
       channel,
@@ -324,17 +332,20 @@ export abstract class IMeshDevice {
 
   /**
    * Sends a text over the radio
-   * @param waypoint Desired waypoint to send
-   * @param destinationNum Node number of the destination node
-   * @param wantAck Whether or not acknowledgement is wanted
-   * @param channel channel to send on default of 0
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {Protobuf.Waypoint} waypoint Desired waypoint to send
+   * @param {number} destinationNum Node number of the destination node
+   * @param {boolean} wantAck Whether or not acknowledgement is wanted
+   * @param {Types.ChannelNumber} channel Channel to send on default of 0
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
+   * @returns {Promise<void>}
    */
   public sendWaypoint(
     waypoint: Protobuf.Waypoint,
     destinationNum?: number,
     wantAck = false,
-    channel = 0,
+    channel: Types.ChannelNumber = 0,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
@@ -342,13 +353,13 @@ export abstract class IMeshDevice {
       Types.Emitter.sendWaypoint,
       `📤 Sending waypoint to ${
         destinationNum ?? "broadcast"
-      } on channel ${channel}`,
-      LogRecord_Level.DEBUG
+      } on channel ${channel.toString()}`,
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     return this.sendPacket(
-      Waypoint.toBinary(waypoint),
-      PortNum.WAYPOINT_APP,
+      Protobuf.Waypoint.toBinary(waypoint),
+      Protobuf.PortNum.WAYPOINT_APP,
       destinationNum,
       wantAck,
       channel,
@@ -361,23 +372,28 @@ export abstract class IMeshDevice {
 
   /**
    * Sends packet over the radio
-   * @param byteData
-   * @param portNum dataType Enum of protobuf data type
-   * @param destinationNum Node number of the destination node
-   * @param wantAck Whether or not acknowledgement is wanted
-   * @param channel channel to send on default of 0
-   * @param wantResponse Used for testing, requests recpipient to respond in kind with the same type of request
-   * @param echoResponse Sends event back to client
-   * @param callback If wantAck is true, callback is called when the ack is received
-   * @param emoji used for message reactions
-   * @param replyId used to reply to a message
+   *
+   * @param {Uint8Array} byteData Raw bytes to send
+   * @param {Protobuf.PortNum} portNum DataType Enum of protobuf data type
+   * @param {number} [destinationNum] Node number of the destination node
+   * @param {boolean} [wantAck=false] Whether or not acknowledgement is wanted.
+   *   Default is `false`
+   * @param {Types.ChannelNumber} [channel=0] Channel to send. Default is `0`
+   * @param {boolean} [wantResponse=false] Used for testing, requests recpipient
+   *   to respond in kind with the same type of request. Default is `false`
+   * @param {boolean} [echoResponse=false] Sends event back to client. Default
+   *   is `false`. Default is `false`
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
+   * @param {number} [emoji=0] Used for message reactions. Default is `0`
+   * @param {number} [replyId=0] Used to reply to a message. Default is `0`
    */
   public async sendPacket(
     byteData: Uint8Array,
-    portNum: PortNum,
+    portNum: Protobuf.PortNum,
     destinationNum?: number,
     wantAck = false,
-    channel = 0,
+    channel: Types.ChannelNumber = 0,
     wantResponse = false,
     echoResponse = false,
     callback?: (id: number) => Promise<void>,
@@ -390,10 +406,10 @@ export abstract class IMeshDevice {
       `📤 Sending ${Protobuf.PortNum[portNum] ?? "UNK"} to ${
         destinationNum ?? "broadcast"
       }`,
-      LogRecord_Level.TRACE
+      Protobuf.LogRecord_Level.TRACE
     );
 
-    const meshPacket = MeshPacket.create({
+    const meshPacket = Protobuf.MeshPacket.create({
       payloadVariant: {
         decoded: {
           payload: byteData,
@@ -408,13 +424,13 @@ export abstract class IMeshDevice {
         oneofKind: "decoded"
       },
       from: this.myNodeInfo.myNodeNum,
-      to: destinationNum ? destinationNum : BROADCAST_NUM,
+      to: destinationNum ? destinationNum : broadCastNum,
       id: this.generateRandId(),
       wantAck: wantAck,
       channel
     });
 
-    const toRadio = ToRadio.toBinary({
+    const toRadio = Protobuf.ToRadio.toBinary({
       payloadVariant: {
         packet: meshPacket,
         oneofKind: "packet"
@@ -429,7 +445,11 @@ export abstract class IMeshDevice {
 
   /**
    * Sends raw packet over the radio
-   * @param toRadio binary data to send
+   *
+   * @param {number} id Unique packet ID
+   * @param {Uint8Array} toRadio Binary data to send
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async sendRaw(
     id: number,
@@ -441,7 +461,7 @@ export abstract class IMeshDevice {
         Types.EmitterScope.iMeshDevice,
         Types.Emitter.sendRaw,
         `Message longer than 512 bytes, it will not be sent!`,
-        LogRecord_Level.WARNING
+        Protobuf.LogRecord_Level.WARNING
       );
     } else {
       this.queue.push({
@@ -463,8 +483,10 @@ export abstract class IMeshDevice {
 
   /**
    * Writes config to device
-   * @param config config object
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {Protobuf.Config} config Config object
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async setConfig(
     config: Protobuf.Config,
@@ -474,7 +496,7 @@ export abstract class IMeshDevice {
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.setConfig,
       `Setting config ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     let configType: Protobuf.AdminMessage_ConfigType;
@@ -518,7 +540,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       setRadio,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -526,15 +548,17 @@ export abstract class IMeshDevice {
       false,
       async (id: number) => {
         await this.getConfig(configType);
-        callback && callback(id);
+        await callback?.(id);
       }
     );
   }
 
   /**
    * Writes module config to device
-   * @param config module config object
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {Protobuf.ModuleConfig} config Module config object
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async setModuleConfig(
     config: Protobuf.ModuleConfig,
@@ -544,7 +568,7 @@ export abstract class IMeshDevice {
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.setModuleConfig,
       `Setting module config ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     let configType: Protobuf.AdminMessage_ModuleConfigType;
@@ -588,7 +612,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       setRadio,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -596,14 +620,17 @@ export abstract class IMeshDevice {
       false,
       async (id: number) => {
         await this.getModuleConfig(configType);
-        callback && callback(id);
+        await callback?.(id);
       }
     );
   }
 
   /**
-   * Confirms the currently set config, and prevents changes from reverting after 10 minutes.
-   * @param callback If wantAck is true, callback is called when the ack is received
+   * Confirms the currently set config, and prevents changes from reverting
+   * after 10 minutes.
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async confirmSetConfig(
     callback?: (id: number) => Promise<void>
@@ -612,7 +639,7 @@ export abstract class IMeshDevice {
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.confirmSetConfig,
       `Confirming config ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const confirmSetRadio = Protobuf.AdminMessage.toBinary({
@@ -624,7 +651,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       confirmSetRadio,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -636,18 +663,20 @@ export abstract class IMeshDevice {
 
   /**
    * Sets devices owner data
-   * @param owner Owner data to apply to the device
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {Protobuf.User} owner Owner data to apply to the device
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async setOwner(
-    owner: User,
+    owner: Protobuf.User,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.setOwner,
       `Setting owner ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const setOwner = Protobuf.AdminMessage.toBinary({
@@ -659,7 +688,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       setOwner,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -667,15 +696,17 @@ export abstract class IMeshDevice {
       false,
       async (id: number) => {
         await this.getOwner();
-        callback && callback(id);
+        await callback?.(id);
       }
     );
   }
 
   /**
    * Sets devices ChannelSettings
-   * @param channel Channel data to be set
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {Protobuf.Channel} channel Channel data to be set
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async setChannel(
     channel: Protobuf.Channel,
@@ -687,7 +718,7 @@ export abstract class IMeshDevice {
       `📻 Setting Channel: ${channel.index} ${
         callback ? "with" : "without"
       } callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const setChannel = Protobuf.AdminMessage.toBinary({
@@ -699,7 +730,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       setChannel,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -707,14 +738,17 @@ export abstract class IMeshDevice {
       false,
       async (id: number) => {
         await this.getChannel(channel.index);
-        callback && callback(id);
+        await callback?.(id);
       }
     );
   }
 
   /**
-   * Confirms the currently set channels, and prevents changes from reverting after 10 minutes.
-   * @param callback If wantAck is true, callback is called when the ack is received
+   * Confirms the currently set channels, and prevents changes from reverting
+   * after 10 minutes.
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async confirmSetChannel(
     callback?: (id: number) => Promise<void>
@@ -723,7 +757,7 @@ export abstract class IMeshDevice {
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.confirmSetChannel,
       `📻 Confirming Channel config ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const confirmSetChannel = Protobuf.AdminMessage.toBinary({
@@ -735,7 +769,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       confirmSetChannel,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -747,8 +781,10 @@ export abstract class IMeshDevice {
 
   /**
    * Clears specific channel with the designated index
-   * @param index Channel index to be cleared
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {number} index Channel index to be cleared
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async clearChannel(
     index: number,
@@ -758,7 +794,7 @@ export abstract class IMeshDevice {
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.clearChannel,
       `📻 Clearing Channel ${index} ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const channel = Protobuf.Channel.create({
@@ -774,7 +810,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       setChannel,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -782,15 +818,17 @@ export abstract class IMeshDevice {
       false,
       async (id: number) => {
         await this.getChannel(channel.index);
-        callback && callback(id);
+        await callback?.(id);
       }
     );
   }
 
   /**
    * Gets specified channel information from the radio
-   * @param index Channel index to be retrieved
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {number} index Channel index to be retrieved
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async getChannel(
     index: number,
@@ -802,7 +840,7 @@ export abstract class IMeshDevice {
       `📻 Requesting Channel: ${index} ${
         callback ? "with" : "without"
       } callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const getChannelRequest = Protobuf.AdminMessage.toBinary({
@@ -814,7 +852,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       getChannelRequest,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -826,18 +864,20 @@ export abstract class IMeshDevice {
 
   /**
    * Gets all of the devices channels
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async getAllChannels(callback?: () => Promise<void>): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.getAllChannels,
       `📻 Requesting all Channels ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     // TODO: Use device queue now.
-    const queue: Array<() => Promise<void>> = [];
+    const queue: (() => Promise<void>)[] = [];
     for (let i = 0; i <= this.myNodeInfo.maxChannels; i++) {
       queue.push(async (): Promise<void> => {
         return await Promise.resolve();
@@ -845,12 +885,16 @@ export abstract class IMeshDevice {
       await this.getChannel(i, queue[i]);
     }
     await Promise.all(queue);
-    callback && callback();
+    await callback?.();
   }
 
   /**
    * Gets devices config
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {Protobuf.AdminMessage_ConfigType} configType Desired config type to
+   *   request
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async getConfig(
     configType: Protobuf.AdminMessage_ConfigType,
@@ -860,7 +904,7 @@ export abstract class IMeshDevice {
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.getConfig,
       `Requesting config ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const getRadioRequest = Protobuf.AdminMessage.toBinary({
@@ -872,7 +916,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       getRadioRequest,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -883,30 +927,34 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Gets devices config
-   * @param callback If wantAck is true, callback is called when the ack is received
+   * Gets Module config
+   *
+   * @param {Protobuf.AdminMessage_ModuleConfigType} moduleConfigType Desired
+   *   module config type to request
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async getModuleConfig(
-    configType: Protobuf.AdminMessage_ModuleConfigType,
+    moduleConfigType: Protobuf.AdminMessage_ModuleConfigType,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.getModuleConfig,
       `Requesting module config ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const getRadioRequest = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
         oneofKind: "getModuleConfigRequest",
-        getModuleConfigRequest: configType
+        getModuleConfigRequest: moduleConfigType
       }
     });
 
     await this.sendPacket(
       getRadioRequest,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -918,7 +966,9 @@ export abstract class IMeshDevice {
 
   /**
    * Gets devices Owner
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async getOwner(
     callback?: (id: number) => Promise<void>
@@ -927,7 +977,7 @@ export abstract class IMeshDevice {
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.getOwner,
       `Requesting owner ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const getOwnerRequest = Protobuf.AdminMessage.toBinary({
@@ -939,7 +989,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       getOwnerRequest,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -951,7 +1001,9 @@ export abstract class IMeshDevice {
 
   /**
    * Gets devices metadata
-   * @param callback If wantAck is true, callback is called when the ack is received
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async getMetadata(
     callback?: (id: number) => Promise<void>
@@ -960,7 +1012,7 @@ export abstract class IMeshDevice {
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.getMetadata,
       `Requesting owner ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const getDeviceMetricsRequest = Protobuf.AdminMessage.toBinary({
@@ -972,7 +1024,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       getDeviceMetricsRequest,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -983,8 +1035,11 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Resets the internal NodeDB of the radio, usefull for removing old nodes that no longer exist.
-   * @param callback If wantAck is true, callback is called when the ack is received
+   * Resets the internal NodeDB of the radio, usefull for removing old nodes
+   * that no longer exist.
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
    */
   public async resetPeers(
     callback?: (id: number) => Promise<void>
@@ -993,7 +1048,7 @@ export abstract class IMeshDevice {
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.resetPeers,
       `📻 Resetting Peers ${callback ? "with" : "without"} callback`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
 
     const resetPeers = Protobuf.AdminMessage.toBinary({
@@ -1005,7 +1060,7 @@ export abstract class IMeshDevice {
 
     await this.sendPacket(
       resetPeers,
-      PortNum.ADMIN_APP,
+      Protobuf.PortNum.ADMIN_APP,
       this.myNodeInfo.myNodeNum,
       true,
       0,
@@ -1017,20 +1072,18 @@ export abstract class IMeshDevice {
     );
   }
 
-  /**
-   * Triggers the device configure process
-   */
+  /** Triggers the device configure process */
   public configure(): void {
     // TODO: this not always logged
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.configure,
       `⚙️ Requesting device configuration`,
-      LogRecord_Level.DEBUG
+      Protobuf.LogRecord_Level.DEBUG
     );
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
-    const toRadio = ToRadio.toBinary({
+    const toRadio = Protobuf.ToRadio.toBinary({
       payloadVariant: {
         wantConfigId: this.configId,
         oneofKind: "wantConfigId"
@@ -1044,7 +1097,8 @@ export abstract class IMeshDevice {
 
   /**
    * Updates the device status eliminating duplicate status events
-   * @param status
+   *
+   * @param {Types.DeviceStatusEnum} status New device status
    */
   public updateDeviceStatus(status: Types.DeviceStatusEnum): void {
     if (status !== this.deviceStatus) {
@@ -1054,23 +1108,25 @@ export abstract class IMeshDevice {
 
   /**
    * Generates random packet identifier
+   *
+   * @returns {number} Random packet ID
    */
   private generateRandId(): number {
     return Math.floor(Math.random() * 1e9);
   }
 
   /**
-   * Gets called whenever a fromRadio message is received from device, returns fromRadio data
-   * @param fromRadio Uint8Array containing raw radio data
+   * Gets called whenever a fromRadio message is received from device, returns
+   * fromRadio data
+   *
+   * @param {Uint8Array} fromRadio Uint8Array containing raw radio data
    */
   protected async handleFromRadio(fromRadio: Uint8Array): Promise<void> {
-    const decodedMessage = FromRadio.fromBinary(fromRadio);
+    const decodedMessage = Protobuf.FromRadio.fromBinary(fromRadio);
 
     this.onFromRadio.emit(decodedMessage);
 
-    /**
-     * @todo add map here when `all=true` gets fixed.
-     */
+    /** @todo Add map here when `all=true` gets fixed. */
     switch (decodedMessage.payloadVariant.oneofKind) {
       case "packet":
         await this.handleMeshPacket(decodedMessage.payloadVariant.packet);
@@ -1079,13 +1135,13 @@ export abstract class IMeshDevice {
       case "myInfo":
         if (
           parseFloat(decodedMessage.payloadVariant.myInfo.firmwareVersion) <
-          MIN_FW_VERSION
+          minFwVer
         ) {
           this.log(
             Types.EmitterScope.iMeshDevice,
             Types.Emitter.handleFromRadio,
-            `Device firmware outdated. Min supported: ${MIN_FW_VERSION} got : ${decodedMessage.payloadVariant.myInfo.firmwareVersion}`,
-            LogRecord_Level.CRITICAL
+            `Device firmware outdated. Min supported: ${minFwVer} got : ${decodedMessage.payloadVariant.myInfo.firmwareVersion}`,
+            Protobuf.LogRecord_Level.CRITICAL
           );
         }
         this.onMyNodeInfo.emit(decodedMessage.payloadVariant.myInfo);
@@ -1093,7 +1149,7 @@ export abstract class IMeshDevice {
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
           "📱 Received Node info for this device",
-          LogRecord_Level.TRACE
+          Protobuf.LogRecord_Level.TRACE
         );
         break;
 
@@ -1102,11 +1158,11 @@ export abstract class IMeshDevice {
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
           `📱 Received Node Info packet for node: ${decodedMessage.payloadVariant.nodeInfo.num}`,
-          LogRecord_Level.TRACE
+          Protobuf.LogRecord_Level.TRACE
         );
 
         this.onNodeInfoPacket.emit({
-          packet: MeshPacket.create({
+          packet: Protobuf.MeshPacket.create({
             id: decodedMessage.id
           }),
           data: decodedMessage.payloadVariant.nodeInfo
@@ -1114,7 +1170,7 @@ export abstract class IMeshDevice {
 
         if (decodedMessage.payloadVariant.nodeInfo.position) {
           this.onPositionPacket.emit({
-            packet: MeshPacket.create({
+            packet: Protobuf.MeshPacket.create({
               id: decodedMessage.id,
               from: decodedMessage.payloadVariant.nodeInfo.num
             }),
@@ -1124,7 +1180,7 @@ export abstract class IMeshDevice {
 
         if (decodedMessage.payloadVariant.nodeInfo.user) {
           this.onUserPacket.emit({
-            packet: MeshPacket.create({
+            packet: Protobuf.MeshPacket.create({
               id: decodedMessage.id,
               from: decodedMessage.payloadVariant.nodeInfo.num
             }),
@@ -1146,12 +1202,12 @@ export abstract class IMeshDevice {
             "UNK"
           }`,
           decodedMessage.payloadVariant.config.payloadVariant.oneofKind
-            ? LogRecord_Level.TRACE
-            : LogRecord_Level.WARNING
+            ? Protobuf.LogRecord_Level.TRACE
+            : Protobuf.LogRecord_Level.WARNING
         );
 
         this.onConfigPacket.emit({
-          packet: MeshPacket.create({
+          packet: Protobuf.MeshPacket.create({
             id: decodedMessage.id
           }),
           data: decodedMessage.payloadVariant.config
@@ -1163,7 +1219,7 @@ export abstract class IMeshDevice {
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
           "Received onLogRecord",
-          LogRecord_Level.TRACE
+          Protobuf.LogRecord_Level.TRACE
         );
         this.onLogRecord.emit(decodedMessage.payloadVariant.logRecord);
         break;
@@ -1174,7 +1230,7 @@ export abstract class IMeshDevice {
             Types.EmitterScope.iMeshDevice,
             Types.Emitter.handleFromRadio,
             `❌ Invalid config id reveived from device, exptected ${this.configId} but received ${decodedMessage.payloadVariant.configCompleteId}`,
-            LogRecord_Level.ERROR
+            Protobuf.LogRecord_Level.ERROR
           );
         }
 
@@ -1182,7 +1238,7 @@ export abstract class IMeshDevice {
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleFromRadio,
           `⚙️ Valid config id reveived from device: ${this.configId}`,
-          LogRecord_Level.INFO
+          Protobuf.LogRecord_Level.INFO
         );
 
         await this.getAllChannels(async () => {
@@ -1191,7 +1247,7 @@ export abstract class IMeshDevice {
 
         await this.sendRaw(
           0,
-          ToRadio.toBinary({
+          Protobuf.ToRadio.toBinary({
             payloadVariant: {
               peerInfo: {
                 appVersion: 1,
@@ -1222,12 +1278,12 @@ export abstract class IMeshDevice {
               .oneofKind ?? "UNK"
           }`,
           decodedMessage.payloadVariant.moduleConfig.payloadVariant.oneofKind
-            ? LogRecord_Level.TRACE
-            : LogRecord_Level.WARNING
+            ? Protobuf.LogRecord_Level.TRACE
+            : Protobuf.LogRecord_Level.WARNING
         );
 
         this.onModuleConfigPacket.emit({
-          packet: MeshPacket.create({
+          packet: Protobuf.MeshPacket.create({
             id: decodedMessage.id
           }),
           data: decodedMessage.payloadVariant.moduleConfig
@@ -1236,9 +1292,7 @@ export abstract class IMeshDevice {
     }
   }
 
-  /**
-   * Completes all SubEvents
-   */
+  /** Completes all SubEvents */
   public complete(): void {
     this.onLogEvent.cancelAll();
     this.onFromRadio.cancelAll();
@@ -1269,13 +1323,17 @@ export abstract class IMeshDevice {
 
   /**
    * Gets called when a MeshPacket is received from device
-   * @param meshPacket
+   *
+   * @param {Protobuf.MeshPacket} meshPacket Packet to process
    */
-  private async handleMeshPacket(meshPacket: MeshPacket): Promise<void> {
+  private async handleMeshPacket(
+    meshPacket: Protobuf.MeshPacket
+  ): Promise<void> {
     this.onMeshPacket.emit(meshPacket);
     if (meshPacket.from !== this.myNodeInfo.myNodeNum) {
       /**
-       * @todo, this shouldn't be called unless the device interracts with the mesh, currently it does.
+       * TODO: this shouldn't be called unless the device interracts with the
+       * mesh, currently it does.
        */
       this.onMeshHeartbeat.emit(new Date());
     }
@@ -1293,21 +1351,24 @@ export abstract class IMeshDevice {
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "Device received encrypted data packet, ignoring.",
-          LogRecord_Level.DEBUG
+          Protobuf.LogRecord_Level.DEBUG
         );
         break;
     }
   }
 
-  private handleDataPacket(dataPacket: Data, meshPacket: MeshPacket) {
+  private handleDataPacket(
+    dataPacket: Protobuf.Data,
+    meshPacket: Protobuf.MeshPacket
+  ) {
     let adminMessage: Protobuf.AdminMessage | undefined = undefined;
     switch (dataPacket.portnum) {
-      case PortNum.TEXT_MESSAGE_APP:
+      case Protobuf.PortNum.TEXT_MESSAGE_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received TEXT_MESSAGE_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onMessagePacket.emit({
@@ -1316,12 +1377,12 @@ export abstract class IMeshDevice {
         });
         break;
 
-      case PortNum.REMOTE_HARDWARE_APP:
+      case Protobuf.PortNum.REMOTE_HARDWARE_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received REMOTE_HARDWARE_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onRemoteHardwarePacket.emit({
@@ -1330,52 +1391,53 @@ export abstract class IMeshDevice {
         });
         break;
 
-      case PortNum.POSITION_APP:
+      case Protobuf.PortNum.POSITION_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received POSITION_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onPositionPacket.emit({
           packet: meshPacket,
-          data: Position.fromBinary(dataPacket.payload)
+          data: Protobuf.Position.fromBinary(dataPacket.payload)
         });
         break;
 
-      case PortNum.NODEINFO_APP:
+      case Protobuf.PortNum.NODEINFO_APP:
         /**
-         * @todo, workaround for NODEINFO_APP plugin sending a User protobuf instead of a NodeInfo protobuf
+         * TODO: workaround for NODEINFO_APP plugin sending a User protobuf
+         * instead of a NodeInfo protobuf
          */
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received NODEINFO_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onUserPacket.emit({
           packet: meshPacket,
-          data: User.fromBinary(dataPacket.payload)
+          data: Protobuf.User.fromBinary(dataPacket.payload)
         });
         break;
 
-      case PortNum.ROUTING_APP:
+      case Protobuf.PortNum.ROUTING_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received ROUTING_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onRoutingPacket.emit({
           packet: meshPacket,
-          data: Routing.fromBinary(dataPacket.payload)
+          data: Protobuf.Routing.fromBinary(dataPacket.payload)
         });
         break;
 
-      case PortNum.ADMIN_APP:
+      case Protobuf.PortNum.ADMIN_APP:
         adminMessage = Protobuf.AdminMessage.fromBinary(dataPacket.payload);
         this.log(
           Types.EmitterScope.iMeshDevice,
@@ -1384,7 +1446,7 @@ export abstract class IMeshDevice {
             //change
             adminMessage.payloadVariant.oneofKind ?? "UNK"
           }`,
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         switch (adminMessage.payloadVariant.oneofKind) {
@@ -1425,42 +1487,42 @@ export abstract class IMeshDevice {
               `Received unhandled AdminMessage, type ${
                 adminMessage.payloadVariant.oneofKind ?? "undefined"
               }`,
-              LogRecord_Level.DEBUG,
+              Protobuf.LogRecord_Level.DEBUG,
               dataPacket.payload
             );
         }
         break;
 
-      case PortNum.TEXT_MESSAGE_COMPRESSED_APP:
+      case Protobuf.PortNum.TEXT_MESSAGE_COMPRESSED_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received TEXT_MESSAGE_COMPRESSED_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         break;
 
-      case PortNum.WAYPOINT_APP:
+      case Protobuf.PortNum.WAYPOINT_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received WAYPOINT_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onWaypointPacket.emit({
           packet: meshPacket,
-          data: Waypoint.fromBinary(dataPacket.payload)
+          data: Protobuf.Waypoint.fromBinary(dataPacket.payload)
         });
         break;
 
-      case PortNum.REPLY_APP:
+      case Protobuf.PortNum.REPLY_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received REPLY_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onPingPacket.emit({
@@ -1469,12 +1531,12 @@ export abstract class IMeshDevice {
         });
         break;
 
-      case PortNum.IP_TUNNEL_APP:
+      case Protobuf.PortNum.IP_TUNNEL_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received IP_TUNNEL_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onIpTunnelPacket.emit({
@@ -1483,12 +1545,12 @@ export abstract class IMeshDevice {
         });
         break;
 
-      case PortNum.SERIAL_APP:
+      case Protobuf.PortNum.SERIAL_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received SERIAL_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onSerialPacket.emit({
@@ -1497,12 +1559,12 @@ export abstract class IMeshDevice {
         });
         break;
 
-      case PortNum.STORE_FORWARD_APP:
+      case Protobuf.PortNum.STORE_FORWARD_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received STORE_FORWARD_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onStoreForwardPacket.emit({
@@ -1511,12 +1573,12 @@ export abstract class IMeshDevice {
         });
         break;
 
-      case PortNum.RANGE_TEST_APP:
+      case Protobuf.PortNum.RANGE_TEST_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received RANGE_TEST_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onRangeTestPacket.emit({
@@ -1525,12 +1587,12 @@ export abstract class IMeshDevice {
         });
         break;
 
-      case PortNum.TELEMETRY_APP:
+      case Protobuf.PortNum.TELEMETRY_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received TELEMETRY_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onTelemetryPacket.emit({
@@ -1539,12 +1601,12 @@ export abstract class IMeshDevice {
         });
         break;
 
-      case PortNum.PRIVATE_APP:
+      case Protobuf.PortNum.PRIVATE_APP:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received PRIVATE_APP packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onPrivatePacket.emit({
@@ -1553,12 +1615,12 @@ export abstract class IMeshDevice {
         });
         break;
 
-      case PortNum.ATAK_FORWARDER:
+      case Protobuf.PortNum.ATAK_FORWARDER:
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           "📦 Received ATAK_FORWARDER packet",
-          LogRecord_Level.TRACE,
+          Protobuf.LogRecord_Level.TRACE,
           dataPacket.payload
         );
         this.onAtakPacket.emit({
@@ -1572,9 +1634,9 @@ export abstract class IMeshDevice {
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
           `⚠️ Received unhandled PortNum: ${
-            PortNum[dataPacket.portnum] ?? "UNK"
+            Protobuf.PortNum[dataPacket.portnum] ?? "UNK"
           }`, //warn
-          LogRecord_Level.WARNING,
+          Protobuf.LogRecord_Level.WARNING,
           dataPacket.payload
         );
         break;

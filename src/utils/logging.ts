@@ -1,22 +1,23 @@
-import { LogRecord_Level } from "../generated/index.js";
-import { Types } from "../index.js";
+import { Protobuf, Types } from "../index.js";
 import { SettingsManager } from "../settingsManager.js";
 
 /**
  * Global event logger
- * @param emitter Name of calling function
- * @param message Informative message
- * @param level Desired logging level
+ *
+ * @param {Types.EmitterScope} scope Debug statement's wrapper class
+ * @param {Types.Emitter} emitter Name of calling function
+ * @param {string} message Informative message
+ * @param {Protobuf.LogRecord_Level} level Desired logging level
  */
 export const log = (
   scope: Types.EmitterScope,
   emitter: Types.Emitter,
   message: string,
-  level: LogRecord_Level
+  level: Protobuf.LogRecord_Level
 ): void => {
   if (level >= SettingsManager.debugMode) {
     switch (level) {
-      case LogRecord_Level.TRACE:
+      case Protobuf.LogRecord_Level.TRACE:
         console.info(
           `%c[TRACE]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
             Types.Emitter[emitter] ?? "UNK"
@@ -27,7 +28,7 @@ export const log = (
         );
         break;
 
-      case LogRecord_Level.DEBUG:
+      case Protobuf.LogRecord_Level.DEBUG:
         console.info(
           `%c[DEBUG]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
             Types.Emitter[emitter] ?? "UNK"
@@ -38,7 +39,7 @@ export const log = (
         );
         break;
 
-      case LogRecord_Level.INFO:
+      case Protobuf.LogRecord_Level.INFO:
         console.info(
           `%c[INFO]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
             Types.Emitter[emitter] ?? "UNK"
@@ -48,7 +49,7 @@ export const log = (
           "color:white"
         );
         break;
-      case LogRecord_Level.WARNING:
+      case Protobuf.LogRecord_Level.WARNING:
         console.warn(
           `%c[WARNING]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
             Types.Emitter[emitter] ?? "UNK"
@@ -59,7 +60,7 @@ export const log = (
         );
         break;
 
-      case LogRecord_Level.ERROR:
+      case Protobuf.LogRecord_Level.ERROR:
         console.error(
           `%c[ERROR]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
             Types.Emitter[emitter] ?? "UNK"
@@ -70,7 +71,7 @@ export const log = (
         );
         break;
 
-      case LogRecord_Level.CRITICAL:
+      case Protobuf.LogRecord_Level.CRITICAL:
         console.error(
           `%c[CRITICAL]%c ${Types.EmitterScope[scope] ?? "UNK"}.${
             Types.Emitter[emitter] ?? "UNK"

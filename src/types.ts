@@ -1,23 +1,9 @@
 import type {
   IBLEConnection,
   IHTTPConnection,
-  ISerialConnection
+  ISerialConnection,
+  Protobuf
 } from "./index.js";
-import type {
-  LogRecord_Level,
-  MeshPacket,
-  NodeInfo,
-  Position,
-  Routing,
-  User,
-  Waypoint
-} from "./generated/mesh.js";
-import { DeviceMetadata } from "./generated/device_metadata.js";
-import { ModuleConfig } from "./generated/module_config.js";
-import { Config } from "./generated/config.js";
-import { Channel } from "./generated/channel.js";
-import { HardwareMessage } from "./generated/remote_hardware.js";
-import { Telemetry } from "./generated/telemetry.js";
 
 export enum DeviceStatusEnum {
   DEVICE_RESTARTING,
@@ -29,149 +15,136 @@ export enum DeviceStatusEnum {
   DEVICE_CONFIGURED
 }
 
-export type DeviceInterface =
-  | IHTTPConnection
-  | IBLEConnection
-  | ISerialConnection;
-
 export type ConnectionParameters =
   | HTTPConnectionParameters
   | BLEConnectionParameters
   | SerialConnectionParameters;
 
 export interface HTTPConnectionParameters {
-  /**
-   * address The IP Address/Domain to connect to, without protocol
-   */
+  /** Address The IP Address/Domain to connect to, without protocol */
   address: string;
   /**
-   * Enables transport layer security. Notes: Slower, devices' certificate must be trusted by the browser
+   * Enables transport layer security. Notes: Slower, devices' certificate must
+   * be trusted by the browser
    */
   tls?: boolean;
-  /**
-   * Enables receiving messages all at once, versus one per request
-   */
+  /** Enables receiving messages all at once, versus one per request */
   receiveBatchRequests?: boolean;
   /**
-   * (ms) Sets a fixed interval in that the device is fetched for new messages, defaults to 5 seconds
+   * (ms) Sets a fixed interval in that the device is fetched for new messages,
+   * defaults to 5 seconds
    */
   fetchInterval: number;
 }
 
 export interface BLEConnectionParameters {
-  /**
-   * Optional filter options for the web bluetooth api requestDevice() method
-   */
+  /** Optional filter options for the web bluetooth api requestDevice() method */
   deviceFilter?: RequestDeviceOptions;
-  /**
-   * Connect directly to a Bluetooth deivce, obtained from `getDevices()`
-   */
+  /** Connect directly to a Bluetooth deivce, obtained from `getDevices()` */
   device?: BluetoothDevice;
 }
 
 export interface SerialConnectionParameters {
   baudRate?: number;
-  /**
-   * Connect directly to a Serial port, obtained from `getPorts()`
-   */
+  /** Connect directly to a Serial port, obtained from `getPorts()` */
   port?: SerialPort;
 }
 
 export type LogEventPacket = LogEvent & { date: Date };
 
 export interface NodeInfoPacket {
-  packet: MeshPacket;
-  data: NodeInfo;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.NodeInfo;
 }
 
 export interface UserPacket {
-  packet: MeshPacket;
-  data: User;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.User;
 }
 
 export interface RoutingPacket {
-  packet: MeshPacket;
-  data: Routing;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Routing;
 }
 
 export interface PositionPacket {
-  packet: MeshPacket;
-  data: Position;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Position;
 }
 
 export interface MessagePacket {
-  packet: MeshPacket;
+  packet: Protobuf.MeshPacket;
   text: string;
 }
 
 export interface PingPacket {
-  packet: MeshPacket;
+  packet: Protobuf.MeshPacket;
   data: Uint8Array;
 }
 
 export interface IpTunnelPacket {
-  packet: MeshPacket;
+  packet: Protobuf.MeshPacket;
   data: Uint8Array;
 }
 
 export interface SerialPacket {
-  packet: MeshPacket;
+  packet: Protobuf.MeshPacket;
   data: Uint8Array;
 }
 
 export interface StoreForwardPacket {
-  packet: MeshPacket;
+  packet: Protobuf.MeshPacket;
   data: Uint8Array;
 }
 
 export interface RangeTestPacket {
-  packet: MeshPacket;
+  packet: Protobuf.MeshPacket;
   data: Uint8Array;
 }
 
 export interface TelemetryPacket {
-  packet: MeshPacket;
-  data: Telemetry;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Telemetry;
 }
 
 export interface PrivatePacket {
-  packet: MeshPacket;
+  packet: Protobuf.MeshPacket;
   data: Uint8Array;
 }
 
 export interface AtakPacket {
-  packet: MeshPacket;
+  packet: Protobuf.MeshPacket;
   data: Uint8Array;
 }
 
 export interface RemoteHardwarePacket {
-  packet: MeshPacket;
-  data: HardwareMessage;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.HardwareMessage;
 }
 
 export interface ChannelPacket {
-  packet: MeshPacket;
-  data: Channel;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Channel;
 }
 
 export interface ConfigPacket {
-  packet: MeshPacket;
-  data: Config;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Config;
 }
 
 export interface ModuleConfigPacket {
-  packet: MeshPacket;
-  data: ModuleConfig;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.ModuleConfig;
 }
 
 export interface DeviceMetadataPacket {
-  packet: MeshPacket;
-  data: DeviceMetadata;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.DeviceMetadata;
 }
 
 export interface WaypointPacket {
-  packet: MeshPacket;
-  data: Waypoint;
+  packet: Protobuf.MeshPacket;
+  data: Protobuf.Waypoint;
 }
 
 export enum EmitterScope {
@@ -184,6 +157,7 @@ export enum EmitterScope {
 }
 
 export enum Emitter {
+  "constructor",
   "sendText",
   "sendWaypoint",
   "sendPacket",
@@ -216,6 +190,12 @@ export interface LogEvent {
   scope: EmitterScope;
   emitter: Emitter;
   message: string;
-  level: LogRecord_Level;
+  level: Protobuf.LogRecord_Level;
   packet?: Uint8Array;
 }
+
+export type ChannelNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type ConnectionType =
+  | IBLEConnection
+  | IHTTPConnection
+  | ISerialConnection;

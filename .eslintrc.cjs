@@ -20,6 +20,18 @@ module.exports = {
     "import/resolver": {
       typescript: true,
       node: true
+    },
+    jsdoc: {
+      mode: "typescript"
     }
+  },
+  rules: {
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        selector: ["variable", "function", "variableLike"],
+        format: ["camelCase"]
+      }
+    ]
   }
 };

@@ -1,58 +1,35 @@
-import { Types } from "./index.js";
+import { Protobuf, Types } from "./index.js";
 import {
-  FROMNUM_UUID,
-  FROMRADIO_UUID,
-  SERVICE_UUID,
-  TORADIO_UUID
+  fromNumUUID,
+  fromRadioUUID,
+  serviceUUID,
+  toRadioUUID
 } from "./constants.js";
-import { LogRecord_Level } from "./generated/mesh.js";
 import { IMeshDevice } from "./iMeshDevice.js";
-import type { BLEConnectionParameters } from "./types.js";
 import { typedArrayToBuffer } from "./utils/general.js";
 
-/**
- * Allows to connect to a Meshtastic device via bluetooth
- */
+/** Allows to connect to a Meshtastic device via bluetooth */
 export class IBLEConnection extends IMeshDevice {
-  /**
-   * Defines the connection type as ble
-   */
+  /** Defines the connection type as ble */
   connType: string;
 
-  /**
-   * Currently connected BLE device
-   */
-  device: BluetoothDevice | void;
+  /** Currently connected BLE device */
+  device: BluetoothDevice | undefined;
 
-  /**
-   * Short Description
-   */
+  /** Short Description */
   service: BluetoothRemoteGATTService | undefined;
 
-  /**
-   * Short Description
-   */
+  /** Short Description */
   toRadioCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
-  /**
-   * Short Description
-   */
+  /** Short Description */
   fromRadioCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
-  /**
-   * Short Description
-   */
+  /** Short Description */
   fromNumCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
-  /**
-   * States if the device was force disconnected by a user
-   */
+  /** States if the device was force disconnected by a user */
   userInitiatedDisconnect: boolean;
-
-  /**
-   * Set when a read promise has yet to be resolved, to prevent simultaneous reads.
-   */
-  // pendingRead: boolean;
 
   constructor(configId?: number) {
     super(configId);
@@ -69,6 +46,8 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Gets web bluetooth support avaliability for the device
+   *
+   * @returns {Promise<void>}
    */
   public supported(): Promise<boolean> {
     return navigator.bluetooth.getAvailability();
@@ -76,6 +55,8 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Gets list of bluetooth devices that can be passed to `connect`
+   *
+   * @returns {Promise<BluetoothDevice[]>} Array of avaliable BLE devices
    */
   public getDevices(): Promise<BluetoothDevice[]> {
     return navigator.bluetooth.getDevices();
@@ -83,76 +64,74 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Opens browser dialog to select a device
+   *
+   * @param {RequestDeviceOptions} [filter] Filter to apply to
+   *   `navigator.bluetooth.requestDevice()`
+   * @returns {Promise<BluetoothDevice>} Returned BLE device
    */
   public getDevice(filter?: RequestDeviceOptions): Promise<BluetoothDevice> {
     return navigator.bluetooth.requestDevice(
       filter ?? {
-        filters: [{ services: [SERVICE_UUID] }]
+        filters: [{ services: [serviceUUID] }]
       }
     );
   }
 
   /**
    * Initiates the connect process to a Meshtastic device via Bluetooth
-   * @param parameters ble connection parameters
+   *
+   * @param {Types.BLEConnectionParameters} parameters Ble connection parameters
+   * @param {BluetoothDevice} parameters.device Externally obtained bluetooth
+   *   device to use
+   * @param {RequestDeviceOptions} parameters.deviceFilter Device request filter
    */
   public async connect({
     device,
     deviceFilter
-  }: BLEConnectionParameters): Promise<void> {
-    /**
-     * Check for API avaliability
-     */
+  }: Types.BLEConnectionParameters): Promise<void> {
+    /** Check for API avaliability */
     if (!navigator.bluetooth) {
       this.log(
         Types.EmitterScope.iBleConnection,
         Types.Emitter.connect,
         `This browser doesn't support the WebBluetooth API`,
-        LogRecord_Level.WARNING
+        Protobuf.LogRecord_Level.WARNING
       );
     }
 
-    /**
-     * Set device state to connecting
-     */
+    /** Set device state to connecting */
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
-    /**
-     * Set device if specified, else request.
-     */
+    /** Set device if specified, else request. */
     this.device = device ?? (await this.getDevice(deviceFilter));
 
-    /**
-     * Setup event listners
-     */
+    /** Setup event listners */
     this.device.addEventListener("gattserverdisconnected", () => {
       this.log(
         Types.EmitterScope.iBleConnection,
         Types.Emitter.connect,
         "Device disconnected",
-        LogRecord_Level.INFO
+        Protobuf.LogRecord_Level.INFO
       );
       this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
       this.complete();
     });
 
-    /**
-     * Connect to device
-     */
+    /** Connect to device */
     await this.device.gatt?.connect();
 
-    this.service = await this.device.gatt?.getPrimaryService(SERVICE_UUID);
+    this.service = await this.device.gatt?.getPrimaryService(serviceUUID);
 
     this.toRadioCharacteristic = await this.service?.getCharacteristic(
-      TORADIO_UUID
+      toRadioUUID
     );
 
     this.fromRadioCharacteristic = await this.service?.getCharacteristic(
-      FROMRADIO_UUID
+      fromRadioUUID
     );
 
     this.fromNumCharacteristic = await this.service?.getCharacteristic(
-      FROMNUM_UUID
+      fromNumUUID
     );
 
     await this.fromNumCharacteristic?.startNotifications();
@@ -166,12 +145,10 @@ export class IBLEConnection extends IMeshDevice {
 
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
-    await this.configure();
+    this.configure();
   }
 
-  /**
-   * Disconnects from the Meshtastic device
-   */
+  /** Disconnects from the Meshtastic device */
   public disconnect(): void {
     this.userInitiatedDisconnect = true;
     this.device?.gatt?.disconnect();
@@ -181,15 +158,14 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Pings device to check if it is avaliable
-   * @todo implement
+   *
+   * @todo Implement
    */
   public async ping(): Promise<boolean> {
     return Promise.resolve(true);
   }
 
-  /**
-   * Short description
-   */
+  /** Short description */
   protected async readFromRadio(): Promise<void> {
     // if (this.pendingRead) {
     //   return Promise.resolve();
@@ -201,22 +177,20 @@ export class IBLEConnection extends IMeshDevice {
       await this.fromRadioCharacteristic
         .readValue()
         .then((value) => {
-          if (value) {
-            readBuffer = value.buffer;
+          readBuffer = value.buffer;
 
-            if (value.byteLength > 0) {
-              void this.handleFromRadio(new Uint8Array(readBuffer, 0));
-            }
+          if (value.byteLength > 0) {
+            void this.handleFromRadio(new Uint8Array(readBuffer, 0));
           }
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
         })
-        .catch(({ message }: { message: string }) => {
+        .catch((e: Error) => {
           readBuffer = new ArrayBuffer(0);
           this.log(
             Types.EmitterScope.iBleConnection,
             Types.Emitter.readFromRadio,
-            message,
-            LogRecord_Level.ERROR
+            `❌ ${e.message}`,
+            Protobuf.LogRecord_Level.ERROR
           );
         });
     }
@@ -225,6 +199,8 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Sends supplied protobuf message to the radio
+   *
+   * @param {Uint8Array} data Raw bytes to send to the radio
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     await this.toRadioCharacteristic?.writeValue(typedArrayToBuffer(data));
