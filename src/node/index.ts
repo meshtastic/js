@@ -1,4 +1,4 @@
-import { Client, IConnection } from "../client.js";
+import { Client } from "../client.js";
 import { IMeshDevice } from "../iMeshDevice.js";
 import { IHTTPConnection } from "../iHttpConnection.js";
 import { INodeSerialConnection } from "../iNodeSerialConnection.js";
@@ -12,7 +12,6 @@ export {
   IMeshDevice,
   IHTTPConnection,
   INodeSerialConnection,
-  IConnection,
   SettingsManager,
   Types,
   Constants,
