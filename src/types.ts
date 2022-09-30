@@ -208,7 +208,8 @@ export enum Emitter {
   "readFromRadio",
   "writeToRadio",
   "setDebugMode",
-  "getMetadata"
+  "getMetadata",
+  "resetPeers"
 }
 
 export interface LogEvent {

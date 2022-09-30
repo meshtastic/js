@@ -756,7 +756,7 @@ export abstract class IMeshDevice {
   ): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
-      Types.Emitter.deleteChannel,
+      Types.Emitter.clearChannel,
       `📻 Clearing Channel ${index} ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
