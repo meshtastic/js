@@ -1,8 +1,6 @@
 import { SubEvent } from "sub-events";
 
 import { BROADCAST_NUM, MIN_FW_VERSION } from "./constants.js";
-import { AdminMessage } from "./generated/admin.js";
-import type { Channel } from "./generated/channel.js";
 import {
   Data,
   FromRadio,
@@ -416,14 +414,12 @@ export abstract class IMeshDevice {
       channel
     });
 
-    const toRadio = ToRadio.toBinary(
-      ToRadio.create({
-        payloadVariant: {
-          packet: meshPacket,
-          oneofKind: "packet"
-        }
-      })
-    );
+    const toRadio = ToRadio.toBinary({
+      payloadVariant: {
+        packet: meshPacket,
+        oneofKind: "packet"
+      }
+    });
 
     if (echoResponse) {
       await this.handleMeshPacket(meshPacket);
@@ -513,14 +509,12 @@ export abstract class IMeshDevice {
         break;
     }
 
-    const setRadio = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          oneofKind: "setConfig",
-          setConfig: config
-        }
-      })
-    );
+    const setRadio = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        oneofKind: "setConfig",
+        setConfig: config
+      }
+    });
 
     await this.sendPacket(
       setRadio,
@@ -585,14 +579,12 @@ export abstract class IMeshDevice {
         break;
     }
 
-    const setRadio = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          oneofKind: "setModuleConfig",
-          setModuleConfig: config
-        }
-      })
-    );
+    const setRadio = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        oneofKind: "setModuleConfig",
+        setModuleConfig: config
+      }
+    });
 
     await this.sendPacket(
       setRadio,
@@ -623,14 +615,12 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
-    const confirmSetRadio = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          confirmSetRadio: true,
-          oneofKind: "confirmSetRadio"
-        }
-      })
-    );
+    const confirmSetRadio = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        confirmSetRadio: true,
+        oneofKind: "confirmSetRadio"
+      }
+    });
 
     await this.sendPacket(
       confirmSetRadio,
@@ -660,14 +650,12 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
-    const setOwner = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          setOwner: owner,
-          oneofKind: "setOwner"
-        }
-      })
-    );
+    const setOwner = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        setOwner: owner,
+        oneofKind: "setOwner"
+      }
+    });
 
     await this.sendPacket(
       setOwner,
@@ -690,7 +678,7 @@ export abstract class IMeshDevice {
    * @param callback If wantAck is true, callback is called when the ack is received
    */
   public async setChannel(
-    channel: Channel,
+    channel: Protobuf.Channel,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
@@ -702,14 +690,12 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
-    const setChannel = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          setChannel: channel,
-          oneofKind: "setChannel"
-        }
-      })
-    );
+    const setChannel = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        setChannel: channel,
+        oneofKind: "setChannel"
+      }
+    });
 
     await this.sendPacket(
       setChannel,
@@ -740,14 +726,12 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
-    const confirmSetChannel = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          confirmSetRadio: true,
-          oneofKind: "confirmSetRadio"
-        }
-      })
-    );
+    const confirmSetChannel = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        confirmSetRadio: true,
+        oneofKind: "confirmSetRadio"
+      }
+    });
 
     await this.sendPacket(
       confirmSetChannel,
@@ -762,22 +746,18 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * @TODO
-   * Is this needed?
-   */
-  /**
-   * Deletes specific channel via index
-   * @param index Channel index to be deleted
+   * Clears specific channel with the designated index
+   * @param index Channel index to be cleared
    * @param callback If wantAck is true, callback is called when the ack is received
    */
-  public async deleteChannel(
+  public async clearChannel(
     index: number,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.deleteChannel,
-      `📻 Deleting Channel ${callback ? "with" : "without"} callback`,
+      `📻 Clearing Channel ${index} ${callback ? "with" : "without"} callback`,
       LogRecord_Level.DEBUG
     );
 
@@ -785,14 +765,12 @@ export abstract class IMeshDevice {
       index,
       role: Protobuf.Channel_Role.DISABLED
     });
-    const setChannel = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          setChannel: channel,
-          oneofKind: "setChannel"
-        }
-      })
-    );
+    const setChannel = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        setChannel: channel,
+        oneofKind: "setChannel"
+      }
+    });
 
     await this.sendPacket(
       setChannel,
@@ -827,14 +805,12 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
-    const getChannelRequest = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          getChannelRequest: index + 1,
-          oneofKind: "getChannelRequest"
-        }
-      })
-    );
+    const getChannelRequest = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        getChannelRequest: index + 1,
+        oneofKind: "getChannelRequest"
+      }
+    });
 
     await this.sendPacket(
       getChannelRequest,
@@ -887,14 +863,12 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
-    const getRadioRequest = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          oneofKind: "getConfigRequest",
-          getConfigRequest: configType
-        }
-      })
-    );
+    const getRadioRequest = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        oneofKind: "getConfigRequest",
+        getConfigRequest: configType
+      }
+    });
 
     await this.sendPacket(
       getRadioRequest,
@@ -923,14 +897,12 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
-    const getRadioRequest = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          oneofKind: "getModuleConfigRequest",
-          getModuleConfigRequest: configType
-        }
-      })
-    );
+    const getRadioRequest = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        oneofKind: "getModuleConfigRequest",
+        getModuleConfigRequest: configType
+      }
+    });
 
     await this.sendPacket(
       getRadioRequest,
@@ -958,14 +930,12 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
-    const getOwnerRequest = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          getOwnerRequest: true,
-          oneofKind: "getOwnerRequest"
-        }
-      })
-    );
+    const getOwnerRequest = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        getOwnerRequest: true,
+        oneofKind: "getOwnerRequest"
+      }
+    });
 
     await this.sendPacket(
       getOwnerRequest,
@@ -993,14 +963,12 @@ export abstract class IMeshDevice {
       LogRecord_Level.DEBUG
     );
 
-    const getDeviceMetricsRequest = AdminMessage.toBinary(
-      AdminMessage.create({
-        payloadVariant: {
-          getDeviceMetadataRequest: 0,
-          oneofKind: "getDeviceMetadataRequest"
-        }
-      })
-    );
+    const getDeviceMetricsRequest = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        getDeviceMetadataRequest: 0,
+        oneofKind: "getDeviceMetadataRequest"
+      }
+    });
 
     await this.sendPacket(
       getDeviceMetricsRequest,
@@ -1011,6 +979,41 @@ export abstract class IMeshDevice {
       true,
       false,
       callback
+    );
+  }
+
+  /**
+   * Resets the internal NodeDB of the radio, usefull for removing old nodes that no longer exist.
+   * @param callback If wantAck is true, callback is called when the ack is received
+   */
+  public async resetPeers(
+    callback?: (id: number) => Promise<void>
+  ): Promise<void> {
+    this.log(
+      Types.EmitterScope.iMeshDevice,
+      Types.Emitter.resetPeers,
+      `📻 Resetting Peers ${callback ? "with" : "without"} callback`,
+      LogRecord_Level.DEBUG
+    );
+
+    const resetPeers = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        nodedbReset: 1,
+        oneofKind: "nodedbReset"
+      }
+    });
+
+    await this.sendPacket(
+      resetPeers,
+      PortNum.ADMIN_APP,
+      this.myNodeInfo.myNodeNum,
+      true,
+      0,
+      true,
+      false,
+      async (id: number) => {
+        callback && (await callback(id));
+      }
     );
   }
 
@@ -1027,14 +1030,12 @@ export abstract class IMeshDevice {
     );
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
-    const toRadio = ToRadio.toBinary(
-      ToRadio.create({
-        payloadVariant: {
-          wantConfigId: this.configId,
-          oneofKind: "wantConfigId"
-        }
-      })
-    );
+    const toRadio = ToRadio.toBinary({
+      payloadVariant: {
+        wantConfigId: this.configId,
+        oneofKind: "wantConfigId"
+      }
+    });
 
     setTimeout(() => {
       void this.sendRaw(0, toRadio);
@@ -1190,17 +1191,15 @@ export abstract class IMeshDevice {
 
         await this.sendRaw(
           0,
-          ToRadio.toBinary(
-            ToRadio.create({
-              payloadVariant: {
-                peerInfo: {
-                  appVersion: 1,
-                  mqttGateway: false
-                },
-                oneofKind: "peerInfo"
-              }
-            })
-          )
+          ToRadio.toBinary({
+            payloadVariant: {
+              peerInfo: {
+                appVersion: 1,
+                mqttGateway: false
+              },
+              oneofKind: "peerInfo"
+            }
+          })
         );
 
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
@@ -1301,7 +1300,7 @@ export abstract class IMeshDevice {
   }
 
   private handleDataPacket(dataPacket: Data, meshPacket: MeshPacket) {
-    let adminMessage: AdminMessage | undefined = undefined;
+    let adminMessage: Protobuf.AdminMessage | undefined = undefined;
     switch (dataPacket.portnum) {
       case PortNum.TEXT_MESSAGE_APP:
         this.log(
@@ -1377,7 +1376,7 @@ export abstract class IMeshDevice {
         break;
 
       case PortNum.ADMIN_APP:
-        adminMessage = AdminMessage.fromBinary(dataPacket.payload);
+        adminMessage = Protobuf.AdminMessage.fromBinary(dataPacket.payload);
         this.log(
           Types.EmitterScope.iMeshDevice,
           Types.Emitter.handleMeshPacket,
