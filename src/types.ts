@@ -152,8 +152,7 @@ export enum EmitterScope {
   "iSerialConnection",
   "iNodeSerialConnection",
   "iBleConnection",
-  "iHttpConnection",
-  "SettingsManager"
+  "iHttpConnection"
 }
 
 export enum Emitter {

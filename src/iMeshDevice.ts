@@ -37,9 +37,12 @@ export abstract class IMeshDevice {
    */
   public queue: Queue;
 
+  /** Sets the library-wide logging level */
+  public logLevel: Protobuf.LogRecord_Level = Protobuf.LogRecord_Level.WARNING;
+
   constructor(configId?: number) {
     this.log = (scope, emitter, message, level, packet): void => {
-      log(scope, emitter, message, level);
+      log(scope, emitter, message, level, this.logLevel);
       this.onLogEvent.emit({
         scope,
         emitter,
@@ -286,6 +289,15 @@ export abstract class IMeshDevice {
    */
   public readonly onDeviceMetadataPacket =
     new SubEvent<Types.DeviceMetadataPacket>();
+
+  /**
+   * Sets the desired logging level for this device
+   *
+   * @param {Protobuf.LogRecord_Level} level Desired logging level
+   */
+  public setLogLevel(level: Protobuf.LogRecord_Level): void {
+    this.logLevel = level;
+  }
 
   /**
    * Sends a text over the radio

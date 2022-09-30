@@ -1,5 +1,4 @@
 import { Protobuf, Types } from "../index.js";
-import { SettingsManager } from "../settingsManager.js";
 
 /**
  * Global event logger
@@ -8,14 +7,16 @@ import { SettingsManager } from "../settingsManager.js";
  * @param {Types.Emitter} emitter Name of calling function
  * @param {string} message Informative message
  * @param {Protobuf.LogRecord_Level} level Desired logging level
+ * @param {Protobuf.LogRecord_Level} currentLevel Current logging level
  */
 export const log = (
   scope: Types.EmitterScope,
   emitter: Types.Emitter,
   message: string,
-  level: Protobuf.LogRecord_Level
+  level: Protobuf.LogRecord_Level,
+  currentLevel: Protobuf.LogRecord_Level
 ): void => {
-  if (level >= SettingsManager.debugMode) {
+  if (level >= currentLevel) {
     switch (level) {
       case Protobuf.LogRecord_Level.TRACE:
         console.info(

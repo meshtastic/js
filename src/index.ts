@@ -4,7 +4,6 @@ import { IBLEConnection } from "./iBleConnection.js";
 import { IHTTPConnection } from "./iHttpConnection.js";
 import { ISerialConnection } from "./iSerialConnection.js";
 import * as Protobuf from "./generated/index.js";
-import { SettingsManager } from "./settingsManager.js";
 import * as Types from "./types.js";
 import * as Constants from "./constants.js";
 
@@ -14,7 +13,6 @@ export {
   IBLEConnection,
   IHTTPConnection,
   ISerialConnection,
-  SettingsManager,
   Types,
   Constants,
   Protobuf
