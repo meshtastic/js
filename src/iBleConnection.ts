@@ -94,7 +94,7 @@ export class IBLEConnection extends IMeshDevice {
       this.log(
         Types.EmitterScope.iBleConnection,
         Types.Emitter.connect,
-        `This browser doesn't support the WebBluetooth API`,
+        `⚠️ This browser doesn't support the WebBluetooth API`,
         Protobuf.LogRecord_Level.WARNING
       );
     }

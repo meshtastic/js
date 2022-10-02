@@ -86,7 +86,7 @@ export class ISerialConnection extends IMeshDevice {
       this.log(
         Types.EmitterScope.iSerialConnection,
         Types.Emitter.connect,
-        `This browser doesn't support the WebSerial API`,
+        `⚠️ This browser doesn't support the WebSerial API`,
         Protobuf.LogRecord_Level.WARNING
       );
     }
