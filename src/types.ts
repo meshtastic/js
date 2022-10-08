@@ -193,7 +193,17 @@ export interface LogEvent {
   packet?: Uint8Array;
 }
 
-export type ChannelNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export enum ChannelNumber {
+  PRIMARY,
+  CHANNEL1,
+  CHANNEL2,
+  CHANNEL3,
+  CHANNEL4,
+  CHANNEL5,
+  CHANNEL6,
+  ADMIN
+}
+
 export type ConnectionType =
   | IBLEConnection
   | IHTTPConnection

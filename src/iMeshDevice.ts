@@ -306,8 +306,8 @@ export abstract class IMeshDevice {
    * @param {number} [destinationNum] Node number of the destination node
    * @param {boolean} [wantAck=false] Whether or not acknowledgement is wanted.
    *   Default is `false`
-   * @param {Types.channelNumber} [channel=0] Channel number to send to. Default
-   *   is `0`. Default is `0`
+   * @param {Types.channelNumber} [channel=Types.ChannelNumber.PRIMARY] Channel
+   *   number to send to. Default is `Types.ChannelNumber.PRIMARY`
    * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
    *   callback is called when the ack is received
    * @returns {Promise<void>}
@@ -316,7 +316,7 @@ export abstract class IMeshDevice {
     text: string,
     destinationNum?: number,
     wantAck = false,
-    channel: Types.ChannelNumber = 0,
+    channel: Types.ChannelNumber = Types.ChannelNumber.PRIMARY,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
@@ -348,7 +348,8 @@ export abstract class IMeshDevice {
    * @param {Protobuf.Waypoint} waypoint Desired waypoint to send
    * @param {number} destinationNum Node number of the destination node
    * @param {boolean} wantAck Whether or not acknowledgement is wanted
-   * @param {Types.ChannelNumber} channel Channel to send on default of 0
+   * @param {Types.ChannelNumber} [channel=Types.ChannelNumber.PRIMARY] Channel
+   *   to send on. Default is `Types.ChannelNumber.PRIMARY`
    * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
    *   callback is called when the ack is received
    * @returns {Promise<void>}
@@ -357,7 +358,7 @@ export abstract class IMeshDevice {
     waypoint: Protobuf.Waypoint,
     destinationNum?: number,
     wantAck = false,
-    channel: Types.ChannelNumber = 0,
+    channel: Types.ChannelNumber = Types.ChannelNumber.PRIMARY,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
@@ -390,7 +391,8 @@ export abstract class IMeshDevice {
    * @param {number} [destinationNum] Node number of the destination node
    * @param {boolean} [wantAck=false] Whether or not acknowledgement is wanted.
    *   Default is `false`
-   * @param {Types.ChannelNumber} [channel=0] Channel to send. Default is `0`
+   * @param {Types.ChannelNumber} [channel=Types.ChannelNumber.PRIMARY] Channel
+   *   to send. Default is `Types.ChannelNumber.PRIMARY`
    * @param {boolean} [wantResponse=false] Used for testing, requests recpipient
    *   to respond in kind with the same type of request. Default is `false`
    * @param {boolean} [echoResponse=false] Sends event back to client. Default
@@ -405,7 +407,7 @@ export abstract class IMeshDevice {
     portNum: Protobuf.PortNum,
     destinationNum?: number,
     wantAck = false,
-    channel: Types.ChannelNumber = 0,
+    channel: Types.ChannelNumber = Types.ChannelNumber.PRIMARY,
     wantResponse = false,
     echoResponse = false,
     callback?: (id: number) => Promise<void>,
@@ -1014,16 +1016,20 @@ export abstract class IMeshDevice {
   /**
    * Gets devices metadata
    *
+   * @param {number} nodeNum Destination Node to be queried
    * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
    *   callback is called when the ack is received
    */
   public async getMetadata(
+    nodeNum: number,
     callback?: (id: number) => Promise<void>
   ): Promise<void> {
     this.log(
       Types.EmitterScope.iMeshDevice,
       Types.Emitter.getMetadata,
-      `Requesting owner ${callback ? "with" : "without"} callback`,
+      `Requesting metadata from ${nodeNum} ${
+        callback ? "with" : "without"
+      } callback`,
       Protobuf.LogRecord_Level.DEBUG
     );
 
@@ -1037,9 +1043,9 @@ export abstract class IMeshDevice {
     await this.sendPacket(
       getDeviceMetricsRequest,
       Protobuf.PortNum.ADMIN_APP,
-      this.myNodeInfo.myNodeNum,
+      nodeNum,
       true,
-      0,
+      Types.ChannelNumber.ADMIN,
       true,
       false,
       callback
