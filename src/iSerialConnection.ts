@@ -76,10 +76,13 @@ export class ISerialConnection extends IMeshDevice {
    *   connect to
    * @param {number} [parameters.baudRate=115200] Baud rate override. Default is
    *   `115200`. Default is `115200`
+   * @param {boolean} [concurrentLogOutput=false] Emit extra data on serial port
+   *   as debug log data. Default is `false`
    */
   public async connect({
     port,
-    baudRate = 115200
+    baudRate = 115200,
+    concurrentLogOutput = false
   }: Types.SerialConnectionParameters): Promise<void> {
     /** Check for API avaliability */
     if (!navigator.serial) {
@@ -115,6 +118,7 @@ export class ISerialConnection extends IMeshDevice {
     });
 
     let byteBuffer = new Uint8Array([]);
+    const onDeviceDebugLog = this.onDeviceDebugLog;
 
     if (this.port.readable && this.port.writable) {
       const { log } = this;
@@ -127,14 +131,19 @@ export class ISerialConnection extends IMeshDevice {
             const framingByte2 = byteBuffer[framingIndex + 1];
             if (framingByte2 === 0xc3) {
               if (byteBuffer.subarray(0, framingIndex).length) {
-                log(
-                  Types.EmitterScope.iSerialConnection,
-                  Types.Emitter.connect,
-                  `⚠️ Found unneccesary message padding, removing: ${byteBuffer
-                    .subarray(0, framingIndex)
-                    .toString()}`,
-                  Protobuf.LogRecord_Level.WARNING
-                );
+                if (concurrentLogOutput) {
+                  onDeviceDebugLog.emit(byteBuffer.subarray(0, framingIndex));
+                } else {
+                  log(
+                    Types.EmitterScope.iSerialConnection,
+                    Types.Emitter.connect,
+                    `⚠️ Found unneccesary message padding, removing: ${byteBuffer
+                      .subarray(0, framingIndex)
+                      .toString()}`,
+                    Protobuf.LogRecord_Level.WARNING
+                  );
+                }
+
                 byteBuffer = byteBuffer.subarray(framingIndex);
               }
 

@@ -268,7 +268,7 @@ export abstract class IMeshDevice {
   public readonly onDeviceStatus = new SubEvent<Types.DeviceStatusEnum>();
 
   /**
-   * Fires when a new FromRadio message containing a Text packet has been
+   * Fires when a new FromRadio message containing a LogRecord packet has been
    * received from device
    *
    * @event onLogRecord
@@ -281,6 +281,13 @@ export abstract class IMeshDevice {
    * @event onMeshHeartbeat
    */
   public readonly onMeshHeartbeat = new SubEvent<Date>();
+
+  /**
+   * Outputs any debug log data (currently serial connections only)
+   *
+   * @event onDeviceDebugLog
+   */
+  public readonly onDeviceDebugLog = new SubEvent<Uint8Array>();
 
   /**
    * Fires when the device receives a Metadata packet

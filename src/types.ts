@@ -48,6 +48,7 @@ export interface SerialConnectionParameters {
   baudRate?: number;
   /** Connect directly to a Serial port, obtained from `getPorts()` */
   port?: SerialPort;
+  concurrentLogOutput: boolean;
 }
 
 export type LogEventPacket = LogEvent & { date: Date };
