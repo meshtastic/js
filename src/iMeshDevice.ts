@@ -1016,7 +1016,7 @@ export abstract class IMeshDevice {
 
     const getDeviceMetricsRequest = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
-        getDeviceMetadataRequest: 0,
+        getDeviceMetadataRequest: true,
         oneofKind: "getDeviceMetadataRequest"
       }
     });
