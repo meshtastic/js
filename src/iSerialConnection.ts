@@ -76,8 +76,8 @@ export class ISerialConnection extends IMeshDevice {
    *   connect to
    * @param {number} [parameters.baudRate=115200] Baud rate override. Default is
    *   `115200`. Default is `115200`
-   * @param {boolean} [concurrentLogOutput=false] Emit extra data on serial port
-   *   as debug log data. Default is `false`
+   * @param {boolean} [parameters.concurrentLogOutput=false] Emit extra data on
+   *   serial port as debug log data. Default is `false`
    */
   public async connect({
     port,

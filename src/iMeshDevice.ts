@@ -884,32 +884,6 @@ export abstract class IMeshDevice {
   }
 
   /**
-   * Gets all of the devices channels
-   *
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
-   */
-  public async getAllChannels(callback?: () => Promise<void>): Promise<void> {
-    this.log(
-      Types.EmitterScope.iMeshDevice,
-      Types.Emitter.getAllChannels,
-      `📻 Requesting all Channels ${callback ? "with" : "without"} callback`,
-      Protobuf.LogRecord_Level.DEBUG
-    );
-
-    // TODO: Use device queue now.
-    const queue: (() => Promise<void>)[] = [];
-    for (let i = 0; i <= this.myNodeInfo.maxChannels; i++) {
-      queue.push(async (): Promise<void> => {
-        return await Promise.resolve();
-      });
-      await this.getChannel(i, queue[i]);
-    }
-    await Promise.all(queue);
-    await callback?.();
-  }
-
-  /**
    * Gets devices config
    *
    * @param {Protobuf.AdminMessage_ConfigType} configType Desired config type to
@@ -1266,10 +1240,6 @@ export abstract class IMeshDevice {
           Protobuf.LogRecord_Level.INFO
         );
 
-        await this.getAllChannels(async () => {
-          await Promise.resolve();
-        });
-
         await this.sendRaw(
           0,
           Protobuf.ToRadio.toBinary({
@@ -1280,7 +1250,10 @@ export abstract class IMeshDevice {
               },
               oneofKind: "peerInfo"
             }
-          })
+          }),
+          async () => {
+            //find out what this does
+          }
         );
 
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
@@ -1312,6 +1285,22 @@ export abstract class IMeshDevice {
             id: decodedMessage.id
           }),
           data: decodedMessage.payloadVariant.moduleConfig
+        });
+        break;
+
+      case "channel":
+        this.log(
+          Types.EmitterScope.iMeshDevice,
+          Types.Emitter.handleFromRadio,
+          `🔐 Received Channel: ${decodedMessage.payloadVariant.channel.index}`,
+          Protobuf.LogRecord_Level.TRACE
+        );
+
+        this.onChannelPacket.emit({
+          packet: Protobuf.MeshPacket.create({
+            id: decodedMessage.id
+          }),
+          data: decodedMessage.payloadVariant.channel
         });
         break;
     }
