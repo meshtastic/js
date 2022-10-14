@@ -2,7 +2,9 @@
 export const toRadioUUID = "f75c76d2-129e-4dad-a1dd-7866124401e7";
 
 /** Bluetooth Low Energy FromRadio characteristic */
-export const fromRadioUUID = "8ba2bcc2-ee02-4a55-a531-c525c5e454d5";
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const EOLfromRadioUUID = "8ba2bcc2-ee02-4a55-a531-c525c5e454d5";
+export const fromRadioUUID = "2C55E69E-4993-11ED-B878-0242AC120002";
 
 /**
  * Bluetooth Low Energy FromNum characteristic, provides BLE notification on new
