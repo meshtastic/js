@@ -16,6 +16,8 @@ export class IBLEConnection extends IMeshDevice {
   /** Currently connected BLE device */
   device: BluetoothDevice | undefined;
 
+  GATTServer: BluetoothRemoteGATTServer | undefined;
+
   /** Short Description */
   service: BluetoothRemoteGATTService | undefined;
 
@@ -37,6 +39,7 @@ export class IBLEConnection extends IMeshDevice {
     this.connType = "ble";
     this.device = undefined;
     this.service = undefined;
+    this.GATTServer = undefined;
     this.toRadioCharacteristic = undefined;
     this.fromRadioCharacteristic = undefined;
     this.fromNumCharacteristic = undefined;
@@ -118,23 +121,78 @@ export class IBLEConnection extends IMeshDevice {
     });
 
     /** Connect to device */
-    await this.device.gatt?.connect();
+    await this.device.gatt
+      ?.connect()
+      .then((server) => {
+        this.log(
+          Types.EmitterScope.iBleConnection,
+          Types.Emitter.connect,
+          `✅ Got GATT Server for device: ${server.device.id}`,
+          Protobuf.LogRecord_Level.INFO
+        );
+        this.GATTServer = server;
+      })
+      .catch((e: Error) => {
+        this.log(
+          Types.EmitterScope.iBleConnection,
+          Types.Emitter.connect,
+          `❌ Failed to connect: ${e.message}`,
+          Protobuf.LogRecord_Level.ERROR
+        );
+      });
 
-    this.service = await this.device.gatt?.getPrimaryService(serviceUUID);
+    await this.GATTServer?.getPrimaryService(serviceUUID)
+      .then((service) => {
+        this.log(
+          Types.EmitterScope.iBleConnection,
+          Types.Emitter.connect,
+          `✅ Got GATT Service for device: ${service.device.id}`,
+          Protobuf.LogRecord_Level.INFO
+        );
+        this.service = service;
+      })
+      .catch((e: Error) => {
+        this.log(
+          Types.EmitterScope.iBleConnection,
+          Types.Emitter.connect,
+          `❌ Failed to get primary service: q${e.message}`,
+          Protobuf.LogRecord_Level.ERROR
+        );
+      });
 
-    this.toRadioCharacteristic = await this.service?.getCharacteristic(
-      toRadioUUID
-    );
+    [toRadioUUID, fromRadioUUID, fromNumUUID].map(async (uuid) => {
+      await this.service
+        ?.getCharacteristic(uuid)
+        .then((characteristic) => {
+          this.log(
+            Types.EmitterScope.iBleConnection,
+            Types.Emitter.connect,
+            `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.name}`,
+            Protobuf.LogRecord_Level.INFO
+          );
+          switch (uuid) {
+            case toRadioUUID:
+              this.toRadioCharacteristic = characteristic;
+              break;
+            case fromRadioUUID:
+              this.fromRadioCharacteristic = characteristic;
+              break;
+            case fromNumUUID:
+              this.fromNumCharacteristic = characteristic;
+              break;
+          }
+        })
+        .catch((e: Error) => {
+          this.log(
+            Types.EmitterScope.iBleConnection,
+            Types.Emitter.connect,
+            `❌ Failed to get toRadio characteristic: q${e.message}`,
+            Protobuf.LogRecord_Level.ERROR
+          );
+        });
+    });
 
-    this.fromRadioCharacteristic = await this.service?.getCharacteristic(
-      fromRadioUUID
-    );
-
-    this.fromNumCharacteristic = await this.service?.getCharacteristic(
-      fromNumUUID
-    );
-
-    await this.fromNumCharacteristic?.startNotifications();
+    await this.fromNumCharacteristic?.startNotifications(); // TODO: catch
 
     this.fromNumCharacteristic?.addEventListener(
       "characteristicvaluechanged",
