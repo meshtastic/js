@@ -167,7 +167,7 @@ export class IBLEConnection extends IMeshDevice {
           this.log(
             Types.EmitterScope.iBleConnection,
             Types.Emitter.connect,
-            `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.name}`,
+            `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.uuid}`,
             Protobuf.LogRecord_Level.INFO
           );
           switch (uuid) {
