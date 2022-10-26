@@ -1240,22 +1240,6 @@ export abstract class IMeshDevice {
           Protobuf.LogRecord_Level.INFO
         );
 
-        await this.sendRaw(
-          0,
-          Protobuf.ToRadio.toBinary({
-            payloadVariant: {
-              peerInfo: {
-                appVersion: 1,
-                mqttGateway: false
-              },
-              oneofKind: "peerInfo"
-            }
-          }),
-          async () => {
-            //find out what this does
-          }
-        );
-
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
         break;
 
