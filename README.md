@@ -29,7 +29,7 @@ pnpm add @meshtastic/meshtasticjs
 
 ## Development & Building
 
-The [Meshtastic Protobufs submodule](https://github.com/meshtastic/meshtastic-protobufs/) must be pulled, this can be done via:
+The [Meshtastic Protobuf Definitions](https://github.com/meshtastic/protobufs/) must be pulled, this can be done via:
 
 ```bash
 git submodule update --init
