@@ -26,6 +26,7 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.8.1",
     "@serialport/stream": "^10.3.0",
+    "glob": "^8.0.3",
     "serialport": "^10.4.0",
     "sub-events": "^1.9.0"
   },
