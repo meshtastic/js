@@ -3,6 +3,28 @@
   "version": "0.6.113",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
+  "scripts": {
+    "build": "tsc",
+    "generate:protobufs": "protoc --ts_out src/generated/ --ts_opt long_type_string --proto_path protobufs protobufs/*.proto",
+    "generate:docs": "typedoc src/index.ts",
+    "update:protobufs": "cd protobufs && git pull origin master",
+    "format:check": "prettier --check . && eslint src/**/*.ts",
+    "format:fix": "prettier --write . && eslint --fix src/**/*.ts"
+  },
+  "keywords": [
+    "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
+  ],
+  "contributors": [
+    {
+      "name": "Tobias Huttinger",
+      "url": "https://github.com/thepoweroftwo"
+    },
+    {
+      "name": "Sacha Weatherstone",
+      "email": "sachaw100@hotmail.com",
+      "url": "https://github.com/sachaw"
+    }
+  ],
   "sideEffects": false,
   "type": "module",
   "module": "dist/index.d.ts",
@@ -46,27 +68,5 @@
     "prettier-plugin-jsdoc": "^0.4.2",
     "typedoc": "^0.23.18",
     "typescript": "^4.8.4"
-  },
-  "scripts": {
-    "build": "tsc",
-    "generate:protobufs": "protoc --ts_out src/generated/ --ts_opt long_type_string --proto_path protobufs protobufs/*.proto",
-    "generate:docs": "typedoc src/index.ts",
-    "update:protobufs": "cd protobufs && git pull origin master",
-    "format:check": "prettier --check . && eslint src/*.ts",
-    "format:fix": "prettier --write . && eslint --fix src/*.ts"
-  },
-  "keywords": [
-    "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
-  ],
-  "contributors": [
-    {
-      "name": "Tobias Huttinger",
-      "url": "https://github.com/thepoweroftwo"
-    },
-    {
-      "name": "Sacha Weatherstone",
-      "email": "sachaw100@hotmail.com",
-      "url": "https://github.com/sachaw"
-    }
-  ]
+  }
 }
