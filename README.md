@@ -17,7 +17,7 @@ Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic]
 
 ## Stats
 
-![Alt](https://repobeats.axiom.co/api/embed/8a0bb0a0222172b4eda88c3119b8291813a83994.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/5330641586e92a2ec84676fedb98f6d4a7b25d69.svg "Repobeats analytics image")
 
 ## Installation & Usage
 
