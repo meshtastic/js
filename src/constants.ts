@@ -19,4 +19,4 @@ export const serviceUUID = "6ba1b218-15a8-461f-9fa8-5dcae273eafd";
 export const broadCastNum = 0xffffffff;
 
 /** Minimum device firmware version supported by this version of the library. */
-export const minFwVer = 1.3;
+export const minFwVer = 2.0;
