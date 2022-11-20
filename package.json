@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.6.113",
+  "version": "0.6.114",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
@@ -13,17 +13,6 @@
   },
   "keywords": [
     "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
-  ],
-  "contributors": [
-    {
-      "name": "Tobias Huttinger",
-      "url": "https://github.com/thepoweroftwo"
-    },
-    {
-      "name": "Sacha Weatherstone",
-      "email": "sachaw100@hotmail.com",
-      "url": "https://github.com/sachaw"
-    }
   ],
   "sideEffects": false,
   "type": "module",
@@ -46,19 +35,17 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@protobuf-ts/runtime": "^2.8.1",
-    "@serialport/stream": "^10.3.0",
+    "@protobuf-ts/runtime": "^2.8.2",
     "glob": "^8.0.3",
-    "serialport": "^10.4.0",
     "sub-events": "^1.9.0"
   },
   "devDependencies": {
-    "@protobuf-ts/plugin": "2.8.1",
+    "@protobuf-ts/plugin": "2.8.2",
     "@types/w3c-web-serial": "^1.0.3",
     "@types/web-bluetooth": "^0.0.16",
-    "@typescript-eslint/eslint-plugin": "^5.42.0",
-    "@typescript-eslint/parser": "^5.42.0",
-    "eslint": "^8.27.0",
+    "@typescript-eslint/eslint-plugin": "^5.43.0",
+    "@typescript-eslint/parser": "^5.43.0",
+    "eslint": "^8.28.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.26.0",
@@ -66,7 +53,7 @@
     "node-protoc": "^1.0.3",
     "prettier": "^2.7.1",
     "prettier-plugin-jsdoc": "^0.4.2",
-    "typedoc": "^0.23.20",
-    "typescript": "^4.8.4"
+    "typedoc": "^0.23.21",
+    "typescript": "^4.9.3"
   }
 }
