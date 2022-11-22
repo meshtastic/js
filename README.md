@@ -11,7 +11,7 @@
 
 Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic](https://meshtastic.org) devices. It can be used to build applications to interface with [Meshtastic](https://meshtastic.org) networks, via HTTP(S), Web Bluetooth or Web Serial.
 
-**[Getting Started Guide](https://meshtastic.org/docs/software/js/getting-started)**
+**[Getting Started Guide](https://meshtastic.org/docs/development/js)**
 
 **[Documentation/API Reference](https://js.meshtastic.org)**
 
