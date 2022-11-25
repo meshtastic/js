@@ -190,6 +190,11 @@ export class IBLEConnection extends IMeshDevice {
             Protobuf.LogRecord_Level.ERROR
           );
         });
+
+      setInterval(async () => {
+        await this.readFromRadio();
+        console.log("reading");
+      }, 500);
     });
 
     await this.fromNumCharacteristic?.startNotifications(); // TODO: catch
@@ -263,6 +268,6 @@ export class IBLEConnection extends IMeshDevice {
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     await this.toRadioCharacteristic?.writeValue(typedArrayToBuffer(data));
     // This should be automatic (onCharacteristicValueChanged)
-    // await this.readFromRadio();
+    await this.readFromRadio();
   }
 }
