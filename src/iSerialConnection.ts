@@ -1,6 +1,6 @@
 import { SubEvent } from "sub-events";
 
-import { Protobuf, Types } from "./index.js";
+import { Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import { transformHandler } from "./utils/transformHandler.js";
 
@@ -28,6 +28,8 @@ export class ISerialConnection extends IMeshDevice {
 
   constructor(configId?: number) {
     super(configId);
+
+    this.log = this.log.getSubLogger({ name: "iSerialConnection" });
 
     this.connType = "serial";
     this.port = undefined;
@@ -57,22 +59,22 @@ export class ISerialConnection extends IMeshDevice {
         .read()
         .then(({ value }) => {
           if (value) {
-            void this.handleFromRadio(value).catch((e: Error) => {
-              this.log(
-                Types.EmitterScope.iSerialConnection,
-                Types.Emitter.readFromRadio,
-                `Device errored or disconnected: ${e.message}`,
-                Protobuf.LogRecord_Level.INFO
-              );
-            });
+            void this.handleFromRadio({ fromRadio: value }).catch(
+              (e: Error) => {
+                this.log.info(
+                  Types.EmitterScope.iSerialConnection,
+                  Types.Emitter.readFromRadio,
+                  `Device errored or disconnected: ${e.message}`
+                );
+              }
+            );
           }
         })
         .catch(() => {
-          this.log(
+          this.log.debug(
             Types.EmitterScope.iSerialConnection,
             Types.Emitter.readFromRadio,
-            `Releasing reader`,
-            Protobuf.LogRecord_Level.DEBUG
+            `Releasing reader`
           );
         });
     }
@@ -113,29 +115,31 @@ export class ISerialConnection extends IMeshDevice {
   }: Types.SerialConnectionParameters): Promise<void> {
     /** Check for API avaliability */
     if (!navigator.serial) {
-      this.log(
+      this.log.warn(
         Types.EmitterScope.iSerialConnection,
         Types.Emitter.connect,
-        `⚠️ This browser doesn't support the WebSerial API`,
-        Protobuf.LogRecord_Level.WARNING
+        `⚠️ This browser doesn't support the WebSerial API`
       );
     }
 
     /** Set device state to connecting */
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+    this.updateDeviceStatus({
+      status: Types.DeviceStatusEnum.DEVICE_CONNECTING
+    });
 
     /** Set device if specified, else request. */
     this.port = port ?? (await this.getPort());
 
     /** Setup event listners */
     this.port.addEventListener("disconnect", () => {
-      this.log(
+      this.log.info(
         Types.EmitterScope.iSerialConnection,
         Types.Emitter.connect,
-        "Device disconnected",
-        Protobuf.LogRecord_Level.INFO
+        "Device disconnected"
       );
-      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+      this.updateDeviceStatus({
+        status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+      });
       this.complete();
     });
 
@@ -157,7 +161,9 @@ export class ISerialConnection extends IMeshDevice {
 
           void this.readFromRadio(reader.getReader());
 
-          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+          this.updateDeviceStatus({
+            status: Types.DeviceStatusEnum.DEVICE_CONNECTED
+          });
 
           this.configure();
         } else {
@@ -165,11 +171,10 @@ export class ISerialConnection extends IMeshDevice {
         }
       })
       .catch((e: Error) => {
-        this.log(
+        this.log.error(
           Types.EmitterScope.iSerialConnection,
           Types.Emitter.connect,
-          `❌ ${e.message}`,
-          Protobuf.LogRecord_Level.ERROR
+          `❌ ${e.message}`
         );
       });
   }
@@ -185,7 +190,9 @@ export class ISerialConnection extends IMeshDevice {
   /** Disconnects from the serial port */
   public async disconnect(): Promise<void> {
     this.onReleaseEvent.emit(true);
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.updateDeviceStatus({
+      status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+    });
     this.complete();
     return Promise.resolve();
   }

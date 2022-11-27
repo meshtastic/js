@@ -1,4 +1,4 @@
-import { Protobuf, Types } from "./index.js";
+import { Types } from "./index.js";
 import {
   fromNumUUID,
   fromRadioUUID,
@@ -35,6 +35,8 @@ export class IBLEConnection extends IMeshDevice {
 
   constructor(configId?: number) {
     super(configId);
+
+    this.log = this.log.getSubLogger({ name: "iHttpConnection" });
 
     this.connType = "ble";
     this.device = undefined;
@@ -94,29 +96,31 @@ export class IBLEConnection extends IMeshDevice {
   }: Types.BLEConnectionParameters): Promise<void> {
     /** Check for API avaliability */
     if (!navigator.bluetooth) {
-      this.log(
+      this.log.warn(
         Types.EmitterScope.iBleConnection,
         Types.Emitter.connect,
-        `⚠️ This browser doesn't support the WebBluetooth API`,
-        Protobuf.LogRecord_Level.WARNING
+        `⚠️ This browser doesn't support the WebBluetooth API`
       );
     }
 
     /** Set device state to connecting */
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+    this.updateDeviceStatus({
+      status: Types.DeviceStatusEnum.DEVICE_CONNECTING
+    });
 
     /** Set device if specified, else request. */
     this.device = device ?? (await this.getDevice(deviceFilter));
 
     /** Setup event listners */
     this.device.addEventListener("gattserverdisconnected", () => {
-      this.log(
+      this.log.info(
         Types.EmitterScope.iBleConnection,
         Types.Emitter.connect,
-        "Device disconnected",
-        Protobuf.LogRecord_Level.INFO
+        "Device disconnected"
       );
-      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+      this.updateDeviceStatus({
+        status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+      });
       this.complete();
     });
 
@@ -124,39 +128,35 @@ export class IBLEConnection extends IMeshDevice {
     await this.device.gatt
       ?.connect()
       .then((server) => {
-        this.log(
+        this.log.info(
           Types.EmitterScope.iBleConnection,
           Types.Emitter.connect,
-          `✅ Got GATT Server for device: ${server.device.id}`,
-          Protobuf.LogRecord_Level.INFO
+          `✅ Got GATT Server for device: ${server.device.id}`
         );
         this.GATTServer = server;
       })
       .catch((e: Error) => {
-        this.log(
+        this.log.error(
           Types.EmitterScope.iBleConnection,
           Types.Emitter.connect,
-          `❌ Failed to connect: ${e.message}`,
-          Protobuf.LogRecord_Level.ERROR
+          `❌ Failed to connect: ${e.message}`
         );
       });
 
     await this.GATTServer?.getPrimaryService(serviceUUID)
       .then((service) => {
-        this.log(
+        this.log.info(
           Types.EmitterScope.iBleConnection,
           Types.Emitter.connect,
-          `✅ Got GATT Service for device: ${service.device.id}`,
-          Protobuf.LogRecord_Level.INFO
+          `✅ Got GATT Service for device: ${service.device.id}`
         );
         this.service = service;
       })
       .catch((e: Error) => {
-        this.log(
+        this.log.error(
           Types.EmitterScope.iBleConnection,
           Types.Emitter.connect,
-          `❌ Failed to get primary service: q${e.message}`,
-          Protobuf.LogRecord_Level.ERROR
+          `❌ Failed to get primary service: q${e.message}`
         );
       });
 
@@ -164,11 +164,10 @@ export class IBLEConnection extends IMeshDevice {
       await this.service
         ?.getCharacteristic(uuid)
         .then((characteristic) => {
-          this.log(
+          this.log.info(
             Types.EmitterScope.iBleConnection,
             Types.Emitter.connect,
-            `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.uuid}`,
-            Protobuf.LogRecord_Level.INFO
+            `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.uuid}`
           );
           switch (uuid) {
             case toRadioUUID:
@@ -183,18 +182,12 @@ export class IBLEConnection extends IMeshDevice {
           }
         })
         .catch((e: Error) => {
-          this.log(
+          this.log.error(
             Types.EmitterScope.iBleConnection,
             Types.Emitter.connect,
-            `❌ Failed to get toRadio characteristic: q${e.message}`,
-            Protobuf.LogRecord_Level.ERROR
+            `❌ Failed to get toRadio characteristic: q${e.message}`
           );
         });
-
-      setInterval(async () => {
-        await this.readFromRadio();
-        console.log("reading");
-      }, 500);
     });
 
     await this.fromNumCharacteristic?.startNotifications(); // TODO: catch
@@ -206,7 +199,9 @@ export class IBLEConnection extends IMeshDevice {
       }
     );
 
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+    this.updateDeviceStatus({
+      status: Types.DeviceStatusEnum.DEVICE_CONNECTED
+    });
 
     this.configure();
   }
@@ -215,7 +210,9 @@ export class IBLEConnection extends IMeshDevice {
   public disconnect(): void {
     this.userInitiatedDisconnect = true;
     this.device?.gatt?.disconnect();
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.updateDeviceStatus({
+      status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+    });
     this.complete();
   }
 
@@ -243,17 +240,20 @@ export class IBLEConnection extends IMeshDevice {
           readBuffer = value.buffer;
 
           if (value.byteLength > 0) {
-            void this.handleFromRadio(new Uint8Array(readBuffer, 0));
+            void this.handleFromRadio({
+              fromRadio: new Uint8Array(readBuffer, 0)
+            });
           }
-          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+          this.updateDeviceStatus({
+            status: Types.DeviceStatusEnum.DEVICE_CONNECTED
+          });
         })
         .catch((e: Error) => {
           readBuffer = new ArrayBuffer(0);
-          this.log(
+          this.log.error(
             Types.EmitterScope.iBleConnection,
             Types.Emitter.readFromRadio,
-            `❌ ${e.message}`,
-            Protobuf.LogRecord_Level.ERROR
+            `❌ ${e.message}`
           );
         });
     }

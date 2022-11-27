@@ -1,15 +1,10 @@
 import { SubEvent } from "sub-events";
+import { Logger } from "tslog";
 
 import { Protobuf, Types } from "../index.js";
 
 export const transformHandler = (
-  log: (
-    scope: Types.EmitterScope,
-    emitter: Types.Emitter,
-    message: string,
-    level: Protobuf.LogRecord_Level,
-    packet?: Uint8Array | undefined
-  ) => void,
+  log: Logger<unknown>,
   onReleaseEvent: SubEvent<boolean>,
   onDeviceDebugLog: SubEvent<Uint8Array>,
   concurrentLogOutput: boolean
@@ -17,6 +12,7 @@ export const transformHandler = (
   let byteBuffer = new Uint8Array([]);
   return new TransformStream<Uint8Array, Uint8Array>({
     transform(chunk: Uint8Array, controller): void {
+      log = log.getSubLogger({ name: "streamTransformer" });
       onReleaseEvent.subscribe(() => {
         controller.terminate();
       });
@@ -30,13 +26,12 @@ export const transformHandler = (
             if (concurrentLogOutput) {
               onDeviceDebugLog.emit(byteBuffer.subarray(0, framingIndex));
             } else {
-              log(
+              log.warn(
                 Types.EmitterScope.iSerialConnection,
                 Types.Emitter.connect,
                 `⚠️ Found unneccesary message padding, removing: ${byteBuffer
                   .subarray(0, framingIndex)
-                  .toString()}`,
-                Protobuf.LogRecord_Level.WARNING
+                  .toString()}`
               );
             }
 
@@ -60,7 +55,7 @@ export const transformHandler = (
               malformedDetectorIndex !== -1 &&
               packet[malformedDetectorIndex + 1] == 0xc3
             ) {
-              log(
+              log.warn(
                 Types.EmitterScope.iSerialConnection,
                 Types.Emitter.connect,
                 `⚠️ Malformed packet found, discarding: ${byteBuffer

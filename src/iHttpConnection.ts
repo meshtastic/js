@@ -1,4 +1,4 @@
-import { Protobuf, Types } from "./index.js";
+import { Types } from "./index.js";
 import { IMeshDevice } from "./iMeshDevice.js";
 import { typedArrayToBuffer } from "./utils/general.js";
 
@@ -21,6 +21,8 @@ export class IHTTPConnection extends IMeshDevice {
 
   constructor(configId?: number) {
     super(configId);
+
+    this.log = this.log.getSubLogger({ name: "iHttpConnection" });
 
     this.connType = "http";
     this.url = "http://meshtastic.local";
@@ -49,7 +51,9 @@ export class IHTTPConnection extends IMeshDevice {
     receiveBatchRequests = false,
     tls = false
   }: Types.HTTPConnectionParameters): Promise<void> {
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+    this.updateDeviceStatus({
+      status: Types.DeviceStatusEnum.DEVICE_CONNECTING
+    });
 
     this.receiveBatchRequests = receiveBatchRequests;
 
@@ -59,20 +63,18 @@ export class IHTTPConnection extends IMeshDevice {
       this.deviceStatus === Types.DeviceStatusEnum.DEVICE_CONNECTING &&
       (await this.ping())
     ) {
-      this.log(
+      this.log.debug(
         Types.EmitterScope.iHttpConnection,
         Types.Emitter.connect,
-        `Ping succeeded, starting configuration and request timer.`,
-        Protobuf.LogRecord_Level.DEBUG
+        `Ping succeeded, starting configuration and request timer.`
       );
       this.configure();
       this.readLoop = setInterval(() => {
         this.readFromRadio().catch((e: Error) => {
-          this.log(
+          this.log.error(
             Types.EmitterScope.iHttpConnection,
             Types.Emitter.connect,
-            `❌ ${e.message}`,
-            Protobuf.LogRecord_Level.ERROR
+            `❌ ${e.message}`
           );
         });
       }, fetchInterval);
@@ -93,7 +95,9 @@ export class IHTTPConnection extends IMeshDevice {
   /** Disconnects from the Meshtastic device */
   public disconnect(): void {
     this.abortController.abort();
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.updateDeviceStatus({
+      status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+    });
     if (this.readLoop) {
       clearInterval(this.readLoop);
       this.complete();
@@ -102,11 +106,10 @@ export class IHTTPConnection extends IMeshDevice {
 
   /** Pings device to check if it is avaliable */
   public async ping(): Promise<boolean> {
-    this.log(
+    this.log.debug(
       Types.EmitterScope.iHttpConnection,
       Types.Emitter.ping,
-      `Attempting device ping.`,
-      Protobuf.LogRecord_Level.DEBUG
+      `Attempting device ping.`
     );
 
     const { signal } = this.abortController;
@@ -116,17 +119,20 @@ export class IHTTPConnection extends IMeshDevice {
     await fetch(`${this.url}/hotspot-detect.html`, { signal })
       .then(() => {
         pingSuccessful = true;
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+        this.updateDeviceStatus({
+          status: Types.DeviceStatusEnum.DEVICE_CONNECTED
+        });
       })
       .catch((e: Error) => {
         pingSuccessful = false;
-        this.log(
+        this.log.error(
           Types.EmitterScope.iHttpConnection,
           Types.Emitter.ping,
-          `❌ ${e.message}`,
-          Protobuf.LogRecord_Level.ERROR
+          `❌ ${e.message}`
         );
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
+        this.updateDeviceStatus({
+          status: Types.DeviceStatusEnum.DEVICE_RECONNECTING
+        });
       });
     return pingSuccessful;
   }
@@ -155,24 +161,29 @@ export class IHTTPConnection extends IMeshDevice {
       )
         .then(async (response) => {
           this.peningRequest = false;
-          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+          this.updateDeviceStatus({
+            status: Types.DeviceStatusEnum.DEVICE_CONNECTED
+          });
 
           readBuffer = await response.arrayBuffer();
 
           if (readBuffer.byteLength > 0) {
-            await this.handleFromRadio(new Uint8Array(readBuffer, 0));
+            await this.handleFromRadio({
+              fromRadio: new Uint8Array(readBuffer, 0)
+            });
           }
         })
         .catch((e: Error) => {
           this.peningRequest = false;
-          this.log(
+          this.log.error(
             Types.EmitterScope.iHttpConnection,
             Types.Emitter.readFromRadio,
-            `❌ ${e.message}`,
-            Protobuf.LogRecord_Level.ERROR
+            `❌ ${e.message}`
           );
 
-          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
+          this.updateDeviceStatus({
+            status: Types.DeviceStatusEnum.DEVICE_RECONNECTING
+          });
         });
     }
   }
@@ -194,25 +205,27 @@ export class IHTTPConnection extends IMeshDevice {
       body: typedArrayToBuffer(data)
     })
       .then(async () => {
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+        this.updateDeviceStatus({
+          status: Types.DeviceStatusEnum.DEVICE_CONNECTED
+        });
 
         await this.readFromRadio().catch((e: Error) => {
-          this.log(
+          this.log.error(
             Types.EmitterScope.iHttpConnection,
             Types.Emitter.writeToRadio,
-            `❌ ${e.message}`,
-            Protobuf.LogRecord_Level.ERROR
+            `❌ ${e.message}`
           );
         });
       })
       .catch((e: Error) => {
-        this.log(
+        this.log.error(
           Types.EmitterScope.iHttpConnection,
           Types.Emitter.writeToRadio,
-          `❌ ${e.message}`,
-          Protobuf.LogRecord_Level.ERROR
+          `❌ ${e.message}`
         );
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
+        this.updateDeviceStatus({
+          status: Types.DeviceStatusEnum.DEVICE_RECONNECTING
+        });
       });
   }
 }
