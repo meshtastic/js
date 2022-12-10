@@ -77,6 +77,10 @@ export abstract class IMeshDevice {
     this.onMyNodeInfo.subscribe((myNodeInfo) => {
       this.myNodeInfo = myNodeInfo;
     });
+
+    this.onPendingSettingsChange.subscribe((state) => {
+      this.pendingSettingsChanges = state;
+    });
   }
 
   /** Abstract method that writes data to the radio */
@@ -303,6 +307,13 @@ export abstract class IMeshDevice {
    */
   public readonly onDeviceMetadataPacket =
     new SubEvent<Types.DeviceMetadataPacket>();
+
+  /**
+   * Outputs status of pending settings changes
+   *
+   * @event pendingSettingsChange
+   */
+  public readonly onPendingSettingsChange = new SubEvent<boolean>();
 
   /**
    * Sends a text over the radio
@@ -960,7 +971,7 @@ export abstract class IMeshDevice {
   }
 
   public async beginEditSettings() {
-    this.pendingSettingsChanges = true;
+    this.onPendingSettingsChange.emit(true);
 
     const beginEditSettings = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
@@ -990,7 +1001,7 @@ export abstract class IMeshDevice {
       destination: "self"
     });
 
-    this.pendingSettingsChanges = false;
+    this.onPendingSettingsChange.emit(false);
   }
 
   /**
