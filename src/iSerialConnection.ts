@@ -62,8 +62,7 @@ export class ISerialConnection extends IMeshDevice {
             void this.handleFromRadio({ fromRadio: value }).catch(
               (e: Error) => {
                 this.log.info(
-                  Types.EmitterScope.iSerialConnection,
-                  Types.Emitter.readFromRadio,
+                  Types.Emitter[Types.Emitter.readFromRadio],
                   `Device errored or disconnected: ${e.message}`
                 );
               }
@@ -72,8 +71,7 @@ export class ISerialConnection extends IMeshDevice {
         })
         .catch(() => {
           this.log.debug(
-            Types.EmitterScope.iSerialConnection,
-            Types.Emitter.readFromRadio,
+            Types.Emitter[Types.Emitter.readFromRadio],
             `Releasing reader`
           );
         });
@@ -116,8 +114,7 @@ export class ISerialConnection extends IMeshDevice {
     /** Check for API avaliability */
     if (!navigator.serial) {
       this.log.warn(
-        Types.EmitterScope.iSerialConnection,
-        Types.Emitter.connect,
+        Types.Emitter[Types.Emitter.connect],
         `⚠️ This browser doesn't support the WebSerial API`
       );
     }
@@ -133,8 +130,7 @@ export class ISerialConnection extends IMeshDevice {
     /** Setup event listners */
     this.port.addEventListener("disconnect", () => {
       this.log.info(
-        Types.EmitterScope.iSerialConnection,
-        Types.Emitter.connect,
+        Types.Emitter[Types.Emitter.connect],
         "Device disconnected"
       );
       this.updateDeviceStatus({
@@ -171,11 +167,7 @@ export class ISerialConnection extends IMeshDevice {
         }
       })
       .catch((e: Error) => {
-        this.log.error(
-          Types.EmitterScope.iSerialConnection,
-          Types.Emitter.connect,
-          `❌ ${e.message}`
-        );
+        this.log.error(Types.Emitter[Types.Emitter.connect], `❌ ${e.message}`);
       });
   }
 

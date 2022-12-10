@@ -64,16 +64,14 @@ export class IHTTPConnection extends IMeshDevice {
       (await this.ping())
     ) {
       this.log.debug(
-        Types.EmitterScope.iHttpConnection,
-        Types.Emitter.connect,
+        Types.Emitter[Types.Emitter.connect],
         `Ping succeeded, starting configuration and request timer.`
       );
       this.configure();
       this.readLoop = setInterval(() => {
         this.readFromRadio().catch((e: Error) => {
           this.log.error(
-            Types.EmitterScope.iHttpConnection,
-            Types.Emitter.connect,
+            Types.Emitter[Types.Emitter.connect],
             `❌ ${e.message}`
           );
         });
@@ -107,8 +105,7 @@ export class IHTTPConnection extends IMeshDevice {
   /** Pings device to check if it is avaliable */
   public async ping(): Promise<boolean> {
     this.log.debug(
-      Types.EmitterScope.iHttpConnection,
-      Types.Emitter.ping,
+      Types.Emitter[Types.Emitter.ping],
       `Attempting device ping.`
     );
 
@@ -125,11 +122,7 @@ export class IHTTPConnection extends IMeshDevice {
       })
       .catch((e: Error) => {
         pingSuccessful = false;
-        this.log.error(
-          Types.EmitterScope.iHttpConnection,
-          Types.Emitter.ping,
-          `❌ ${e.message}`
-        );
+        this.log.error(Types.Emitter[Types.Emitter.ping], `❌ ${e.message}`);
         this.updateDeviceStatus({
           status: Types.DeviceStatusEnum.DEVICE_RECONNECTING
         });
@@ -176,8 +169,7 @@ export class IHTTPConnection extends IMeshDevice {
         .catch((e: Error) => {
           this.peningRequest = false;
           this.log.error(
-            Types.EmitterScope.iHttpConnection,
-            Types.Emitter.readFromRadio,
+            Types.Emitter[Types.Emitter.readFromRadio],
             `❌ ${e.message}`
           );
 
@@ -211,16 +203,14 @@ export class IHTTPConnection extends IMeshDevice {
 
         await this.readFromRadio().catch((e: Error) => {
           this.log.error(
-            Types.EmitterScope.iHttpConnection,
-            Types.Emitter.writeToRadio,
+            Types.Emitter[Types.Emitter.writeToRadio],
             `❌ ${e.message}`
           );
         });
       })
       .catch((e: Error) => {
         this.log.error(
-          Types.EmitterScope.iHttpConnection,
-          Types.Emitter.writeToRadio,
+          Types.Emitter[Types.Emitter.writeToRadio],
           `❌ ${e.message}`
         );
         this.updateDeviceStatus({

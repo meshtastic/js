@@ -97,8 +97,7 @@ export class IBLEConnection extends IMeshDevice {
     /** Check for API avaliability */
     if (!navigator.bluetooth) {
       this.log.warn(
-        Types.EmitterScope.iBleConnection,
-        Types.Emitter.connect,
+        Types.Emitter[Types.Emitter.connect],
         `⚠️ This browser doesn't support the WebBluetooth API`
       );
     }
@@ -114,8 +113,7 @@ export class IBLEConnection extends IMeshDevice {
     /** Setup event listners */
     this.device.addEventListener("gattserverdisconnected", () => {
       this.log.info(
-        Types.EmitterScope.iBleConnection,
-        Types.Emitter.connect,
+        Types.Emitter[Types.Emitter.connect],
         "Device disconnected"
       );
       this.updateDeviceStatus({
@@ -129,16 +127,14 @@ export class IBLEConnection extends IMeshDevice {
       ?.connect()
       .then((server) => {
         this.log.info(
-          Types.EmitterScope.iBleConnection,
-          Types.Emitter.connect,
+          Types.Emitter[Types.Emitter.connect],
           `✅ Got GATT Server for device: ${server.device.id}`
         );
         this.GATTServer = server;
       })
       .catch((e: Error) => {
         this.log.error(
-          Types.EmitterScope.iBleConnection,
-          Types.Emitter.connect,
+          Types.Emitter[Types.Emitter.connect],
           `❌ Failed to connect: ${e.message}`
         );
       });
@@ -146,16 +142,14 @@ export class IBLEConnection extends IMeshDevice {
     await this.GATTServer?.getPrimaryService(serviceUUID)
       .then((service) => {
         this.log.info(
-          Types.EmitterScope.iBleConnection,
-          Types.Emitter.connect,
+          Types.Emitter[Types.Emitter.connect],
           `✅ Got GATT Service for device: ${service.device.id}`
         );
         this.service = service;
       })
       .catch((e: Error) => {
         this.log.error(
-          Types.EmitterScope.iBleConnection,
-          Types.Emitter.connect,
+          Types.Emitter[Types.Emitter.connect],
           `❌ Failed to get primary service: q${e.message}`
         );
       });
@@ -165,8 +159,7 @@ export class IBLEConnection extends IMeshDevice {
         ?.getCharacteristic(uuid)
         .then((characteristic) => {
           this.log.info(
-            Types.EmitterScope.iBleConnection,
-            Types.Emitter.connect,
+            Types.Emitter[Types.Emitter.connect],
             `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.uuid}`
           );
           switch (uuid) {
@@ -183,8 +176,7 @@ export class IBLEConnection extends IMeshDevice {
         })
         .catch((e: Error) => {
           this.log.error(
-            Types.EmitterScope.iBleConnection,
-            Types.Emitter.connect,
+            Types.Emitter[Types.Emitter.connect],
             `❌ Failed to get toRadio characteristic: q${e.message}`
           );
         });
@@ -251,8 +243,7 @@ export class IBLEConnection extends IMeshDevice {
         .catch((e: Error) => {
           readBuffer = new ArrayBuffer(0);
           this.log.error(
-            Types.EmitterScope.iBleConnection,
-            Types.Emitter.readFromRadio,
+            Types.Emitter[Types.Emitter.readFromRadio],
             `❌ ${e.message}`
           );
         });
