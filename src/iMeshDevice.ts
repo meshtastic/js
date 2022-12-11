@@ -7,6 +7,7 @@ import {
   clearChannelProps,
   confirmSetChannelProps,
   confirmSetConfigProps,
+  factoryResetProps,
   getChannelProps,
   getConfigProps,
   getMetadataProps,
@@ -14,6 +15,8 @@ import {
   getOwnerProps,
   handleDataPacketProps,
   handleFromRadioProps,
+  rebootOTAProps,
+  rebootProps,
   resetPeersProps,
   sendPacketProps,
   sendRawProps,
@@ -23,6 +26,7 @@ import {
   setModuleConfigProps,
   setOwnerProps,
   setPositionProps,
+  shutdownProps,
   updateDeviceStatusProps
 } from "./types.js";
 import { Queue } from "./utils/queue.js";
@@ -1046,6 +1050,137 @@ export abstract class IMeshDevice {
 
     await this.sendPacket({
       byteData: resetPeers,
+      portNum: Protobuf.PortNum.ADMIN_APP,
+      destination: "self",
+      wantAck: true,
+      wantResponse: true,
+      callback: async (id: number) => {
+        callback && (await callback(id));
+      }
+    });
+  }
+
+  /**
+   * Shuts down the current node after the specified amount of time has elapsed.
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
+   */
+  public async shutdown({ time, callback }: shutdownProps): Promise<void> {
+    this.log.debug(
+      Types.Emitter[Types.Emitter.shutdown],
+      `🔌 Shutting down ${time > 0 ? "now" : `in ${time} seconds`} ${
+        callback ? "with" : "without"
+      } callback`
+    );
+
+    const shutdown = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        shutdownSeconds: time,
+        oneofKind: "shutdownSeconds"
+      }
+    });
+
+    await this.sendPacket({
+      byteData: shutdown,
+      portNum: Protobuf.PortNum.ADMIN_APP,
+      destination: "self",
+      wantAck: true,
+      wantResponse: true,
+      callback: async (id: number) => {
+        callback && (await callback(id));
+      }
+    });
+  }
+
+  /**
+   * Reboots the current node after the specified amount of time has elapsed.
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
+   */
+  public async reboot({ callback, time }: rebootProps): Promise<void> {
+    this.log.debug(
+      Types.Emitter[Types.Emitter.reboot],
+      `🔌 Rebooting node ${time > 0 ? "now" : `in ${time} seconds`} ${
+        callback ? "with" : "without"
+      } callback`
+    );
+
+    const reboot = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        rebootSeconds: time,
+        oneofKind: "rebootSeconds"
+      }
+    });
+
+    await this.sendPacket({
+      byteData: reboot,
+      portNum: Protobuf.PortNum.ADMIN_APP,
+      destination: "self",
+      wantAck: true,
+      wantResponse: true,
+      callback: async (id: number) => {
+        callback && (await callback(id));
+      }
+    });
+  }
+
+  /**
+   * Reboots the current node into OTA mode after the specified amount of time
+   * has elapsed.
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
+   */
+  public async rebootOTA({ callback, time }: rebootOTAProps): Promise<void> {
+    this.log.debug(
+      Types.Emitter[Types.Emitter.rebootOTA],
+      `🔌 Rebooting into OTA mode ${time > 0 ? "now" : `in ${time} seconds`} ${
+        callback ? "with" : "without"
+      } callback`
+    );
+
+    const rebootOTA = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        rebootOtaSeconds: time,
+        oneofKind: "rebootOtaSeconds"
+      }
+    });
+
+    await this.sendPacket({
+      byteData: rebootOTA,
+      portNum: Protobuf.PortNum.ADMIN_APP,
+      destination: "self",
+      wantAck: true,
+      wantResponse: true,
+      callback: async (id: number) => {
+        callback && (await callback(id));
+      }
+    });
+  }
+
+  /**
+   * Factory resets the current node
+   *
+   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
+   *   callback is called when the ack is received
+   */
+  public async factoryReset({ callback }: factoryResetProps): Promise<void> {
+    this.log.debug(
+      Types.Emitter[Types.Emitter.factoryReset],
+      `♻️ Factory resetting node ${callback ? "with" : "without"} callback`
+    );
+
+    const factoryReset = Protobuf.AdminMessage.toBinary({
+      payloadVariant: {
+        factoryReset: 1,
+        oneofKind: "factoryReset"
+      }
+    });
+
+    await this.sendPacket({
+      byteData: factoryReset,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,

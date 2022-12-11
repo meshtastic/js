@@ -183,7 +183,11 @@ export enum Emitter {
   "writeToRadio",
   "setDebugMode",
   "getMetadata",
-  "resetPeers"
+  "resetPeers",
+  "shutdown",
+  "reboot",
+  "rebootOTA",
+  "factoryReset"
 }
 
 export interface LogEvent {
@@ -294,6 +298,21 @@ export interface confirmSetConfigProps {
   callback?: callback;
 }
 export interface resetPeersProps {
+  callback?: callback;
+}
+export interface factoryResetProps {
+  callback?: callback;
+}
+export interface shutdownProps {
+  time: number;
+  callback?: callback;
+}
+export interface rebootProps {
+  time: number;
+  callback?: callback;
+}
+export interface rebootOTAProps {
+  time: number;
   callback?: callback;
 }
 export interface updateDeviceStatusProps {
