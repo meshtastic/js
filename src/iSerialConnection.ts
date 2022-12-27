@@ -36,6 +36,9 @@ export class ISerialConnection extends IMeshDevice {
     this.transformer = undefined;
     this.onReleaseEvent = new SubEvent<boolean>();
     this.preventLock = false;
+
+    this.log.debug(Types.Emitter[Types.Emitter.constructor],
+      `🔷 iSerialConnection instantiated`)
   }
 
   /**

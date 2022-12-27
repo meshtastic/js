@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
@@ -38,15 +38,15 @@
     "@protobuf-ts/runtime": "^2.8.2",
     "glob": "^8.0.3",
     "sub-events": "^1.9.0",
-    "tslog": "^4.4.4"
+    "tslog": "^4.7.0"
   },
   "devDependencies": {
     "@protobuf-ts/plugin": "2.8.2",
     "@types/w3c-web-serial": "^1.0.3",
     "@types/web-bluetooth": "^0.0.16",
-    "@typescript-eslint/eslint-plugin": "^5.46.0",
-    "@typescript-eslint/parser": "^5.46.0",
-    "eslint": "^8.29.0",
+    "@typescript-eslint/eslint-plugin": "^5.47.1",
+    "@typescript-eslint/parser": "^5.47.1",
+    "eslint": "^8.30.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.26.0",
@@ -54,7 +54,7 @@
     "node-protoc": "^1.0.3",
     "prettier": "^2.8.1",
     "prettier-plugin-jsdoc": "^0.4.2",
-    "typedoc": "^0.23.21",
+    "typedoc": "^0.23.23",
     "typescript": "^4.9.4"
   }
 }
