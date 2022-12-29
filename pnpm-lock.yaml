@@ -17,7 +17,7 @@ specifiers:
   prettier: ^2.8.1
   prettier-plugin-jsdoc: ^0.4.2
   sub-events: ^1.9.0
-  tslog: ^4.7.0
+  tslog: ^4.7.1
   typedoc: ^0.23.23
   typescript: ^4.9.4
 
@@ -25,7 +25,7 @@ dependencies:
   '@protobuf-ts/runtime': 2.8.2
   glob: 8.0.3
   sub-events: 1.9.0
-  tslog: 4.7.0
+  tslog: 4.7.1
 
 devDependencies:
   '@protobuf-ts/plugin': 2.8.2
@@ -2265,8 +2265,8 @@ packages:
     resolution: {integrity: sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA==}
     dev: true
 
-  /tslog/4.7.0:
-    resolution: {integrity: sha512-u5N15NPAd6wTAFBKlwdNiYeqZTYXRjjYDNLPPGh5BTBvu+X0SCaqzwG9V9OKp4MlC6UZX5weyrAd1L4J4lG1fw==}
+  /tslog/4.7.1:
+    resolution: {integrity: sha512-Ez90j4FKCUp9bBlgPq96aYDUbXRIOxz6Vxn/4Iw2/IiVxLB5wsUVkWfeK4oqdRMoW8qBVJz9oIT+ysjfyIRufw==}
     engines: {node: '>=16'}
     dev: false
 

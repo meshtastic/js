@@ -715,7 +715,7 @@ export abstract class IMeshDevice {
     await this.sendPacket({
       byteData: Protobuf.Position.toBinary(position),
       portNum: Protobuf.PortNum.POSITION_APP,
-      destination: "broadcast",
+      destination: "self",
       wantAck: true,
       wantResponse: true,
       callback
