@@ -303,6 +303,14 @@ export interface resetPeersProps {
 export interface factoryResetProps {
   callback?: callback;
 }
+export interface traceRouteProps {
+  destination: number;
+  callback?: callback;
+}
+export interface requestPositionProps {
+  destination: number;
+  callback?: callback;
+}
 export interface shutdownProps {
   time: number;
   callback?: callback;

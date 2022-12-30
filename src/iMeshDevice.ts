@@ -16,6 +16,7 @@ import {
   handleFromRadioProps,
   rebootOTAProps,
   rebootProps,
+  requestPositionProps,
   resetPeersProps,
   sendPacketProps,
   sendRawProps,
@@ -26,6 +27,7 @@ import {
   setOwnerProps,
   setPositionProps,
   shutdownProps,
+  traceRouteProps,
   updateDeviceStatusProps
 } from "./types.js";
 import { EventSystem } from "./utils/eventSystem.js";
@@ -997,6 +999,44 @@ export abstract class IMeshDevice {
     setTimeout(() => {
       void this.sendRaw({ id: 0, toRadio });
     }, 200);
+  }
+
+  /** Sends a trace route packet to the designated node */
+  public async traceRoute({
+    destination,
+    callback
+  }: traceRouteProps): Promise<void> {
+    const routeDiscovery = Protobuf.RouteDiscovery.toBinary({
+      route: []
+    });
+
+    await this.sendPacket({
+      byteData: routeDiscovery,
+      portNum: Protobuf.PortNum.ROUTING_APP,
+      destination: destination,
+      wantAck: true,
+      wantResponse: true,
+      callback: async (id: number) => {
+        callback && (await callback(id));
+      }
+    });
+  }
+
+  /** Requests position from the designated node */
+  public async requestPosition({
+    destination,
+    callback
+  }: requestPositionProps): Promise<void> {
+    await this.sendPacket({
+      byteData: new Uint8Array(),
+      portNum: Protobuf.PortNum.POSITION_APP,
+      destination: destination,
+      wantAck: true,
+      wantResponse: true,
+      callback: async (id: number) => {
+        callback && (await callback(id));
+      }
+    });
   }
 
   /**
