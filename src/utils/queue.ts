@@ -1,5 +1,5 @@
 import { SubEvent } from "sub-events";
-import { Protobuf } from "../index.js";
+import { PacketError } from "../types.js";
 
 export interface IQueueItem {
   id: number;
@@ -8,16 +8,11 @@ export interface IQueueItem {
   promise: Promise<number>;
 }
 
-export interface packetError {
-  id: number;
-  error: Protobuf.Routing_Error;
-}
-
 export class Queue {
   private queue: IQueueItem[] = [];
   private locked = false;
   private ackNotifier = new SubEvent<number>();
-  private errorNotifier = new SubEvent<packetError>();
+  private errorNotifier = new SubEvent<PacketError>();
 
   public clear(): void {
     this.queue = [];
@@ -56,7 +51,7 @@ export class Queue {
     this.ackNotifier.emit(id);
   }
 
-  public processError(e: packetError): void {
+  public processError(e: PacketError): void {
     console.warn("PROCESSING ERROR", e.id);
     console.log(this.queue);
     this.errorNotifier.emit(e);

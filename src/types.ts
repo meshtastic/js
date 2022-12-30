@@ -216,6 +216,11 @@ export type ConnectionType =
 
 export type destination = number | "self" | "broadcast";
 
+export interface PacketError {
+  id: number;
+  error: Protobuf.Routing_Error;
+}
+
 export interface sendTextProps {
   text: string;
   destination?: destination;
