@@ -216,20 +216,16 @@ export type ConnectionType =
 
 export type destination = number | "self" | "broadcast";
 
-export type callback = (id: number) => Promise<void>;
-
 export interface sendTextProps {
   text: string;
   destination?: destination;
   wantAck?: boolean;
   channel?: ChannelNumber;
-  callback: callback;
 }
 export interface sendWaypointProps {
   waypoint: Protobuf.Waypoint;
   destination: destination;
   channel?: ChannelNumber;
-  callback?: callback;
 }
 export interface sendPacketProps {
   byteData: Uint8Array;
@@ -239,89 +235,57 @@ export interface sendPacketProps {
   channel?: ChannelNumber;
   wantResponse?: boolean;
   echoResponse?: boolean;
-  callback?: callback;
   emoji?: number;
   replyId?: number;
 }
 export interface sendRawProps {
   id: number;
   toRadio: Uint8Array;
-  callback?: callback;
 }
 export interface setConfigProps {
   config: Protobuf.Config;
-  callback?: callback;
 }
 export interface setModuleConfigProps {
   moduleConfig: Protobuf.ModuleConfig;
-  callback?: callback;
 }
 export interface setOwnerProps {
   owner: Protobuf.User;
-  callback?: callback;
 }
 export interface setChannelProps {
   channel: Protobuf.Channel;
-  callback?: callback;
 }
 export interface setPositionProps {
   position: Protobuf.Position;
-  callback?: callback;
 }
 export interface getChannelProps {
   index: number;
-  callback?: callback;
 }
 export interface getConfigProps {
   configType: Protobuf.AdminMessage_ConfigType;
-  callback?: callback;
 }
 export interface getModuleConfigProps {
   moduleConfigType: Protobuf.AdminMessage_ModuleConfigType;
-  callback?: callback;
-}
-export interface getOwnerProps {
-  callback?: callback;
 }
 export interface getMetadataProps {
   nodeNum: number;
-  callback?: callback;
 }
 export interface clearChannelProps {
   index: number;
-  callback?: callback;
-}
-export interface confirmSetChannelProps {
-  callback?: callback;
-}
-export interface confirmSetConfigProps {
-  callback?: callback;
-}
-export interface resetPeersProps {
-  callback?: callback;
-}
-export interface factoryResetProps {
-  callback?: callback;
 }
 export interface traceRouteProps {
   destination: number;
-  callback?: callback;
 }
 export interface requestPositionProps {
   destination: number;
-  callback?: callback;
 }
 export interface shutdownProps {
   time: number;
-  callback?: callback;
 }
 export interface rebootProps {
   time: number;
-  callback?: callback;
 }
 export interface rebootOTAProps {
   time: number;
-  callback?: callback;
 }
 export interface updateDeviceStatusProps {
   status: DeviceStatusEnum;

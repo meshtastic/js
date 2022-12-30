@@ -4,20 +4,15 @@ import { broadCastNum, minFwVer } from "./constants.js";
 import { Protobuf, Types } from "./index.js";
 import {
   clearChannelProps,
-  confirmSetChannelProps,
-  confirmSetConfigProps,
-  factoryResetProps,
   getChannelProps,
   getConfigProps,
   getMetadataProps,
   getModuleConfigProps,
-  getOwnerProps,
   handleDataPacketProps,
   handleFromRadioProps,
   rebootOTAProps,
   rebootProps,
   requestPositionProps,
-  resetPeersProps,
   sendPacketProps,
   sendRawProps,
   sendTextProps,
@@ -57,8 +52,8 @@ export abstract class IMeshDevice {
   public configId: number;
 
   /**
-   * Keeps track of all requests sent to the radio that have callbacks TODO:
-   * Update description
+   * Packert queue, to space out transmissions and routing handle errors and
+   * acks
    */
   public queue: Queue;
 
@@ -115,17 +110,14 @@ export abstract class IMeshDevice {
    *   Default is `false`
    * @param {Types.channelNumber} [channel=Types.ChannelNumber.PRIMARY] Channel
    *   number to send to. Default is `Types.ChannelNumber.PRIMARY`
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    * @returns {Promise<void>}
    */
-  public sendText({
+  public async sendText({
     text,
     destination,
     wantAck,
-    channel,
-    callback
-  }: sendTextProps): Promise<void> {
+    channel
+  }: sendTextProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.sendText],
       `📤 Sending message to ${destination ?? "broadcast"} on channel ${
@@ -141,8 +133,7 @@ export abstract class IMeshDevice {
       destination: destination ?? "broadcast",
       wantAck,
       channel,
-      echoResponse: true,
-      callback
+      echoResponse: true
     });
   }
 
@@ -154,16 +145,13 @@ export abstract class IMeshDevice {
    * @param {boolean} wantAck Whether or not acknowledgement is wanted
    * @param {Types.ChannelNumber} [channel=Types.ChannelNumber.PRIMARY] Channel
    *   to send on. Default is `Types.ChannelNumber.PRIMARY`
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    * @returns {Promise<void>}
    */
   public sendWaypoint({
     waypoint,
     destination,
-    channel,
-    callback
-  }: Types.sendWaypointProps): Promise<void> {
+    channel
+  }: Types.sendWaypointProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.sendWaypoint],
       `📤 Sending waypoint to ${destination} on channel ${
@@ -177,8 +165,7 @@ export abstract class IMeshDevice {
       destination,
       wantAck: true,
       channel,
-      echoResponse: true,
-      callback
+      echoResponse: true
     });
   }
 
@@ -196,8 +183,6 @@ export abstract class IMeshDevice {
    *   to respond in kind with the same type of request. Default is `false`
    * @param {boolean} [echoResponse=false] Sends event back to client. Default
    *   is `false`. Default is `false`
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    * @param {number} [emoji=0] Used for message reactions. Default is `0`
    * @param {number} [replyId=0] Used to reply to a message. Default is `0`
    */
@@ -209,10 +194,9 @@ export abstract class IMeshDevice {
     channel = Types.ChannelNumber.PRIMARY,
     wantResponse = false,
     echoResponse = false,
-    callback,
     emoji = 0,
     replyId = 0
-  }: sendPacketProps): Promise<void> {
+  }: sendPacketProps): Promise<number> {
     this.log.trace(
       Types.Emitter[Types.Emitter.sendPacket],
       `📤 Sending ${Protobuf.PortNum[portNum]} to ${destination}`
@@ -252,9 +236,9 @@ export abstract class IMeshDevice {
     });
 
     if (echoResponse) {
-      await this.handleMeshPacket(meshPacket);
+      this.handleMeshPacket(meshPacket);
     }
-    await this.sendRaw({ id: meshPacket.id, toRadio, callback });
+    return this.sendRaw({ id: meshPacket.id, toRadio });
   }
 
   /**
@@ -262,30 +246,22 @@ export abstract class IMeshDevice {
    *
    * @param {number} id Unique packet ID
    * @param {Uint8Array} toRadio Binary data to send
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async sendRaw({ id, toRadio, callback }: sendRawProps): Promise<void> {
+  public async sendRaw({ id, toRadio }: sendRawProps): Promise<number> {
     if (toRadio.length > 512) {
-      this.log.warn(
-        Types.Emitter[Types.Emitter.sendRaw],
-        `Message longer than 512 bytes, it will not be sent!`
-      );
+      throw new Error("Message longer than 512 bytes, it will not be sent!");
     } else {
       this.queue.push({
         id,
         data: toRadio,
-        callback:
-          callback ??
-          (async () => {
-            return Promise.resolve();
-          }),
         waitingAck: false
       });
 
       await this.queue.processQueue(async (data) => {
         await this.writeToRadio(data);
       });
+
+      return this.queue.wait(id);
     }
   }
 
@@ -293,14 +269,9 @@ export abstract class IMeshDevice {
    * Writes config to device
    *
    * @param {Protobuf.Config} config Config object
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async setConfig({ config, callback }: setConfigProps): Promise<void> {
-    this.log.debug(
-      Types.Emitter[Types.Emitter.setConfig],
-      `Setting config ${callback ? "with" : "without"} callback`
-    );
+  public async setConfig({ config }: setConfigProps): Promise<number> {
+    this.log.debug(Types.Emitter[Types.Emitter.setConfig], `Setting config`);
 
     let configType: Protobuf.AdminMessage_ConfigType;
 
@@ -341,16 +312,15 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: setRadio,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        await this.getConfig({ configType });
-        await callback?.(id);
-      }
+      wantResponse: true
+    }).then(async (id) => {
+      await this.getConfig({ configType });
+      return id;
     });
   }
 
@@ -358,16 +328,13 @@ export abstract class IMeshDevice {
    * Writes module config to device
    *
    * @param {Protobuf.ModuleConfig} config Module config object
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
   public async setModuleConfig({
-    moduleConfig,
-    callback
-  }: setModuleConfigProps): Promise<void> {
+    moduleConfig
+  }: setModuleConfigProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setModuleConfig],
-      `Setting module config ${callback ? "with" : "without"} callback`
+      `Setting module config`
     );
 
     let moduleConfigType: Protobuf.AdminMessage_ModuleConfigType;
@@ -414,16 +381,15 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: setRadio,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        await this.getModuleConfig({ moduleConfigType });
-        await callback?.(id);
-      }
+      wantResponse: true
+    }).then(async (id) => {
+      await this.getModuleConfig({ moduleConfigType });
+      return id;
     });
   }
 
@@ -431,14 +397,9 @@ export abstract class IMeshDevice {
    * Sets devices owner data
    *
    * @param {Protobuf.User} owner Owner data to apply to the device
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async setOwner({ owner, callback }: setOwnerProps): Promise<void> {
-    this.log.debug(
-      Types.Emitter[Types.Emitter.setOwner],
-      `Setting owner ${callback ? "with" : "without"} callback`
-    );
+  public async setOwner({ owner }: setOwnerProps): Promise<number> {
+    this.log.debug(Types.Emitter[Types.Emitter.setOwner], `Setting owner`);
 
     const setOwner = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
@@ -447,16 +408,15 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: setOwner,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        await this.getOwner({});
-        await callback?.(id);
-      }
+      wantResponse: true
+    }).then(async (id) => {
+      await this.getOwner();
+      return id;
     });
   }
 
@@ -464,18 +424,11 @@ export abstract class IMeshDevice {
    * Sets devices ChannelSettings
    *
    * @param {Protobuf.Channel} channel Channel data to be set
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async setChannel({
-    channel,
-    callback
-  }: setChannelProps): Promise<void> {
+  public async setChannel({ channel }: setChannelProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setChannel],
-      `📻 Setting Channel: ${channel.index} ${
-        callback ? "with" : "without"
-      } callback`
+      `📻 Setting Channel: ${channel.index}`
     );
 
     const setChannel = Protobuf.AdminMessage.toBinary({
@@ -485,27 +438,25 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: setChannel,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        await this.getChannel({ index: channel.index });
-        await callback?.(id);
-      }
+      wantResponse: true
+    }).then(async (id) => {
+      await this.getChannel({ index: channel.index });
+      return id;
     });
   }
 
-  public async setPosition({ position, callback }: setPositionProps) {
-    await this.sendPacket({
+  public async setPosition({ position }: setPositionProps): Promise<number> {
+    return this.sendPacket({
       byteData: Protobuf.Position.toBinary(position),
       portNum: Protobuf.PortNum.POSITION_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback
+      wantResponse: true
     });
   }
 
@@ -513,15 +464,11 @@ export abstract class IMeshDevice {
    * Gets specified channel information from the radio
    *
    * @param {number} index Channel index to be retrieved
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async getChannel({ index, callback }: getChannelProps): Promise<void> {
+  public async getChannel({ index }: getChannelProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getChannel],
-      `📻 Requesting Channel: ${index} ${
-        callback ? "with" : "without"
-      } callback`
+      `📻 Requesting Channel: ${index}`
     );
 
     const getChannelRequest = Protobuf.AdminMessage.toBinary({
@@ -531,13 +478,12 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: getChannelRequest,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback
+      wantResponse: true
     });
   }
 
@@ -546,17 +492,9 @@ export abstract class IMeshDevice {
    *
    * @param {Protobuf.AdminMessage_ConfigType} configType Desired config type to
    *   request
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async getConfig({
-    configType,
-    callback
-  }: getConfigProps): Promise<void> {
-    this.log.debug(
-      Types.Emitter[Types.Emitter.getConfig],
-      `Requesting config ${callback ? "with" : "without"} callback`
-    );
+  public async getConfig({ configType }: getConfigProps): Promise<number> {
+    this.log.debug(Types.Emitter[Types.Emitter.getConfig], `Requesting config`);
 
     const getRadioRequest = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
@@ -565,13 +503,12 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: getRadioRequest,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback
+      wantResponse: true
     });
   }
 
@@ -580,16 +517,13 @@ export abstract class IMeshDevice {
    *
    * @param {Protobuf.AdminMessage_ModuleConfigType} moduleConfigType Desired
    *   module config type to request
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
   public async getModuleConfig({
-    moduleConfigType,
-    callback
-  }: getModuleConfigProps): Promise<void> {
+    moduleConfigType
+  }: getModuleConfigProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getModuleConfig],
-      `Requesting module config ${callback ? "with" : "without"} callback`
+      `Requesting module config`
     );
 
     const getRadioRequest = Protobuf.AdminMessage.toBinary({
@@ -599,27 +533,18 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: getRadioRequest,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback
+      wantResponse: true
     });
   }
 
-  /**
-   * Gets devices Owner
-   *
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
-   */
-  public async getOwner({ callback }: getOwnerProps): Promise<void> {
-    this.log.debug(
-      Types.Emitter[Types.Emitter.getOwner],
-      `Requesting owner ${callback ? "with" : "without"} callback`
-    );
+  /** Gets devices Owner */
+  public async getOwner(): Promise<number> {
+    this.log.debug(Types.Emitter[Types.Emitter.getOwner], `Requesting owner`);
 
     const getOwnerRequest = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
@@ -628,13 +553,12 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: getOwnerRequest,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback
+      wantResponse: true
     });
   }
 
@@ -642,18 +566,11 @@ export abstract class IMeshDevice {
    * Gets devices metadata
    *
    * @param {number} nodeNum Destination Node to be queried
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async getMetadata({
-    nodeNum,
-    callback
-  }: getMetadataProps): Promise<void> {
+  public async getMetadata({ nodeNum }: getMetadataProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getMetadata],
-      `Requesting metadata from ${nodeNum} ${
-        callback ? "with" : "without"
-      } callback`
+      `Requesting metadata from ${nodeNum}`
     );
 
     const getDeviceMetricsRequest = Protobuf.AdminMessage.toBinary({
@@ -663,14 +580,13 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: getDeviceMetricsRequest,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: nodeNum,
       wantAck: true,
       channel: Types.ChannelNumber.ADMIN,
-      wantResponse: true,
-      callback
+      wantResponse: true
     });
   }
 
@@ -678,16 +594,11 @@ export abstract class IMeshDevice {
    * Clears specific channel with the designated index
    *
    * @param {number} index Channel index to be cleared
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async clearChannel({
-    index,
-    callback
-  }: clearChannelProps): Promise<void> {
+  public async clearChannel({ index }: clearChannelProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.clearChannel],
-      `📻 Clearing Channel ${index} ${callback ? "with" : "without"} callback`
+      `📻 Clearing Channel ${index}`
     );
 
     const channel = Protobuf.Channel.create({
@@ -701,32 +612,26 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: setChannel,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        await this.getChannel({ index: channel.index });
-        await callback?.(id);
-      }
+      wantResponse: true
+    }).then(async (id) => {
+      await this.getChannel({ index: channel.index });
+      return id;
     });
   }
 
   /**
    * Confirms the currently set channels, and prevents changes from reverting
    * after 10 minutes.
-   *
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async confirmSetChannel({
-    callback
-  }: confirmSetChannelProps): Promise<void> {
+  public async confirmSetChannel(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.confirmSetChannel],
-      `📻 Confirming Channel config ${callback ? "with" : "without"} callback`
+      `📻 Confirming Channel config`
     );
 
     const confirmSetChannel = Protobuf.AdminMessage.toBinary({
@@ -736,17 +641,16 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: confirmSetChannel,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback
+      wantResponse: true
     });
   }
 
-  public async beginEditSettings() {
+  public async beginEditSettings(): Promise<number> {
     this.events.onPendingSettingsChange.emit(true);
 
     const beginEditSettings = Protobuf.AdminMessage.toBinary({
@@ -756,14 +660,16 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: beginEditSettings,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self"
     });
   }
 
-  public async commitEditSettings() {
+  public async commitEditSettings(): Promise<number> {
+    this.events.onPendingSettingsChange.emit(false);
+
     const commitEditSettings = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
         oneofKind: "commitEditSettings",
@@ -771,28 +677,21 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: commitEditSettings,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self"
     });
-
-    this.events.onPendingSettingsChange.emit(false);
   }
 
   /**
    * Confirms the currently set config, and prevents changes from reverting
    * after 10 minutes.
-   *
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async confirmSetConfig({
-    callback
-  }: confirmSetConfigProps): Promise<void> {
+  public async confirmSetConfig(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.confirmSetConfig],
-      `Confirming config ${callback ? "with" : "without"} callback`
+      `Confirming config`
     );
     if (!this.pendingSettingsChanges) {
       await this.beginEditSettings();
@@ -805,27 +704,23 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: confirmSetRadio,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback
+      wantResponse: true
     });
   }
 
   /**
    * Resets the internal NodeDB of the radio, usefull for removing old nodes
    * that no longer exist.
-   *
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async resetPeers({ callback }: resetPeersProps): Promise<void> {
+  public async resetPeers(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.resetPeers],
-      `📻 Resetting Peers ${callback ? "with" : "without"} callback`
+      `📻 Resetting Peers`
     );
 
     const resetPeers = Protobuf.AdminMessage.toBinary({
@@ -835,30 +730,20 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: resetPeers,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        callback && (await callback(id));
-      }
+      wantResponse: true
     });
   }
 
-  /**
-   * Shuts down the current node after the specified amount of time has elapsed.
-   *
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
-   */
-  public async shutdown({ time, callback }: shutdownProps): Promise<void> {
+  /** Shuts down the current node after the specified amount of time has elapsed. */
+  public async shutdown({ time }: shutdownProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.shutdown],
-      `🔌 Shutting down ${time > 0 ? "now" : `in ${time} seconds`} ${
-        callback ? "with" : "without"
-      } callback`
+      `🔌 Shutting down ${time > 0 ? "now" : `in ${time} seconds`}`
     );
 
     const shutdown = Protobuf.AdminMessage.toBinary({
@@ -868,30 +753,20 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: shutdown,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        callback && (await callback(id));
-      }
+      wantResponse: true
     });
   }
 
-  /**
-   * Reboots the current node after the specified amount of time has elapsed.
-   *
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
-   */
-  public async reboot({ callback, time }: rebootProps): Promise<void> {
+  /** Reboots the current node after the specified amount of time has elapsed. */
+  public async reboot({ time }: rebootProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.reboot],
-      `🔌 Rebooting node ${time > 0 ? "now" : `in ${time} seconds`} ${
-        callback ? "with" : "without"
-      } callback`
+      `🔌 Rebooting node ${time > 0 ? "now" : `in ${time} seconds`}`
     );
 
     const reboot = Protobuf.AdminMessage.toBinary({
@@ -901,31 +776,23 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: reboot,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        callback && (await callback(id));
-      }
+      wantResponse: true
     });
   }
 
   /**
    * Reboots the current node into OTA mode after the specified amount of time
    * has elapsed.
-   *
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
    */
-  public async rebootOTA({ callback, time }: rebootOTAProps): Promise<void> {
+  public async rebootOTA({ time }: rebootOTAProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.rebootOTA],
-      `🔌 Rebooting into OTA mode ${time > 0 ? "now" : `in ${time} seconds`} ${
-        callback ? "with" : "without"
-      } callback`
+      `🔌 Rebooting into OTA mode ${time > 0 ? "now" : `in ${time} seconds`}`
     );
 
     const rebootOTA = Protobuf.AdminMessage.toBinary({
@@ -935,28 +802,20 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: rebootOTA,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        callback && (await callback(id));
-      }
+      wantResponse: true
     });
   }
 
-  /**
-   * Factory resets the current node
-   *
-   * @param {(id: number) => Promise<void>} [callback] If wantAck is true,
-   *   callback is called when the ack is received
-   */
-  public async factoryReset({ callback }: factoryResetProps): Promise<void> {
+  /** Factory resets the current node */
+  public async factoryReset(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.factoryReset],
-      `♻️ Factory resetting node ${callback ? "with" : "without"} callback`
+      `♻️ Factory resetting node`
     );
 
     const factoryReset = Protobuf.AdminMessage.toBinary({
@@ -966,19 +825,17 @@ export abstract class IMeshDevice {
       }
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: factoryReset,
       portNum: Protobuf.PortNum.ADMIN_APP,
       destination: "self",
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        callback && (await callback(id));
-      }
+      wantResponse: true
     });
   }
 
   /** Triggers the device configure process */
+  // TODO: Make more robust and await the sendRaw
   public configure(): void {
     // TODO: this not always logged
     this.log.debug(
@@ -1002,40 +859,30 @@ export abstract class IMeshDevice {
   }
 
   /** Sends a trace route packet to the designated node */
-  public async traceRoute({
-    destination,
-    callback
-  }: traceRouteProps): Promise<void> {
+  public async traceRoute({ destination }: traceRouteProps): Promise<number> {
     const routeDiscovery = Protobuf.RouteDiscovery.toBinary({
       route: []
     });
 
-    await this.sendPacket({
+    return this.sendPacket({
       byteData: routeDiscovery,
       portNum: Protobuf.PortNum.ROUTING_APP,
       destination: destination,
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        callback && (await callback(id));
-      }
+      wantResponse: true
     });
   }
 
   /** Requests position from the designated node */
   public async requestPosition({
-    destination,
-    callback
-  }: requestPositionProps): Promise<void> {
-    await this.sendPacket({
+    destination
+  }: requestPositionProps): Promise<number> {
+    return this.sendPacket({
       byteData: new Uint8Array(),
       portNum: Protobuf.PortNum.POSITION_APP,
       destination: destination,
       wantAck: true,
-      wantResponse: true,
-      callback: async (id: number) => {
-        callback && (await callback(id));
-      }
+      wantResponse: true
     });
   }
 
@@ -1065,9 +912,7 @@ export abstract class IMeshDevice {
    *
    * @param {Uint8Array} fromRadio Uint8Array containing raw radio data
    */
-  protected async handleFromRadio({
-    fromRadio
-  }: handleFromRadioProps): Promise<void> {
+  protected handleFromRadio({ fromRadio }: handleFromRadioProps): void {
     const decodedMessage = Protobuf.FromRadio.fromBinary(fromRadio);
 
     this.events.onFromRadio.emit(decodedMessage);
@@ -1075,7 +920,7 @@ export abstract class IMeshDevice {
     /** @todo Add map here when `all=true` gets fixed. */
     switch (decodedMessage.payloadVariant.oneofKind) {
       case "packet":
-        await this.handleMeshPacket(decodedMessage.payloadVariant.packet);
+        this.handleMeshPacket(decodedMessage.payloadVariant.packet);
         break;
 
       case "myInfo":
@@ -1253,9 +1098,7 @@ export abstract class IMeshDevice {
    *
    * @param {Protobuf.MeshPacket} meshPacket Packet to process
    */
-  private async handleMeshPacket(
-    meshPacket: Protobuf.MeshPacket
-  ): Promise<void> {
+  private handleMeshPacket(meshPacket: Protobuf.MeshPacket): void {
     this.events.onMeshPacket.emit(meshPacket);
     if (meshPacket.from !== this.myNodeInfo.myNodeNum) {
       /**
@@ -1267,9 +1110,6 @@ export abstract class IMeshDevice {
 
     switch (meshPacket.payloadVariant.oneofKind) {
       case "decoded":
-        await this.queue.processAck(
-          meshPacket.payloadVariant.decoded.requestId
-        );
         this.handleDataPacket({
           dataPacket: meshPacket.payloadVariant.decoded,
           meshPacket
@@ -1287,11 +1127,19 @@ export abstract class IMeshDevice {
 
   private handleDataPacket({ dataPacket, meshPacket }: handleDataPacketProps) {
     let adminMessage: Protobuf.AdminMessage | undefined = undefined;
+    let routingPacket: Protobuf.Routing | undefined = undefined;
 
     this.log.trace(
       Types.Emitter[Types.Emitter.handleMeshPacket],
       `📦 Received ${Protobuf.PortNum[dataPacket.portnum]} packet`
     );
+
+    if (
+      dataPacket.requestId !== 0 &&
+      dataPacket.portnum !== Protobuf.PortNum.ROUTING_APP
+    ) {
+      this.queue.processAck(dataPacket.requestId);
+    }
 
     switch (dataPacket.portnum) {
       case Protobuf.PortNum.TEXT_MESSAGE_APP:
@@ -1323,10 +1171,32 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.ROUTING_APP:
+        routingPacket = Protobuf.Routing.fromBinary(dataPacket.payload);
+
         this.events.onRoutingPacket.emit({
           packet: meshPacket,
-          data: Protobuf.Routing.fromBinary(dataPacket.payload)
+          data: routingPacket
         });
+        switch (routingPacket.variant.oneofKind) {
+          case "errorReason":
+            this.queue.processError({
+              id: dataPacket.requestId,
+              error: routingPacket.variant.errorReason
+            });
+            break;
+          case "routeReply":
+            console.log("routeReply");
+
+            console.log(routingPacket.variant.routeReply);
+
+            break;
+          case "routeRequest":
+            console.log("routeRequest");
+
+            console.log(routingPacket.variant.routeRequest);
+
+            break;
+        }
         break;
 
       case Protobuf.PortNum.ADMIN_APP:

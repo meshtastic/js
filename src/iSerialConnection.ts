@@ -64,14 +64,7 @@ export class ISerialConnection extends IMeshDevice {
         .read()
         .then(({ value }) => {
           if (value) {
-            void this.handleFromRadio({ fromRadio: value }).catch(
-              (e: Error) => {
-                this.log.info(
-                  Types.Emitter[Types.Emitter.readFromRadio],
-                  `Device errored or disconnected: ${e.message}`
-                );
-              }
-            );
+            this.handleFromRadio({ fromRadio: value });
           }
         })
         .catch(() => {
