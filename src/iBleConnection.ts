@@ -48,8 +48,10 @@ export class IBLEConnection extends IMeshDevice {
     this.userInitiatedDisconnect = false;
     // this.pendingRead = false;
 
-    this.log.debug(Types.Emitter[Types.Emitter.constructor],
-      `🔷 iBleConnection instantiated`)
+    this.log.debug(
+      Types.Emitter[Types.Emitter.constructor],
+      `🔷 iBleConnection instantiated`
+    );
   }
 
   /**

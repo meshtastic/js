@@ -31,8 +31,10 @@ export class IHTTPConnection extends IMeshDevice {
     this.peningRequest = false;
     this.abortController = new AbortController();
 
-    this.log.debug(Types.Emitter[Types.Emitter.constructor],
-      `🔷 iHttpConnection instantiated`)
+    this.log.debug(
+      Types.Emitter[Types.Emitter.constructor],
+      `🔷 iHttpConnection instantiated`
+    );
   }
 
   /**

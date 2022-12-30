@@ -1,4 +1,3 @@
-import { SubEvent } from "sub-events";
 import { Logger } from "tslog";
 
 import { broadCastNum, minFwVer } from "./constants.js";
@@ -29,6 +28,7 @@ import {
   shutdownProps,
   updateDeviceStatusProps
 } from "./types.js";
+import { EventSystem } from "./utils/eventSystem.js";
 import { Queue } from "./utils/queue.js";
 
 /** Base class for connection methods to extend */
@@ -60,6 +60,8 @@ export abstract class IMeshDevice {
    */
   public queue: Queue;
 
+  public events: EventSystem;
+
   constructor(configId?: number) {
     this.log = new Logger({ name: "iMeshDevice" });
 
@@ -69,8 +71,9 @@ export abstract class IMeshDevice {
     this.myNodeInfo = Protobuf.MyNodeInfo.create();
     this.configId = configId ?? this.generateRandId();
     this.queue = new Queue();
+    this.events = new EventSystem();
 
-    this.onDeviceStatus.subscribe((status) => {
+    this.events.onDeviceStatus.subscribe((status) => {
       this.deviceStatus = status;
       if (status === Types.DeviceStatusEnum.DEVICE_CONFIGURED)
         this.isConfigured = true;
@@ -78,11 +81,11 @@ export abstract class IMeshDevice {
         this.isConfigured = false;
     });
 
-    this.onMyNodeInfo.subscribe((myNodeInfo) => {
+    this.events.onMyNodeInfo.subscribe((myNodeInfo) => {
       this.myNodeInfo = myNodeInfo;
     });
 
-    this.onPendingSettingsChange.subscribe((state) => {
+    this.events.onPendingSettingsChange.subscribe((state) => {
       this.pendingSettingsChanges = state;
     });
   }
@@ -100,224 +103,6 @@ export abstract class IMeshDevice {
 
   /** Abstract method that pings the radio */
   protected abstract ping(): Promise<boolean>;
-
-  /**
-   * Fires when a new FromRadio message has been received from the device
-   *
-   * @event onLogEvent
-   */
-  public readonly onLogEvent = new SubEvent<Types.LogEventPacket>();
-
-  /**
-   * Fires when a new FromRadio message has been received from the device
-   *
-   * @event onFromRadio
-   */
-  public readonly onFromRadio = new SubEvent<Protobuf.FromRadio>();
-
-  /**
-   * Fires when a new FromRadio message containing a Data packet has been
-   * received from the device
-   *
-   * @event onMeshPacket
-   */
-  public readonly onMeshPacket = new SubEvent<Protobuf.MeshPacket>();
-
-  /**
-   * Fires when a new MyNodeInfo message has been received from the device
-   *
-   * @event onMyNodeInfo
-   */
-  public readonly onMyNodeInfo = new SubEvent<Protobuf.MyNodeInfo>();
-
-  /**
-   * Fires when a new MeshPacket message containing a NodeInfo packet has been
-   * received from device
-   *
-   * @event onNodeInfoPacket
-   */
-  public readonly onNodeInfoPacket = new SubEvent<Types.NodeInfoPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a User packet has been
-   * received from device
-   *
-   * @event onUserPacket
-   */
-  public readonly onUserPacket = new SubEvent<Types.UserPacket>();
-
-  /**
-   * Fires when a new Channel message is recieved
-   *
-   * @event onChannelPacket
-   */
-  public readonly onChannelPacket = new SubEvent<Types.ChannelPacket>();
-
-  /**
-   * Fires when a new Config message is recieved
-   *
-   * @event onConfigPacket
-   */
-  public readonly onConfigPacket = new SubEvent<Types.ConfigPacket>();
-
-  /**
-   * Fires when a new ModuleConfig message is recieved
-   *
-   * @event onModuleConfigPacket
-   */
-  public readonly onModuleConfigPacket =
-    new SubEvent<Types.ModuleConfigPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Ping packet has been
-   * received from device
-   *
-   * @event onPingPacket
-   */
-  public readonly onPingPacket = new SubEvent<Types.PingPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a IP Tunnel packet has been
-   * received from device
-   *
-   * @event onIpTunnelPacket
-   */
-
-  public readonly onIpTunnelPacket = new SubEvent<Types.IpTunnelPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Serial packet has been
-   * received from device
-   *
-   * @event onSerialPacket
-   */
-
-  public readonly onSerialPacket = new SubEvent<Types.SerialPacket>();
-  /**
-   * Fires when a new MeshPacket message containing a Store and Forward packet
-   * has been received from device
-   *
-   * @event onStoreForwardPacket
-   */
-  public readonly onStoreForwardPacket =
-    new SubEvent<Types.StoreForwardPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Store and Forward packet
-   * has been received from device
-   *
-   * @event onRangeTestPacket
-   */
-  public readonly onRangeTestPacket = new SubEvent<Types.RangeTestPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Telemetry packet has been
-   * received from device
-   *
-   * @event onTelemetryPacket
-   */
-  public readonly onTelemetryPacket = new SubEvent<Types.TelemetryPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Private packet has been
-   * received from device
-   *
-   * @event onPrivatePacket
-   */
-  public readonly onPrivatePacket = new SubEvent<Types.PrivatePacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a ATAK packet has been
-   * received from device
-   *
-   * @event onAtakPacket
-   */
-  public readonly onAtakPacket = new SubEvent<Types.AtakPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Routing packet has been
-   * received from device
-   *
-   * @event onRoutingPacket
-   */
-  public readonly onRoutingPacket = new SubEvent<Types.RoutingPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Position packet has been
-   * received from device
-   *
-   * @event onPositionPacket
-   */
-  public readonly onPositionPacket = new SubEvent<Types.PositionPacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Text packet has been
-   * received from device
-   *
-   * @event onMessagePacket
-   */
-  public readonly onMessagePacket = new SubEvent<Types.MessagePacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Remote Hardware packet has
-   * been received from device
-   *
-   * @event onRemoteHardwarePacket
-   */
-  public readonly onRemoteHardwarePacket =
-    new SubEvent<Types.RemoteHardwarePacket>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Waypoint packet has been
-   * received from device
-   *
-   * @event onWaypointPacket
-   */
-  public readonly onWaypointPacket = new SubEvent<Types.WaypointPacket>();
-
-  /**
-   * Fires when the devices connection or configuration status changes
-   *
-   * @event onDeviceStatus
-   */
-  public readonly onDeviceStatus = new SubEvent<Types.DeviceStatusEnum>();
-
-  /**
-   * Fires when a new FromRadio message containing a LogRecord packet has been
-   * received from device
-   *
-   * @event onLogRecord
-   */
-  public readonly onLogRecord = new SubEvent<Protobuf.LogRecord>();
-
-  /**
-   * Fires when the device receives a meshPacket, returns a timestamp
-   *
-   * @event onMeshHeartbeat
-   */
-  public readonly onMeshHeartbeat = new SubEvent<Date>();
-
-  /**
-   * Outputs any debug log data (currently serial connections only)
-   *
-   * @event onDeviceDebugLog
-   */
-  public readonly onDeviceDebugLog = new SubEvent<Uint8Array>();
-
-  /**
-   * Fires when the device receives a Metadata packet
-   *
-   * @event onDeviceMetadataPacket
-   */
-  public readonly onDeviceMetadataPacket =
-    new SubEvent<Types.DeviceMetadataPacket>();
-
-  /**
-   * Outputs status of pending settings changes
-   *
-   * @event pendingSettingsChange
-   */
-  public readonly onPendingSettingsChange = new SubEvent<boolean>();
 
   /**
    * Sends a text over the radio
@@ -960,7 +745,7 @@ export abstract class IMeshDevice {
   }
 
   public async beginEditSettings() {
-    this.onPendingSettingsChange.emit(true);
+    this.events.onPendingSettingsChange.emit(true);
 
     const beginEditSettings = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
@@ -990,7 +775,7 @@ export abstract class IMeshDevice {
       destination: "self"
     });
 
-    this.onPendingSettingsChange.emit(false);
+    this.events.onPendingSettingsChange.emit(false);
   }
 
   /**
@@ -1221,7 +1006,7 @@ export abstract class IMeshDevice {
    */
   public updateDeviceStatus({ status }: updateDeviceStatusProps): void {
     if (status !== this.deviceStatus) {
-      this.onDeviceStatus.emit(status);
+      this.events.onDeviceStatus.emit(status);
     }
   }
 
@@ -1245,7 +1030,7 @@ export abstract class IMeshDevice {
   }: handleFromRadioProps): Promise<void> {
     const decodedMessage = Protobuf.FromRadio.fromBinary(fromRadio);
 
-    this.onFromRadio.emit(decodedMessage);
+    this.events.onFromRadio.emit(decodedMessage);
 
     /** @todo Add map here when `all=true` gets fixed. */
     switch (decodedMessage.payloadVariant.oneofKind) {
@@ -1263,7 +1048,7 @@ export abstract class IMeshDevice {
             `Device firmware outdated. Min supported: ${minFwVer} got : ${decodedMessage.payloadVariant.myInfo.firmwareVersion}`
           );
         }
-        this.onMyNodeInfo.emit(decodedMessage.payloadVariant.myInfo);
+        this.events.onMyNodeInfo.emit(decodedMessage.payloadVariant.myInfo);
         this.log.trace(
           Types.Emitter[Types.Emitter.handleFromRadio],
           "📱 Received Node info for this device"
@@ -1276,7 +1061,7 @@ export abstract class IMeshDevice {
           `📱 Received Node Info packet for node: ${decodedMessage.payloadVariant.nodeInfo.num}`
         );
 
-        this.onNodeInfoPacket.emit({
+        this.events.onNodeInfoPacket.emit({
           packet: Protobuf.MeshPacket.create({
             id: decodedMessage.id
           }),
@@ -1284,7 +1069,7 @@ export abstract class IMeshDevice {
         });
 
         if (decodedMessage.payloadVariant.nodeInfo.position) {
-          this.onPositionPacket.emit({
+          this.events.onPositionPacket.emit({
             packet: Protobuf.MeshPacket.create({
               id: decodedMessage.id,
               from: decodedMessage.payloadVariant.nodeInfo.num
@@ -1294,7 +1079,7 @@ export abstract class IMeshDevice {
         }
 
         if (decodedMessage.payloadVariant.nodeInfo.user) {
-          this.onUserPacket.emit({
+          this.events.onUserPacket.emit({
             packet: Protobuf.MeshPacket.create({
               id: decodedMessage.id,
               from: decodedMessage.payloadVariant.nodeInfo.num
@@ -1317,7 +1102,7 @@ export abstract class IMeshDevice {
           );
         }
 
-        this.onConfigPacket.emit({
+        this.events.onConfigPacket.emit({
           packet: Protobuf.MeshPacket.create({
             id: decodedMessage.id
           }),
@@ -1330,7 +1115,7 @@ export abstract class IMeshDevice {
           Types.Emitter[Types.Emitter.handleFromRadio],
           "Received onLogRecord"
         );
-        this.onLogRecord.emit(decodedMessage.payloadVariant.logRecord);
+        this.events.onLogRecord.emit(decodedMessage.payloadVariant.logRecord);
         break;
 
       case "configCompleteId":
@@ -1370,7 +1155,7 @@ export abstract class IMeshDevice {
           );
         }
 
-        this.onModuleConfigPacket.emit({
+        this.events.onModuleConfigPacket.emit({
           packet: Protobuf.MeshPacket.create({
             id: decodedMessage.id
           }),
@@ -1384,7 +1169,7 @@ export abstract class IMeshDevice {
           `🔐 Received Channel: ${decodedMessage.payloadVariant.channel.index}`
         );
 
-        this.onChannelPacket.emit({
+        this.events.onChannelPacket.emit({
           packet: Protobuf.MeshPacket.create({
             id: decodedMessage.id
           }),
@@ -1396,30 +1181,30 @@ export abstract class IMeshDevice {
 
   /** Completes all SubEvents */
   public complete(): void {
-    this.onLogEvent.cancelAll();
-    this.onFromRadio.cancelAll();
-    this.onMeshPacket.cancelAll();
-    this.onMyNodeInfo.cancelAll();
-    this.onNodeInfoPacket.cancelAll();
-    this.onUserPacket.cancelAll();
-    this.onChannelPacket.cancelAll();
-    this.onConfigPacket.cancelAll();
-    this.onModuleConfigPacket.cancelAll();
-    this.onPingPacket.cancelAll();
-    this.onIpTunnelPacket.cancelAll();
-    this.onSerialPacket.cancelAll();
-    this.onStoreForwardPacket.cancelAll();
-    this.onRangeTestPacket.cancelAll();
-    this.onTelemetryPacket.cancelAll();
-    this.onPrivatePacket.cancelAll();
-    this.onAtakPacket.cancelAll();
-    this.onRoutingPacket.cancelAll();
-    this.onPositionPacket.cancelAll();
-    this.onMessagePacket.cancelAll();
-    this.onRemoteHardwarePacket.cancelAll();
-    this.onDeviceStatus.cancelAll();
-    this.onLogRecord.cancelAll();
-    this.onMeshHeartbeat.cancelAll();
+    this.events.onLogEvent.cancelAll();
+    this.events.onFromRadio.cancelAll();
+    this.events.onMeshPacket.cancelAll();
+    this.events.onMyNodeInfo.cancelAll();
+    this.events.onNodeInfoPacket.cancelAll();
+    this.events.onUserPacket.cancelAll();
+    this.events.onChannelPacket.cancelAll();
+    this.events.onConfigPacket.cancelAll();
+    this.events.onModuleConfigPacket.cancelAll();
+    this.events.onPingPacket.cancelAll();
+    this.events.onIpTunnelPacket.cancelAll();
+    this.events.onSerialPacket.cancelAll();
+    this.events.onStoreForwardPacket.cancelAll();
+    this.events.onRangeTestPacket.cancelAll();
+    this.events.onTelemetryPacket.cancelAll();
+    this.events.onPrivatePacket.cancelAll();
+    this.events.onAtakPacket.cancelAll();
+    this.events.onRoutingPacket.cancelAll();
+    this.events.onPositionPacket.cancelAll();
+    this.events.onMessagePacket.cancelAll();
+    this.events.onRemoteHardwarePacket.cancelAll();
+    this.events.onDeviceStatus.cancelAll();
+    this.events.onLogRecord.cancelAll();
+    this.events.onMeshHeartbeat.cancelAll();
     this.queue.clear();
   }
 
@@ -1431,13 +1216,13 @@ export abstract class IMeshDevice {
   private async handleMeshPacket(
     meshPacket: Protobuf.MeshPacket
   ): Promise<void> {
-    this.onMeshPacket.emit(meshPacket);
+    this.events.onMeshPacket.emit(meshPacket);
     if (meshPacket.from !== this.myNodeInfo.myNodeNum) {
       /**
        * TODO: this shouldn't be called unless the device interracts with the
        * mesh, currently it does.
        */
-      this.onMeshHeartbeat.emit(new Date());
+      this.events.onMeshHeartbeat.emit(new Date());
     }
 
     switch (meshPacket.payloadVariant.oneofKind) {
@@ -1469,7 +1254,7 @@ export abstract class IMeshDevice {
           "📦 Received TEXT_MESSAGE_APP packet",
           new TextDecoder().decode(dataPacket.payload)
         );
-        this.onMessagePacket.emit({
+        this.events.onMessagePacket.emit({
           packet: meshPacket,
           text: new TextDecoder().decode(dataPacket.payload)
         });
@@ -1481,7 +1266,7 @@ export abstract class IMeshDevice {
           "📦 Received REMOTE_HARDWARE_APP packet",
           Protobuf.HardwareMessage.fromBinary(dataPacket.payload)
         );
-        this.onRemoteHardwarePacket.emit({
+        this.events.onRemoteHardwarePacket.emit({
           packet: meshPacket,
           data: Protobuf.HardwareMessage.fromBinary(dataPacket.payload)
         });
@@ -1493,7 +1278,7 @@ export abstract class IMeshDevice {
           "📦 Received POSITION_APP packet",
           Protobuf.Position.fromBinary(dataPacket.payload)
         );
-        this.onPositionPacket.emit({
+        this.events.onPositionPacket.emit({
           packet: meshPacket,
           data: Protobuf.Position.fromBinary(dataPacket.payload)
         });
@@ -1509,7 +1294,7 @@ export abstract class IMeshDevice {
           "📦 Received NODEINFO_APP packet",
           Protobuf.User.fromBinary(dataPacket.payload)
         );
-        this.onUserPacket.emit({
+        this.events.onUserPacket.emit({
           packet: meshPacket,
           data: Protobuf.User.fromBinary(dataPacket.payload)
         });
@@ -1521,7 +1306,7 @@ export abstract class IMeshDevice {
           "📦 Received ROUTING_APP packet",
           Protobuf.Routing.fromBinary(dataPacket.payload)
         );
-        this.onRoutingPacket.emit({
+        this.events.onRoutingPacket.emit({
           packet: meshPacket,
           data: Protobuf.Routing.fromBinary(dataPacket.payload)
         });
@@ -1539,31 +1324,31 @@ export abstract class IMeshDevice {
         );
         switch (adminMessage.payloadVariant.oneofKind) {
           case "getChannelResponse":
-            this.onChannelPacket.emit({
+            this.events.onChannelPacket.emit({
               packet: meshPacket,
               data: adminMessage.payloadVariant.getChannelResponse
             });
             break;
           case "getOwnerResponse":
-            this.onUserPacket.emit({
+            this.events.onUserPacket.emit({
               packet: meshPacket,
               data: adminMessage.payloadVariant.getOwnerResponse
             });
             break;
           case "getConfigResponse":
-            this.onConfigPacket.emit({
+            this.events.onConfigPacket.emit({
               packet: meshPacket,
               data: adminMessage.payloadVariant.getConfigResponse
             });
             break;
           case "getModuleConfigResponse":
-            this.onModuleConfigPacket.emit({
+            this.events.onModuleConfigPacket.emit({
               packet: meshPacket,
               data: adminMessage.payloadVariant.getModuleConfigResponse
             });
             break;
           case "getDeviceMetadataResponse":
-            this.onDeviceMetadataPacket.emit({
+            this.events.onDeviceMetadataPacket.emit({
               packet: meshPacket,
               data: adminMessage.payloadVariant.getDeviceMetadataResponse
             });
@@ -1593,7 +1378,7 @@ export abstract class IMeshDevice {
           "📦 Received WAYPOINT_APP packet",
           Protobuf.Waypoint.fromBinary(dataPacket.payload)
         );
-        this.onWaypointPacket.emit({
+        this.events.onWaypointPacket.emit({
           packet: meshPacket,
           data: Protobuf.Waypoint.fromBinary(dataPacket.payload)
         });
@@ -1605,7 +1390,7 @@ export abstract class IMeshDevice {
           "📦 Received REPLY_APP packet",
           dataPacket.payload
         );
-        this.onPingPacket.emit({
+        this.events.onPingPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload //TODO: decode
         });
@@ -1617,7 +1402,7 @@ export abstract class IMeshDevice {
           "📦 Received IP_TUNNEL_APP packet",
           dataPacket.payload
         );
-        this.onIpTunnelPacket.emit({
+        this.events.onIpTunnelPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
         });
@@ -1629,7 +1414,7 @@ export abstract class IMeshDevice {
           "📦 Received SERIAL_APP packet",
           dataPacket.payload
         );
-        this.onSerialPacket.emit({
+        this.events.onSerialPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
         });
@@ -1641,7 +1426,7 @@ export abstract class IMeshDevice {
           "📦 Received STORE_FORWARD_APP packet",
           dataPacket.payload
         );
-        this.onStoreForwardPacket.emit({
+        this.events.onStoreForwardPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
         });
@@ -1653,7 +1438,7 @@ export abstract class IMeshDevice {
           "📦 Received RANGE_TEST_APP packet",
           dataPacket.payload
         );
-        this.onRangeTestPacket.emit({
+        this.events.onRangeTestPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
         });
@@ -1665,7 +1450,7 @@ export abstract class IMeshDevice {
           "📦 Received TELEMETRY_APP packet",
           Protobuf.Telemetry.fromBinary(dataPacket.payload)
         );
-        this.onTelemetryPacket.emit({
+        this.events.onTelemetryPacket.emit({
           packet: meshPacket,
           data: Protobuf.Telemetry.fromBinary(dataPacket.payload)
         });
@@ -1677,7 +1462,7 @@ export abstract class IMeshDevice {
           "📦 Received PRIVATE_APP packet",
           dataPacket.payload
         );
-        this.onPrivatePacket.emit({
+        this.events.onPrivatePacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
         });
@@ -1689,7 +1474,7 @@ export abstract class IMeshDevice {
           "📦 Received ATAK_FORWARDER packet",
           dataPacket.payload
         );
-        this.onAtakPacket.emit({
+        this.events.onAtakPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
         });
