@@ -1247,13 +1247,14 @@ export abstract class IMeshDevice {
 
   private handleDataPacket({ dataPacket, meshPacket }: handleDataPacketProps) {
     let adminMessage: Protobuf.AdminMessage | undefined = undefined;
+
+    this.log.trace(
+      Types.Emitter[Types.Emitter.handleMeshPacket],
+      `📦 Received ${Protobuf.PortNum[dataPacket.portnum]} packet`
+    );
+
     switch (dataPacket.portnum) {
       case Protobuf.PortNum.TEXT_MESSAGE_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received TEXT_MESSAGE_APP packet",
-          new TextDecoder().decode(dataPacket.payload)
-        );
         this.events.onMessagePacket.emit({
           packet: meshPacket,
           text: new TextDecoder().decode(dataPacket.payload)
@@ -1261,11 +1262,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.REMOTE_HARDWARE_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received REMOTE_HARDWARE_APP packet",
-          Protobuf.HardwareMessage.fromBinary(dataPacket.payload)
-        );
         this.events.onRemoteHardwarePacket.emit({
           packet: meshPacket,
           data: Protobuf.HardwareMessage.fromBinary(dataPacket.payload)
@@ -1273,11 +1269,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.POSITION_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received POSITION_APP packet",
-          Protobuf.Position.fromBinary(dataPacket.payload)
-        );
         this.events.onPositionPacket.emit({
           packet: meshPacket,
           data: Protobuf.Position.fromBinary(dataPacket.payload)
@@ -1285,15 +1276,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.NODEINFO_APP:
-        /**
-         * TODO: workaround for NODEINFO_APP plugin sending a User protobuf
-         * instead of a NodeInfo protobuf
-         */
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received NODEINFO_APP packet",
-          Protobuf.User.fromBinary(dataPacket.payload)
-        );
         this.events.onUserPacket.emit({
           packet: meshPacket,
           data: Protobuf.User.fromBinary(dataPacket.payload)
@@ -1301,11 +1283,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.ROUTING_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received ROUTING_APP packet",
-          Protobuf.Routing.fromBinary(dataPacket.payload)
-        );
         this.events.onRoutingPacket.emit({
           packet: meshPacket,
           data: Protobuf.Routing.fromBinary(dataPacket.payload)
@@ -1314,14 +1291,6 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.ADMIN_APP:
         adminMessage = Protobuf.AdminMessage.fromBinary(dataPacket.payload);
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          `📦 Received ADMIN_APP packet of variant ${
-            //change
-            adminMessage.payloadVariant.oneofKind ?? "UNK"
-          }`,
-          adminMessage
-        );
         switch (adminMessage.payloadVariant.oneofKind) {
           case "getChannelResponse":
             this.events.onChannelPacket.emit({
@@ -1365,19 +1334,9 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.TEXT_MESSAGE_COMPRESSED_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received TEXT_MESSAGE_COMPRESSED_APP packet",
-          dataPacket.payload
-        );
         break;
 
       case Protobuf.PortNum.WAYPOINT_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received WAYPOINT_APP packet",
-          Protobuf.Waypoint.fromBinary(dataPacket.payload)
-        );
         this.events.onWaypointPacket.emit({
           packet: meshPacket,
           data: Protobuf.Waypoint.fromBinary(dataPacket.payload)
@@ -1385,11 +1344,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.REPLY_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received REPLY_APP packet",
-          dataPacket.payload
-        );
         this.events.onPingPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload //TODO: decode
@@ -1397,11 +1351,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.IP_TUNNEL_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received IP_TUNNEL_APP packet",
-          dataPacket.payload
-        );
         this.events.onIpTunnelPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
@@ -1409,11 +1358,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.SERIAL_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received SERIAL_APP packet",
-          dataPacket.payload
-        );
         this.events.onSerialPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
@@ -1421,11 +1365,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.STORE_FORWARD_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received STORE_FORWARD_APP packet",
-          dataPacket.payload
-        );
         this.events.onStoreForwardPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
@@ -1433,11 +1372,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.RANGE_TEST_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received RANGE_TEST_APP packet",
-          dataPacket.payload
-        );
         this.events.onRangeTestPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
@@ -1445,11 +1379,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.TELEMETRY_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received TELEMETRY_APP packet",
-          Protobuf.Telemetry.fromBinary(dataPacket.payload)
-        );
         this.events.onTelemetryPacket.emit({
           packet: meshPacket,
           data: Protobuf.Telemetry.fromBinary(dataPacket.payload)
@@ -1457,11 +1386,6 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.PRIVATE_APP:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received PRIVATE_APP packet",
-          dataPacket.payload
-        );
         this.events.onPrivatePacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
@@ -1469,25 +1393,10 @@ export abstract class IMeshDevice {
         break;
 
       case Protobuf.PortNum.ATAK_FORWARDER:
-        this.log.trace(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          "📦 Received ATAK_FORWARDER packet",
-          dataPacket.payload
-        );
         this.events.onAtakPacket.emit({
           packet: meshPacket,
           data: dataPacket.payload
         });
-        break;
-
-      default:
-        this.log.warn(
-          Types.Emitter[Types.Emitter.handleMeshPacket],
-          `⚠️ Received unhandled PortNum: ${
-            Protobuf.PortNum[dataPacket.portnum]
-          }`,
-          dataPacket.payload
-        );
         break;
     }
   }
