@@ -244,7 +244,7 @@ export abstract class IMeshDevice {
     if (echoResponse) {
       this.handleMeshPacket({
         ...meshPacket,
-        rxTime: new Date().getTime()
+        rxTime: new Date().getTime() / 1000
       });
     }
     return this.sendRaw({ id: meshPacket.id, toRadio });
