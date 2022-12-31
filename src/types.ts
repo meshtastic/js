@@ -54,6 +54,7 @@ export interface SerialConnectionParameters {
 export type LogEventPacket = LogEvent & { date: Date };
 
 export interface PacketMetadata<T> {
+  id: number;
   from: number;
   channel: ChannelNumber;
   data: T;

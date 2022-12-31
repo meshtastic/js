@@ -868,6 +868,7 @@ export abstract class IMeshDevice {
         //TODO: HERE
         if (decodedMessage.payloadVariant.nodeInfo.position) {
           this.events.onPositionPacket.emit({
+            id: decodedMessage.id,
             from: decodedMessage.payloadVariant.nodeInfo.num,
             channel: ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.nodeInfo.position
@@ -877,6 +878,7 @@ export abstract class IMeshDevice {
         //TODO: HERE
         if (decodedMessage.payloadVariant.nodeInfo.user) {
           this.events.onUserPacket.emit({
+            id: decodedMessage.id,
             from: decodedMessage.payloadVariant.nodeInfo.num,
             channel: ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.nodeInfo.user
@@ -1039,6 +1041,7 @@ export abstract class IMeshDevice {
     switch (dataPacket.portnum) {
       case Protobuf.PortNum.TEXT_MESSAGE_APP:
         this.events.onMessagePacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: new TextDecoder().decode(dataPacket.payload)
@@ -1047,6 +1050,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.REMOTE_HARDWARE_APP:
         this.events.onRemoteHardwarePacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: Protobuf.HardwareMessage.fromBinary(dataPacket.payload)
@@ -1055,6 +1059,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.POSITION_APP:
         this.events.onPositionPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: Protobuf.Position.fromBinary(dataPacket.payload)
@@ -1063,6 +1068,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.NODEINFO_APP:
         this.events.onUserPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: Protobuf.User.fromBinary(dataPacket.payload)
@@ -1073,6 +1079,7 @@ export abstract class IMeshDevice {
         routingPacket = Protobuf.Routing.fromBinary(dataPacket.payload);
 
         this.events.onRoutingPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: routingPacket
@@ -1116,6 +1123,7 @@ export abstract class IMeshDevice {
             break;
           case "getOwnerResponse":
             this.events.onUserPacket.emit({
+              id: meshPacket.id,
               from: meshPacket.from,
               channel: meshPacket.channel,
               data: adminMessage.payloadVariant.getOwnerResponse
@@ -1133,6 +1141,7 @@ export abstract class IMeshDevice {
             break;
           case "getDeviceMetadataResponse":
             this.events.onDeviceMetadataPacket.emit({
+              id: meshPacket.id,
               from: meshPacket.from,
               channel: meshPacket.channel,
               data: adminMessage.payloadVariant.getDeviceMetadataResponse
@@ -1154,6 +1163,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.WAYPOINT_APP:
         this.events.onWaypointPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: Protobuf.Waypoint.fromBinary(dataPacket.payload)
@@ -1162,6 +1172,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.REPLY_APP:
         this.events.onPingPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: dataPacket.payload //TODO: decode
@@ -1170,6 +1181,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.IP_TUNNEL_APP:
         this.events.onIpTunnelPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: dataPacket.payload
@@ -1178,6 +1190,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.SERIAL_APP:
         this.events.onSerialPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: dataPacket.payload
@@ -1186,6 +1199,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.STORE_FORWARD_APP:
         this.events.onStoreForwardPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: dataPacket.payload
@@ -1194,6 +1208,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.RANGE_TEST_APP:
         this.events.onRangeTestPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: dataPacket.payload
@@ -1202,6 +1217,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.TELEMETRY_APP:
         this.events.onTelemetryPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: Protobuf.Telemetry.fromBinary(dataPacket.payload)
@@ -1210,6 +1226,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.PRIVATE_APP:
         this.events.onPrivatePacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: dataPacket.payload
@@ -1218,6 +1235,7 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.ATAK_FORWARDER:
         this.events.onAtakPacket.emit({
+          id: meshPacket.id,
           from: meshPacket.from,
           channel: meshPacket.channel,
           data: dataPacket.payload
