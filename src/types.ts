@@ -55,6 +55,7 @@ export type LogEventPacket = LogEvent & { date: Date };
 
 export interface PacketMetadata<T> {
   id: number;
+  rxTime: Date;
   from: number;
   channel: ChannelNumber;
   data: T;
