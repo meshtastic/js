@@ -242,7 +242,10 @@ export abstract class IMeshDevice {
     });
 
     if (echoResponse) {
-      this.handleMeshPacket(meshPacket);
+      this.handleMeshPacket({
+        ...meshPacket,
+        rxTime: new Date().getTime()
+      });
     }
     return this.sendRaw({ id: meshPacket.id, toRadio });
   }
