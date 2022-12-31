@@ -53,99 +53,10 @@ export interface SerialConnectionParameters {
 
 export type LogEventPacket = LogEvent & { date: Date };
 
-export interface NodeInfoPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.NodeInfo;
-}
-
-export interface UserPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.User;
-}
-
-export interface RoutingPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.Routing;
-}
-
-export interface PositionPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.Position;
-}
-
-export interface MessagePacket {
-  packet: Protobuf.MeshPacket;
-  text: string;
-}
-
-export interface PingPacket {
-  packet: Protobuf.MeshPacket;
-  data: Uint8Array;
-}
-
-export interface IpTunnelPacket {
-  packet: Protobuf.MeshPacket;
-  data: Uint8Array;
-}
-
-export interface SerialPacket {
-  packet: Protobuf.MeshPacket;
-  data: Uint8Array;
-}
-
-export interface StoreForwardPacket {
-  packet: Protobuf.MeshPacket;
-  data: Uint8Array;
-}
-
-export interface RangeTestPacket {
-  packet: Protobuf.MeshPacket;
-  data: Uint8Array;
-}
-
-export interface TelemetryPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.Telemetry;
-}
-
-export interface PrivatePacket {
-  packet: Protobuf.MeshPacket;
-  data: Uint8Array;
-}
-
-export interface AtakPacket {
-  packet: Protobuf.MeshPacket;
-  data: Uint8Array;
-}
-
-export interface RemoteHardwarePacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.HardwareMessage;
-}
-
-export interface ChannelPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.Channel;
-}
-
-export interface ConfigPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.Config;
-}
-
-export interface ModuleConfigPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.ModuleConfig;
-}
-
-export interface DeviceMetadataPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.DeviceMetadata;
-}
-
-export interface WaypointPacket {
-  packet: Protobuf.MeshPacket;
-  data: Protobuf.Waypoint;
+export interface PacketMetadata<T> {
+  from: number;
+  channel: ChannelNumber;
+  data: T;
 }
 
 export enum EmitterScope {

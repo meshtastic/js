@@ -3,6 +3,7 @@ import { Logger } from "tslog";
 import { broadCastNum, minFwVer } from "./constants.js";
 import { Protobuf, Types } from "./index.js";
 import {
+  ChannelNumber,
   clearChannelProps,
   getChannelProps,
   getConfigProps,
@@ -829,7 +830,6 @@ export abstract class IMeshDevice {
    */
   protected handleFromRadio({ fromRadio }: handleFromRadioProps): void {
     const decodedMessage = Protobuf.FromRadio.fromBinary(fromRadio);
-
     this.events.onFromRadio.emit(decodedMessage);
 
     /** @todo Add map here when `all=true` gets fixed. */
@@ -861,29 +861,24 @@ export abstract class IMeshDevice {
           `📱 Received Node Info packet for node: ${decodedMessage.payloadVariant.nodeInfo.num}`
         );
 
-        this.events.onNodeInfoPacket.emit({
-          packet: Protobuf.MeshPacket.create({
-            id: decodedMessage.id
-          }),
-          data: decodedMessage.payloadVariant.nodeInfo
-        });
+        this.events.onNodeInfoPacket.emit(
+          decodedMessage.payloadVariant.nodeInfo
+        );
 
+        //TODO: HERE
         if (decodedMessage.payloadVariant.nodeInfo.position) {
           this.events.onPositionPacket.emit({
-            packet: Protobuf.MeshPacket.create({
-              id: decodedMessage.id,
-              from: decodedMessage.payloadVariant.nodeInfo.num
-            }),
+            from: decodedMessage.payloadVariant.nodeInfo.num,
+            channel: ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.nodeInfo.position
           });
         }
 
+        //TODO: HERE
         if (decodedMessage.payloadVariant.nodeInfo.user) {
           this.events.onUserPacket.emit({
-            packet: Protobuf.MeshPacket.create({
-              id: decodedMessage.id,
-              from: decodedMessage.payloadVariant.nodeInfo.num
-            }),
+            from: decodedMessage.payloadVariant.nodeInfo.num,
+            channel: ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.nodeInfo.user
           });
         }
@@ -902,12 +897,7 @@ export abstract class IMeshDevice {
           );
         }
 
-        this.events.onConfigPacket.emit({
-          packet: Protobuf.MeshPacket.create({
-            id: decodedMessage.id
-          }),
-          data: decodedMessage.payloadVariant.config
-        });
+        this.events.onConfigPacket.emit(decodedMessage.payloadVariant.config);
         break;
 
       case "logRecord":
@@ -957,12 +947,9 @@ export abstract class IMeshDevice {
           );
         }
 
-        this.events.onModuleConfigPacket.emit({
-          packet: Protobuf.MeshPacket.create({
-            id: decodedMessage.id
-          }),
-          data: decodedMessage.payloadVariant.moduleConfig
-        });
+        this.events.onModuleConfigPacket.emit(
+          decodedMessage.payloadVariant.moduleConfig
+        );
         break;
 
       case "channel":
@@ -971,12 +958,7 @@ export abstract class IMeshDevice {
           `🔐 Received Channel: ${decodedMessage.payloadVariant.channel.index}`
         );
 
-        this.events.onChannelPacket.emit({
-          packet: Protobuf.MeshPacket.create({
-            id: decodedMessage.id
-          }),
-          data: decodedMessage.payloadVariant.channel
-        });
+        this.events.onChannelPacket.emit(decodedMessage.payloadVariant.channel);
         break;
     }
   }
@@ -1027,7 +1009,7 @@ export abstract class IMeshDevice {
 
     switch (meshPacket.payloadVariant.oneofKind) {
       case "decoded":
-        this.handleDataPacket({
+        this.handleDecodedPacket({
           dataPacket: meshPacket.payloadVariant.decoded,
           meshPacket
         });
@@ -1042,7 +1024,10 @@ export abstract class IMeshDevice {
     }
   }
 
-  private handleDataPacket({ dataPacket, meshPacket }: handleDataPacketProps) {
+  private handleDecodedPacket({
+    dataPacket,
+    meshPacket
+  }: handleDataPacketProps) {
     let adminMessage: Protobuf.AdminMessage | undefined = undefined;
     let routingPacket: Protobuf.Routing | undefined = undefined;
 
@@ -1054,28 +1039,32 @@ export abstract class IMeshDevice {
     switch (dataPacket.portnum) {
       case Protobuf.PortNum.TEXT_MESSAGE_APP:
         this.events.onMessagePacket.emit({
-          packet: meshPacket,
-          text: new TextDecoder().decode(dataPacket.payload)
+          from: meshPacket.from,
+          channel: meshPacket.channel,
+          data: new TextDecoder().decode(dataPacket.payload)
         });
         break;
 
       case Protobuf.PortNum.REMOTE_HARDWARE_APP:
         this.events.onRemoteHardwarePacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: Protobuf.HardwareMessage.fromBinary(dataPacket.payload)
         });
         break;
 
       case Protobuf.PortNum.POSITION_APP:
         this.events.onPositionPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: Protobuf.Position.fromBinary(dataPacket.payload)
         });
         break;
 
       case Protobuf.PortNum.NODEINFO_APP:
         this.events.onUserPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: Protobuf.User.fromBinary(dataPacket.payload)
         });
         break;
@@ -1084,7 +1073,8 @@ export abstract class IMeshDevice {
         routingPacket = Protobuf.Routing.fromBinary(dataPacket.payload);
 
         this.events.onRoutingPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: routingPacket
         });
         switch (routingPacket.variant.oneofKind) {
@@ -1120,32 +1110,31 @@ export abstract class IMeshDevice {
         adminMessage = Protobuf.AdminMessage.fromBinary(dataPacket.payload);
         switch (adminMessage.payloadVariant.oneofKind) {
           case "getChannelResponse":
-            this.events.onChannelPacket.emit({
-              packet: meshPacket,
-              data: adminMessage.payloadVariant.getChannelResponse
-            });
+            this.events.onChannelPacket.emit(
+              adminMessage.payloadVariant.getChannelResponse
+            );
             break;
           case "getOwnerResponse":
             this.events.onUserPacket.emit({
-              packet: meshPacket,
+              from: meshPacket.from,
+              channel: meshPacket.channel,
               data: adminMessage.payloadVariant.getOwnerResponse
             });
             break;
           case "getConfigResponse":
-            this.events.onConfigPacket.emit({
-              packet: meshPacket,
-              data: adminMessage.payloadVariant.getConfigResponse
-            });
+            this.events.onConfigPacket.emit(
+              adminMessage.payloadVariant.getConfigResponse
+            );
             break;
           case "getModuleConfigResponse":
-            this.events.onModuleConfigPacket.emit({
-              packet: meshPacket,
-              data: adminMessage.payloadVariant.getModuleConfigResponse
-            });
+            this.events.onModuleConfigPacket.emit(
+              adminMessage.payloadVariant.getModuleConfigResponse
+            );
             break;
           case "getDeviceMetadataResponse":
             this.events.onDeviceMetadataPacket.emit({
-              packet: meshPacket,
+              from: meshPacket.from,
+              channel: meshPacket.channel,
               data: adminMessage.payloadVariant.getDeviceMetadataResponse
             });
             break;
@@ -1165,63 +1154,72 @@ export abstract class IMeshDevice {
 
       case Protobuf.PortNum.WAYPOINT_APP:
         this.events.onWaypointPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: Protobuf.Waypoint.fromBinary(dataPacket.payload)
         });
         break;
 
       case Protobuf.PortNum.REPLY_APP:
         this.events.onPingPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: dataPacket.payload //TODO: decode
         });
         break;
 
       case Protobuf.PortNum.IP_TUNNEL_APP:
         this.events.onIpTunnelPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: dataPacket.payload
         });
         break;
 
       case Protobuf.PortNum.SERIAL_APP:
         this.events.onSerialPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: dataPacket.payload
         });
         break;
 
       case Protobuf.PortNum.STORE_FORWARD_APP:
         this.events.onStoreForwardPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: dataPacket.payload
         });
         break;
 
       case Protobuf.PortNum.RANGE_TEST_APP:
         this.events.onRangeTestPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: dataPacket.payload
         });
         break;
 
       case Protobuf.PortNum.TELEMETRY_APP:
         this.events.onTelemetryPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: Protobuf.Telemetry.fromBinary(dataPacket.payload)
         });
         break;
 
       case Protobuf.PortNum.PRIVATE_APP:
         this.events.onPrivatePacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: dataPacket.payload
         });
         break;
 
       case Protobuf.PortNum.ATAK_FORWARDER:
         this.events.onAtakPacket.emit({
-          packet: meshPacket,
+          from: meshPacket.from,
+          channel: meshPacket.channel,
           data: dataPacket.payload
         });
         break;

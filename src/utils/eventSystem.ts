@@ -1,5 +1,6 @@
 import { SubEvent } from "sub-events";
 import { Protobuf, Types } from "../index.js";
+import { PacketMetadata } from "../types.js";
 
 export class EventSystem {
   /**
@@ -37,7 +38,7 @@ export class EventSystem {
    *
    * @event onNodeInfoPacket
    */
-  public readonly onNodeInfoPacket = new SubEvent<Types.NodeInfoPacket>();
+  public readonly onNodeInfoPacket = new SubEvent<Protobuf.NodeInfo>();
 
   /**
    * Fires when a new MeshPacket message containing a User packet has been
@@ -45,29 +46,28 @@ export class EventSystem {
    *
    * @event onUserPacket
    */
-  public readonly onUserPacket = new SubEvent<Types.UserPacket>();
+  public readonly onUserPacket = new SubEvent<PacketMetadata<Protobuf.User>>();
 
   /**
    * Fires when a new Channel message is recieved
    *
    * @event onChannelPacket
    */
-  public readonly onChannelPacket = new SubEvent<Types.ChannelPacket>();
+  public readonly onChannelPacket = new SubEvent<Protobuf.Channel>();
 
   /**
    * Fires when a new Config message is recieved
    *
    * @event onConfigPacket
    */
-  public readonly onConfigPacket = new SubEvent<Types.ConfigPacket>();
+  public readonly onConfigPacket = new SubEvent<Protobuf.Config>();
 
   /**
    * Fires when a new ModuleConfig message is recieved
    *
    * @event onModuleConfigPacket
    */
-  public readonly onModuleConfigPacket =
-    new SubEvent<Types.ModuleConfigPacket>();
+  public readonly onModuleConfigPacket = new SubEvent<Protobuf.ModuleConfig>();
 
   /**
    * Fires when a new MeshPacket message containing a Ping packet has been
@@ -75,7 +75,7 @@ export class EventSystem {
    *
    * @event onPingPacket
    */
-  public readonly onPingPacket = new SubEvent<Types.PingPacket>();
+  public readonly onPingPacket = new SubEvent<PacketMetadata<Uint8Array>>();
 
   /**
    * Fires when a new MeshPacket message containing a IP Tunnel packet has been
@@ -84,7 +84,7 @@ export class EventSystem {
    * @event onIpTunnelPacket
    */
 
-  public readonly onIpTunnelPacket = new SubEvent<Types.IpTunnelPacket>();
+  public readonly onIpTunnelPacket = new SubEvent<PacketMetadata<Uint8Array>>();
 
   /**
    * Fires when a new MeshPacket message containing a Serial packet has been
@@ -93,15 +93,16 @@ export class EventSystem {
    * @event onSerialPacket
    */
 
-  public readonly onSerialPacket = new SubEvent<Types.SerialPacket>();
+  public readonly onSerialPacket = new SubEvent<PacketMetadata<Uint8Array>>();
   /**
    * Fires when a new MeshPacket message containing a Store and Forward packet
    * has been received from device
    *
    * @event onStoreForwardPacket
    */
-  public readonly onStoreForwardPacket =
-    new SubEvent<Types.StoreForwardPacket>();
+  public readonly onStoreForwardPacket = new SubEvent<
+    PacketMetadata<Uint8Array>
+  >();
 
   /**
    * Fires when a new MeshPacket message containing a Store and Forward packet
@@ -109,7 +110,9 @@ export class EventSystem {
    *
    * @event onRangeTestPacket
    */
-  public readonly onRangeTestPacket = new SubEvent<Types.RangeTestPacket>();
+  public readonly onRangeTestPacket = new SubEvent<
+    PacketMetadata<Uint8Array>
+  >();
 
   /**
    * Fires when a new MeshPacket message containing a Telemetry packet has been
@@ -117,7 +120,9 @@ export class EventSystem {
    *
    * @event onTelemetryPacket
    */
-  public readonly onTelemetryPacket = new SubEvent<Types.TelemetryPacket>();
+  public readonly onTelemetryPacket = new SubEvent<
+    PacketMetadata<Protobuf.Telemetry>
+  >();
 
   /**
    * Fires when a new MeshPacket message containing a Private packet has been
@@ -125,7 +130,7 @@ export class EventSystem {
    *
    * @event onPrivatePacket
    */
-  public readonly onPrivatePacket = new SubEvent<Types.PrivatePacket>();
+  public readonly onPrivatePacket = new SubEvent<PacketMetadata<Uint8Array>>();
 
   /**
    * Fires when a new MeshPacket message containing a ATAK packet has been
@@ -133,7 +138,7 @@ export class EventSystem {
    *
    * @event onAtakPacket
    */
-  public readonly onAtakPacket = new SubEvent<Types.AtakPacket>();
+  public readonly onAtakPacket = new SubEvent<PacketMetadata<Uint8Array>>();
 
   /**
    * Fires when a new MeshPacket message containing a Routing packet has been
@@ -141,7 +146,9 @@ export class EventSystem {
    *
    * @event onRoutingPacket
    */
-  public readonly onRoutingPacket = new SubEvent<Types.RoutingPacket>();
+  public readonly onRoutingPacket = new SubEvent<
+    PacketMetadata<Protobuf.Routing>
+  >();
 
   /**
    * Fires when a new MeshPacket message containing a Position packet has been
@@ -149,7 +156,9 @@ export class EventSystem {
    *
    * @event onPositionPacket
    */
-  public readonly onPositionPacket = new SubEvent<Types.PositionPacket>();
+  public readonly onPositionPacket = new SubEvent<
+    PacketMetadata<Protobuf.Position>
+  >();
 
   /**
    * Fires when a new MeshPacket message containing a Text packet has been
@@ -157,7 +166,7 @@ export class EventSystem {
    *
    * @event onMessagePacket
    */
-  public readonly onMessagePacket = new SubEvent<Types.MessagePacket>();
+  public readonly onMessagePacket = new SubEvent<PacketMetadata<string>>();
 
   /**
    * Fires when a new MeshPacket message containing a Remote Hardware packet has
@@ -165,8 +174,9 @@ export class EventSystem {
    *
    * @event onRemoteHardwarePacket
    */
-  public readonly onRemoteHardwarePacket =
-    new SubEvent<Types.RemoteHardwarePacket>();
+  public readonly onRemoteHardwarePacket = new SubEvent<
+    PacketMetadata<Protobuf.HardwareMessage>
+  >();
 
   /**
    * Fires when a new MeshPacket message containing a Waypoint packet has been
@@ -174,7 +184,9 @@ export class EventSystem {
    *
    * @event onWaypointPacket
    */
-  public readonly onWaypointPacket = new SubEvent<Types.WaypointPacket>();
+  public readonly onWaypointPacket = new SubEvent<
+    PacketMetadata<Protobuf.Waypoint>
+  >();
 
   /**
    * Fires when the devices connection or configuration status changes
@@ -210,8 +222,9 @@ export class EventSystem {
    *
    * @event onDeviceMetadataPacket
    */
-  public readonly onDeviceMetadataPacket =
-    new SubEvent<Types.DeviceMetadataPacket>();
+  public readonly onDeviceMetadataPacket = new SubEvent<
+    PacketMetadata<Protobuf.DeviceMetadata>
+  >();
 
   /**
    * Outputs status of pending settings changes

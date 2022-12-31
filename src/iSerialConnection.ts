@@ -142,7 +142,7 @@ export class ISerialConnection extends IMeshDevice {
       .open({
         baudRate
       })
-      .then(async () => {
+      .then(() => {
         if (this.port?.readable && this.port.writable) {
           this.transformer = transformHandler(
             this.log,
