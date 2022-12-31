@@ -60,7 +60,11 @@ export abstract class IMeshDevice {
   public events: EventSystem;
 
   constructor(configId?: number) {
-    this.log = new Logger({ name: "iMeshDevice" });
+    this.log = new Logger({
+      name: "iMeshDevice",
+      prettyLogTemplate:
+        "{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t[{{name}}]\t"
+    });
 
     this.deviceStatus = Types.DeviceStatusEnum.DEVICE_DISCONNECTED;
     this.isConfigured = false;
@@ -253,8 +257,7 @@ export abstract class IMeshDevice {
     } else {
       this.queue.push({
         id,
-        data: toRadio,
-        waitingAck: false
+        data: toRadio
       });
 
       await this.queue.processQueue(async (data) => {
@@ -273,38 +276,6 @@ export abstract class IMeshDevice {
   public async setConfig({ config }: setConfigProps): Promise<number> {
     this.log.debug(Types.Emitter[Types.Emitter.setConfig], `Setting config`);
 
-    let configType: Protobuf.AdminMessage_ConfigType;
-
-    switch (config.payloadVariant.oneofKind) {
-      case "device":
-        configType = Protobuf.AdminMessage_ConfigType.DEVICE_CONFIG;
-        break;
-
-      case "display":
-        configType = Protobuf.AdminMessage_ConfigType.DISPLAY_CONFIG;
-        break;
-
-      case "lora":
-        configType = Protobuf.AdminMessage_ConfigType.LORA_CONFIG;
-        break;
-
-      case "position":
-        configType = Protobuf.AdminMessage_ConfigType.POSITION_CONFIG;
-        break;
-
-      case "power":
-        configType = Protobuf.AdminMessage_ConfigType.POWER_CONFIG;
-        break;
-
-      case "network":
-        configType = Protobuf.AdminMessage_ConfigType.NETWORK_CONFIG;
-        break;
-
-      case "bluetooth":
-        configType = Protobuf.AdminMessage_ConfigType.BLUETOOTH_CONFIG;
-        break;
-    }
-
     const setRadio = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
         oneofKind: "setConfig",
@@ -318,9 +289,6 @@ export abstract class IMeshDevice {
       destination: "self",
       wantAck: true,
       wantResponse: true
-    }).then(async (id) => {
-      await this.getConfig({ configType });
-      return id;
     });
   }
 
@@ -337,43 +305,6 @@ export abstract class IMeshDevice {
       `Setting module config`
     );
 
-    let moduleConfigType: Protobuf.AdminMessage_ModuleConfigType;
-
-    switch (moduleConfig.payloadVariant.oneofKind) {
-      case "mqtt":
-        moduleConfigType = Protobuf.AdminMessage_ModuleConfigType.MQTT_CONFIG;
-        break;
-
-      case "serial":
-        moduleConfigType = Protobuf.AdminMessage_ModuleConfigType.SERIAL_CONFIG;
-        break;
-
-      case "externalNotification":
-        moduleConfigType =
-          Protobuf.AdminMessage_ModuleConfigType.EXTNOTIF_CONFIG;
-        break;
-
-      case "storeForward":
-        moduleConfigType =
-          Protobuf.AdminMessage_ModuleConfigType.STOREFORWARD_CONFIG;
-        break;
-
-      case "rangeTest":
-        moduleConfigType =
-          Protobuf.AdminMessage_ModuleConfigType.RANGETEST_CONFIG;
-        break;
-
-      case "telemetry":
-        moduleConfigType =
-          Protobuf.AdminMessage_ModuleConfigType.TELEMETRY_CONFIG;
-        break;
-
-      case "cannedMessage":
-        moduleConfigType =
-          Protobuf.AdminMessage_ModuleConfigType.CANNEDMSG_CONFIG;
-        break;
-    }
-
     const setRadio = Protobuf.AdminMessage.toBinary({
       payloadVariant: {
         oneofKind: "setModuleConfig",
@@ -387,9 +318,6 @@ export abstract class IMeshDevice {
       destination: "self",
       wantAck: true,
       wantResponse: true
-    }).then(async (id) => {
-      await this.getModuleConfig({ moduleConfigType });
-      return id;
     });
   }
 
@@ -414,9 +342,6 @@ export abstract class IMeshDevice {
       destination: "self",
       wantAck: true,
       wantResponse: true
-    }).then(async (id) => {
-      await this.getOwner();
-      return id;
     });
   }
 
@@ -444,9 +369,6 @@ export abstract class IMeshDevice {
       destination: "self",
       wantAck: true,
       wantResponse: true
-    }).then(async (id) => {
-      await this.getChannel({ index: channel.index });
-      return id;
     });
   }
 
@@ -618,9 +540,6 @@ export abstract class IMeshDevice {
       destination: "self",
       wantAck: true,
       wantResponse: true
-    }).then(async (id) => {
-      await this.getChannel({ index: channel.index });
-      return id;
     });
   }
 
@@ -835,9 +754,7 @@ export abstract class IMeshDevice {
   }
 
   /** Triggers the device configure process */
-  // TODO: Make more robust and await the sendRaw
-  public configure(): void {
-    // TODO: this not always logged
+  public configure(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.configure],
       `⚙️ Requesting device configuration`
@@ -853,9 +770,7 @@ export abstract class IMeshDevice {
       }
     });
 
-    setTimeout(() => {
-      void this.sendRaw({ id: 0, toRadio });
-    }, 200);
+    return this.sendRaw({ id: this.generateRandId(), toRadio });
   }
 
   /** Sends a trace route packet to the designated node */
@@ -934,14 +849,14 @@ export abstract class IMeshDevice {
           );
         }
         this.events.onMyNodeInfo.emit(decodedMessage.payloadVariant.myInfo);
-        this.log.trace(
+        this.log.info(
           Types.Emitter[Types.Emitter.handleFromRadio],
           "📱 Received Node info for this device"
         );
         break;
 
       case "nodeInfo":
-        this.log.trace(
+        this.log.info(
           Types.Emitter[Types.Emitter.handleFromRadio],
           `📱 Received Node Info packet for node: ${decodedMessage.payloadVariant.nodeInfo.num}`
         );
@@ -1022,7 +937,9 @@ export abstract class IMeshDevice {
         break;
 
       case "rebooted":
-        this.configure();
+        void this.configure().catch(() => {
+          // TODO: FIX, workaround for `wantConfigId` not getting acks.
+        });
         break;
 
       case "moduleConfig":
@@ -1134,13 +1051,6 @@ export abstract class IMeshDevice {
       `📦 Received ${Protobuf.PortNum[dataPacket.portnum]} packet`
     );
 
-    if (
-      dataPacket.requestId !== 0 &&
-      dataPacket.portnum !== Protobuf.PortNum.ROUTING_APP
-    ) {
-      this.queue.processAck(dataPacket.requestId);
-    }
-
     switch (dataPacket.portnum) {
       case Protobuf.PortNum.TEXT_MESSAGE_APP:
         this.events.onMessagePacket.emit({
@@ -1179,10 +1089,17 @@ export abstract class IMeshDevice {
         });
         switch (routingPacket.variant.oneofKind) {
           case "errorReason":
-            this.queue.processError({
-              id: dataPacket.requestId,
-              error: routingPacket.variant.errorReason
-            });
+            if (
+              routingPacket.variant.errorReason === Protobuf.Routing_Error.NONE
+            ) {
+              this.queue.processAck(dataPacket.requestId);
+            } else {
+              this.queue.processError({
+                id: dataPacket.requestId,
+                error: routingPacket.variant.errorReason
+              });
+            }
+
             break;
           case "routeReply":
             console.log("routeReply");

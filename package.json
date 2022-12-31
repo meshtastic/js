@@ -1,10 +1,11 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
     "build": "tsc",
+    "watch": "tsc -w",
     "generate:protobufs": "protoc --ts_out src/generated/ --ts_opt long_type_string --proto_path protobufs protobufs/*.proto",
     "generate:docs": "typedoc src/index.ts",
     "update:protobufs": "cd protobufs && git pull origin master",

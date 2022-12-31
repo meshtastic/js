@@ -72,7 +72,9 @@ export class IHTTPConnection extends IMeshDevice {
         Types.Emitter[Types.Emitter.connect],
         `Ping succeeded, starting configuration and request timer.`
       );
-      this.configure();
+      void this.configure().catch(() => {
+        // TODO: FIX, workaround for `wantConfigId` not getting acks.
+      });
       this.readLoop = setInterval(() => {
         this.readFromRadio().catch((e: Error) => {
           this.log.error(
@@ -166,7 +168,7 @@ export class IHTTPConnection extends IMeshDevice {
           readBuffer = await response.arrayBuffer();
 
           if (readBuffer.byteLength > 0) {
-            await this.handleFromRadio({
+            this.handleFromRadio({
               fromRadio: new Uint8Array(readBuffer, 0)
             });
           }

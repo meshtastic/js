@@ -142,7 +142,7 @@ export class ISerialConnection extends IMeshDevice {
       .open({
         baudRate
       })
-      .then(() => {
+      .then(async () => {
         if (this.port?.readable && this.port.writable) {
           this.transformer = transformHandler(
             this.log,
@@ -159,7 +159,9 @@ export class ISerialConnection extends IMeshDevice {
             status: Types.DeviceStatusEnum.DEVICE_CONNECTED
           });
 
-          this.configure();
+          void this.configure().catch(() => {
+            // TODO: FIX, workaround for `wantConfigId` not getting acks.
+          });
         } else {
           console.log("not readable or writable");
         }

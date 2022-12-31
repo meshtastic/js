@@ -1,10 +1,11 @@
 import { SubEvent } from "sub-events";
+import { Protobuf } from "../index.js";
 import { PacketError } from "../types.js";
 
 export interface IQueueItem {
   id: number;
   data: Uint8Array;
-  waitingAck: boolean;
+  sent: boolean;
   promise: Promise<number>;
 }
 
@@ -18,24 +19,34 @@ export class Queue {
     this.queue = [];
   }
 
-  public push(item: Omit<IQueueItem, "promise">): void {
-    const queueItem = {
+  public push(item: Omit<IQueueItem, "promise" | "sent">): void {
+    const queueItem: IQueueItem = {
       ...item,
+      sent: false,
       promise: new Promise<number>((resolve, reject) => {
         this.ackNotifier.subscribe((id) => {
-          resolve(id);
           if (item.id === id) {
-            resolve(id);
             this.remove(item.id);
+            resolve(id);
           }
         });
         this.errorNotifier.subscribe((e) => {
-          reject(e);
           if (item.id === e.id) {
-            reject(e);
             this.remove(item.id);
+            reject(e);
           }
         });
+        setTimeout(() => {
+          if (this.queue.findIndex((qi) => qi.id === item.id) !== -1) {
+            this.remove(item.id);
+            console.warn(`REMOVING PACKET THAT TIMED OUT ${item.id}`);
+
+            reject({
+              id: item.id,
+              error: Protobuf.Routing_Error.TIMEOUT
+            });
+          }
+        }, 60000);
       })
     };
     this.queue.push(queueItem);
@@ -46,14 +57,10 @@ export class Queue {
   }
 
   public processAck(id: number): void {
-    console.warn("PROCESSING ACK", id);
-    console.log(this.queue);
     this.ackNotifier.emit(id);
   }
 
   public processError(e: PacketError): void {
-    console.warn("PROCESSING ERROR", e.id);
-    console.log(this.queue);
     this.errorNotifier.emit(e);
   }
 
@@ -73,12 +80,12 @@ export class Queue {
       return;
     }
     this.locked = true;
-    while (this.queue.filter((p) => !p.waitingAck).length > 0) {
-      const item = this.queue.filter((p) => !p.waitingAck)[0];
+    while (this.queue.filter((p) => !p.sent).length > 0) {
+      const item = this.queue.filter((p) => !p.sent)[0];
       if (item) {
         await new Promise((resolve) => setTimeout(resolve, 200));
         await writeToRadio(item.data);
-        item.waitingAck = true;
+        item.sent = true;
       }
     }
     setTimeout(() => {

@@ -200,7 +200,9 @@ export class IBLEConnection extends IMeshDevice {
       status: Types.DeviceStatusEnum.DEVICE_CONNECTED
     });
 
-    this.configure();
+    void this.configure().catch(() => {
+      // TODO: FIX, workaround for `wantConfigId` not getting acks.
+    });
   }
 
   /** Disconnects from the Meshtastic device */
