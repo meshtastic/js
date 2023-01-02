@@ -120,7 +120,7 @@ export class IHTTPConnection extends IMeshDevice {
 
     let pingSuccessful = false;
 
-    await fetch(`${this.url}/hotspot-detect.html`, { signal })
+    await fetch(`${this.url}/hotspot-detect.html`, { signal, mode: 'no-cors' })
       .then(() => {
         pingSuccessful = true;
         this.updateDeviceStatus({
