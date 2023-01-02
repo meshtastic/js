@@ -823,7 +823,12 @@ export abstract class IMeshDevice {
    * @returns {number} Random packet ID
    */
   private generateRandId(): number {
-    return Math.floor(Math.random() * 1e9);
+    const seed = crypto.getRandomValues(new Uint32Array(1));
+    if (!seed[0]) {
+      throw new Error("Cannot generate CSPRN");
+    }
+
+    return Math.floor(seed[0] * Math.pow(2, -32) * 1e9);
   }
 
   /**
