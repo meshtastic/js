@@ -45,17 +45,17 @@
     "@protobuf-ts/plugin": "2.8.2",
     "@types/w3c-web-serial": "^1.0.3",
     "@types/web-bluetooth": "^0.0.16",
-    "@typescript-eslint/eslint-plugin": "^5.47.1",
-    "@typescript-eslint/parser": "^5.47.1",
+    "@typescript-eslint/eslint-plugin": "^5.48.0",
+    "@typescript-eslint/parser": "^5.48.0",
     "eslint": "^8.31.0",
-    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-prettier": "^8.6.0",
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsdoc": "^39.6.4",
     "node-protoc": "^1.0.3",
-    "prettier": "^2.8.1",
+    "prettier": "^2.8.2",
     "prettier-plugin-jsdoc": "^0.4.2",
-    "typedoc": "^0.23.23",
+    "typedoc": "^0.23.24",
     "typescript": "^4.9.4"
   }
 }
