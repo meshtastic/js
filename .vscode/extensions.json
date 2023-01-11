@@ -2,6 +2,7 @@
   "recommendations": [
     "esbenp.prettier-vscode",
     "dozerg.tsimportsorter",
-    "dbaeumer.vscode-eslint"
+    "dbaeumer.vscode-eslint",
+    "trunk.io"
   ]
 }
