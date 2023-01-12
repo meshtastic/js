@@ -31,6 +31,9 @@ jobs:
       - name: Fix file extensions
         run: node patch.js
 
+      - name: Trunk Check
+        uses: trunk-io/trunk-action@v1
+
       - name: Build Package
         run: pnpm run build
 
