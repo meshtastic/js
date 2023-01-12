@@ -667,7 +667,7 @@ export abstract class IMeshDevice {
   public async shutdown({ time }: shutdownProps): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.shutdown],
-      `🔌 Shutting down ${time > 0 ? "now" : `in ${time} seconds`}`
+      `🔌 Shutting down ${time > 2 ? "now" : `in ${time} seconds`}`
     );
 
     const shutdown = Protobuf.AdminMessage.toBinary({
