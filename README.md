@@ -29,18 +29,6 @@ pnpm add @meshtastic/meshtasticjs
 
 ## Development & Building
 
-The [Meshtastic Protobuf Definitions](https://github.com/meshtastic/protobufs/) must be pulled, this can be done via:
-
-```bash
-git submodule update --init
-```
-
-Then the type definitions need to be generated:
-
-```bash
-pnpm generate:protobufs
-```
-
 Finally the project can be built:
 
 ```bash

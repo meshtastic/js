@@ -19,9 +19,6 @@ jobs:
       - name: Install Dependencies
         run: pnpm install
 
-      - name: Generate Protobufs
-        run: pnpm generate:protobufs
-
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
 
