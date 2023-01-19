@@ -1,12 +1,12 @@
-import { Types } from "./index.js";
+import { Types } from "../index.js";
 import {
   fromNumUUID,
   fromRadioUUID,
   serviceUUID,
   toRadioUUID
-} from "./constants.js";
-import { IMeshDevice } from "./iMeshDevice.js";
-import { typedArrayToBuffer } from "./utils/general.js";
+} from "../constants.js";
+import { IMeshDevice } from "../iMeshDevice.js";
+import { typedArrayToBuffer } from "../utils/general.js";
 
 /** Allows to connect to a Meshtastic device via bluetooth */
 export class IBLEConnection extends IMeshDevice {
@@ -74,10 +74,6 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Opens browser dialog to select a device
-   *
-   * @param {RequestDeviceOptions} [filter] Filter to apply to
-   *   `navigator.bluetooth.requestDevice()`
-   * @returns {Promise<BluetoothDevice>} Returned BLE device
    */
   public getDevice(filter?: RequestDeviceOptions): Promise<BluetoothDevice> {
     return navigator.bluetooth.requestDevice(
@@ -89,24 +85,11 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Initiates the connect process to a Meshtastic device via Bluetooth
-   *
-   * @param {Types.BLEConnectionParameters} parameters Ble connection parameters
-   * @param {BluetoothDevice} parameters.device Externally obtained bluetooth
-   *   device to use
-   * @param {RequestDeviceOptions} parameters.deviceFilter Device request filter
    */
   public async connect({
     device,
     deviceFilter
   }: Types.BLEConnectionParameters): Promise<void> {
-    /** Check for API avaliability */
-    if (!navigator.bluetooth) {
-      this.log.warn(
-        Types.Emitter[Types.Emitter.connect],
-        `⚠️ This browser doesn't support the WebBluetooth API`
-      );
-    }
-
     /** Set device state to connecting */
     this.updateDeviceStatus({
       status: Types.DeviceStatusEnum.DEVICE_CONNECTING
@@ -239,7 +222,7 @@ export class IBLEConnection extends IMeshDevice {
           readBuffer = value.buffer;
 
           if (value.byteLength > 0) {
-            void this.handleFromRadio({
+            this.handleFromRadio({
               fromRadio: new Uint8Array(readBuffer, 0)
             });
           }
@@ -260,8 +243,6 @@ export class IBLEConnection extends IMeshDevice {
 
   /**
    * Sends supplied protobuf message to the radio
-   *
-   * @param {Uint8Array} data Raw bytes to send to the radio
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     await this.toRadioCharacteristic?.writeValue(typedArrayToBuffer(data));

@@ -1,3 +1,4 @@
 {
-  "tsImportSorter.configuration.sortRules": "none"
+  "editor.defaultFormatter": "trunk.io",
+  "editor.formatOnSave": true
 }

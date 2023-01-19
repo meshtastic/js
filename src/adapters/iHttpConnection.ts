@@ -1,6 +1,6 @@
-import { Types } from "./index.js";
-import { IMeshDevice } from "./iMeshDevice.js";
-import { typedArrayToBuffer } from "./utils/general.js";
+import { Types } from "../index.js";
+import { IMeshDevice } from "../iMeshDevice.js";
+import { typedArrayToBuffer } from "../utils/general.js";
 
 /** Allows to connect to a Meshtastic device over HTTP(S) */
 export class IHTTPConnection extends IMeshDevice {
@@ -39,16 +39,6 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Initiates the connect process to a Meshtastic device via HTTP(S)
-   *
-   * @param {Types.HTTPConnectionParameters} parameters Http connection
-   *   parameters
-   * @param {string} parameters.address IP/hostname to use
-   * @param {number} [parameters.fetchInterval=3000] How often to check for new
-   *   packets. Default is `3000`
-   * @param {boolean} [parameters.receiveBatchRequests=false] Should packets be
-   *   fetched individually or all at once. Default is `false`
-   * @param {boolean} [parameters.tls=false] Should TLS be used for requests.
-   *   Default is `false`
    */
   public async connect({
     address,
@@ -189,8 +179,6 @@ export class IHTTPConnection extends IMeshDevice {
 
   /**
    * Sends supplied protobuf message to the radio
-   *
-   * @param {Uint8Array} data Raw bytes to send
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     const { signal } = this.abortController;

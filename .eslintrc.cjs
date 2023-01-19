@@ -6,23 +6,19 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "plugin:@typescript-eslint/strict",
-    "plugin:jsdoc/recommended",
     "prettier"
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     tsconfigRootDir: __dirname,
-    project: ["./tsconfig.json"]
+    project: ["tsconfig.json"]
   },
-  plugins: ["@typescript-eslint", "import", "jsdoc"],
+  plugins: ["@typescript-eslint", "import"],
   root: true,
   settings: {
     "import/resolver": {
       typescript: true,
       node: true
-    },
-    jsdoc: {
-      mode: "typescript"
     }
   },
   rules: {

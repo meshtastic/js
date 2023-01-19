@@ -1,16 +1,12 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "2.0.13-0",
+  "version": "2.0.13-1",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "generate:protobufs": "protoc --ts_out src/generated/ --ts_opt long_type_string --proto_path protobufs protobufs/*.proto",
-    "generate:docs": "typedoc src/index.ts",
-    "update:protobufs": "cd protobufs && git pull origin master",
-    "format:check": "prettier --check . && eslint src/**/*.ts",
-    "format:fix": "prettier --write . && eslint --fix src/**/*.ts"
+    "generate:docs": "typedoc src/index.ts"
   },
   "keywords": [
     "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
@@ -36,25 +32,22 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@protobuf-ts/runtime": "^2.8.2",
-    "glob": "^8.0.3",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.0.0-20230114035636-d95aa4c6a33c.1",
+    "@bufbuild/protobuf": "^1.0.0",
     "sub-events": "^1.9.0",
     "tslog": "^4.7.1"
   },
   "devDependencies": {
-    "@protobuf-ts/plugin": "2.8.2",
+    "@types/node": "^18.11.18",
     "@types/w3c-web-serial": "^1.0.3",
     "@types/web-bluetooth": "^0.0.16",
-    "@typescript-eslint/eslint-plugin": "^5.48.1",
-    "@typescript-eslint/parser": "^5.48.1",
-    "eslint": "^8.31.0",
+    "@typescript-eslint/eslint-plugin": "^5.48.2",
+    "@typescript-eslint/parser": "^5.48.2",
+    "eslint": "^8.32.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-import-resolver-typescript": "^3.5.3",
-    "eslint-plugin-import": "^2.27.4",
-    "eslint-plugin-jsdoc": "^39.6.4",
-    "node-protoc": "^1.0.3",
-    "prettier": "^2.8.2",
-    "prettier-plugin-jsdoc": "^0.4.2",
+    "eslint-plugin-import": "^2.27.5",
+    "prettier": "^2.8.3",
     "typedoc": "^0.23.24",
     "typescript": "^4.9.4"
   }

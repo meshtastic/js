@@ -1,8 +1,8 @@
 import { SubEvent } from "sub-events";
 
-import { Types } from "./index.js";
-import { IMeshDevice } from "./iMeshDevice.js";
-import { transformHandler } from "./utils/transformHandler.js";
+import { Types } from "../index.js";
+import { IMeshDevice } from "../iMeshDevice.js";
+import { transformHandler } from "../utils/transformHandler.js";
 
 /** Allows to connect to a Meshtastic device over WebSerial */
 export class ISerialConnection extends IMeshDevice {
@@ -45,8 +45,6 @@ export class ISerialConnection extends IMeshDevice {
 
   /**
    * Reads packets from transformed serial port steam and processes them.
-   *
-   * @param {ReadableStreamDefaultReader<Uint8Array>} reader Reader to use
    */
   private async readFromRadio(
     reader: ReadableStreamDefaultReader<Uint8Array>
@@ -83,10 +81,6 @@ export class ISerialConnection extends IMeshDevice {
 
   /**
    * Opens browsers connection dialogue to select a serial port
-   *
-   * @param {SerialPortRequestOptions} [filter] Filter to use when requesting
-   *   serial port
-   * @returns {Promise<SerialPort>} Returned SerialPort
    */
   public async getPort(filter?: SerialPortRequestOptions): Promise<SerialPort> {
     return navigator.serial.requestPort(filter);
@@ -94,29 +88,12 @@ export class ISerialConnection extends IMeshDevice {
 
   /**
    * Initiates the connect process to a Meshtastic device via Web Serial
-   *
-   * @param {Types.SerialConnectionParameters} parameters Serial connection
-   *   parameters
-   * @param {SerialPort} [parameters.port] Externally sourced serialport to
-   *   connect to
-   * @param {number} [parameters.baudRate=115200] Baud rate override. Default is
-   *   `115200`. Default is `115200`
-   * @param {boolean} [parameters.concurrentLogOutput=false] Emit extra data on
-   *   serial port as debug log data. Default is `false`
    */
   public async connect({
     port,
     baudRate = 115200,
     concurrentLogOutput = false
   }: Types.SerialConnectionParameters): Promise<void> {
-    /** Check for API avaliability */
-    if (!navigator.serial) {
-      this.log.warn(
-        Types.Emitter[Types.Emitter.connect],
-        `⚠️ This browser doesn't support the WebSerial API`
-      );
-    }
-
     /** Set device state to connecting */
     this.updateDeviceStatus({
       status: Types.DeviceStatusEnum.DEVICE_CONNECTING
@@ -196,8 +173,6 @@ export class ISerialConnection extends IMeshDevice {
 
   /**
    * Sends supplied protobuf message to the radio
-   *
-   * @param {Uint8Array} data Raw bytes to send
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     while (this.port?.writable?.locked) {
