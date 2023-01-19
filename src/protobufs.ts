@@ -14,3 +14,4 @@ export * from "@buf/meshtastic_protobufs.bufbuild_es/meshtastic/remote_hardware_
 export * from "@buf/meshtastic_protobufs.bufbuild_es/meshtastic/rtttl_pb.js";
 export * from "@buf/meshtastic_protobufs.bufbuild_es/meshtastic/storeforward_pb.js";
 export * from "@buf/meshtastic_protobufs.bufbuild_es/meshtastic/telemetry_pb.js";
+export * as native from "@bufbuild/protobuf";
