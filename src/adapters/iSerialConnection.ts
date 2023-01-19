@@ -62,7 +62,7 @@ export class ISerialConnection extends IMeshDevice {
         .read()
         .then(({ value }) => {
           if (value) {
-            this.handleFromRadio({ fromRadio: value });
+            this.handleFromRadio(value);
           }
         })
         .catch(() => {
@@ -95,9 +95,7 @@ export class ISerialConnection extends IMeshDevice {
     concurrentLogOutput = false
   }: Types.SerialConnectionParameters): Promise<void> {
     /** Set device state to connecting */
-    this.updateDeviceStatus({
-      status: Types.DeviceStatusEnum.DEVICE_CONNECTING
-    });
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
     /** Set device if specified, else request. */
     this.port = port ?? (await this.getPort());
@@ -108,9 +106,7 @@ export class ISerialConnection extends IMeshDevice {
         Types.Emitter[Types.Emitter.connect],
         "Device disconnected"
       );
-      this.updateDeviceStatus({
-        status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
-      });
+      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
       this.complete();
     });
 
@@ -132,9 +128,7 @@ export class ISerialConnection extends IMeshDevice {
 
           void this.readFromRadio(reader.getReader());
 
-          this.updateDeviceStatus({
-            status: Types.DeviceStatusEnum.DEVICE_CONNECTED
-          });
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
           void this.configure().catch(() => {
             // TODO: FIX, workaround for `wantConfigId` not getting acks.
@@ -159,9 +153,7 @@ export class ISerialConnection extends IMeshDevice {
   /** Disconnects from the serial port */
   public async disconnect(): Promise<void> {
     this.onReleaseEvent.emit(true);
-    this.updateDeviceStatus({
-      status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
-    });
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
     return Promise.resolve();
   }

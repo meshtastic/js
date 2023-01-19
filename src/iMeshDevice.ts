@@ -2,31 +2,6 @@ import { Logger } from "tslog";
 
 import { broadCastNum, minFwVer } from "./constants.js";
 import { Protobuf, Types } from "./index.js";
-import {
-  ChannelNumber,
-  clearChannelProps,
-  getChannelProps,
-  getConfigProps,
-  getMetadataProps,
-  getModuleConfigProps,
-  handleDataPacketProps,
-  handleFromRadioProps,
-  PacketMetadata,
-  rebootOTAProps,
-  rebootProps,
-  requestPositionProps,
-  sendPacketProps,
-  sendRawProps,
-  sendTextProps,
-  setChannelProps,
-  setConfigProps,
-  setModuleConfigProps,
-  setOwnerProps,
-  setPositionProps,
-  shutdownProps,
-  traceRouteProps,
-  updateDeviceStatusProps
-} from "./types.js";
 import { EventSystem } from "./utils/eventSystem.js";
 import { Queue } from "./utils/queue.js";
 
@@ -110,12 +85,12 @@ export abstract class IMeshDevice {
   /**
    * Sends a text over the radio
    */
-  public async sendText({
-    text,
-    destination,
-    wantAck,
-    channel
-  }: sendTextProps): Promise<number> {
+  public async sendText(
+    text: string,
+    destination?: Types.Destination,
+    wantAck?: boolean,
+    channel?: Types.ChannelNumber
+  ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.sendText],
       `📤 Sending message to ${destination ?? "broadcast"} on channel ${
@@ -125,24 +100,25 @@ export abstract class IMeshDevice {
 
     const enc = new TextEncoder();
 
-    return this.sendPacket({
-      byteData: enc.encode(text),
-      portNum: Protobuf.PortNum.TEXT_MESSAGE_APP,
-      destination: destination ?? "broadcast",
-      wantAck,
+    return this.sendPacket(
+      enc.encode(text),
+      Protobuf.PortNum.TEXT_MESSAGE_APP,
+      destination ?? "broadcast",
       channel,
-      echoResponse: true
-    });
+      wantAck,
+      true,
+      true
+    );
   }
 
   /**
    * Sends a text over the radio
    */
-  public sendWaypoint({
-    waypoint,
-    destination,
-    channel
-  }: Types.sendWaypointProps): Promise<number> {
+  public sendWaypoint(
+    waypoint: Protobuf.Waypoint,
+    destination: Types.Destination,
+    channel?: Types.ChannelNumber
+  ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.sendWaypoint],
       `📤 Sending waypoint to ${destination} on channel ${
@@ -150,30 +126,28 @@ export abstract class IMeshDevice {
       }`
     );
 
-    return this.sendPacket({
-      byteData: waypoint.toBinary(),
-      portNum: Protobuf.PortNum.WAYPOINT_APP,
+    return this.sendPacket(
+      waypoint.toBinary(),
+      Protobuf.PortNum.WAYPOINT_APP,
       destination,
-      wantAck: true,
-      channel,
-      echoResponse: true
-    });
+      channel
+    );
   }
 
   /**
    * Sends packet over the radio
    */
-  public async sendPacket({
-    byteData,
-    portNum,
-    destination,
-    wantAck = false,
-    channel = Types.ChannelNumber.PRIMARY,
-    wantResponse = false,
+  public async sendPacket(
+    byteData: Uint8Array,
+    portNum: Protobuf.PortNum,
+    destination: Types.Destination,
+    channel: Types.ChannelNumber = Types.ChannelNumber.PRIMARY,
+    wantAck = true,
+    wantResponse = true,
     echoResponse = false,
-    emoji = 0,
-    replyId = 0
-  }: sendPacketProps): Promise<number> {
+    replyId?: number,
+    emoji?: number
+  ): Promise<number> {
     this.log.trace(
       Types.Emitter[Types.Emitter.sendPacket],
       `📤 Sending ${Protobuf.PortNum[portNum]} to ${destination}`
@@ -216,16 +190,16 @@ export abstract class IMeshDevice {
       meshPacket.rxTime = new Date().getTime() / 1000;
       this.handleMeshPacket(meshPacket);
     }
-    return this.sendRaw({ id: meshPacket.id, toRadio: toRadio.toBinary() });
+    return this.sendRaw(toRadio.toBinary(), meshPacket.id);
   }
 
   /**
    * Sends raw packet over the radio
    */
-  public async sendRaw({
-    id = this.generateRandId(),
-    toRadio
-  }: sendRawProps): Promise<number> {
+  public async sendRaw(
+    toRadio: Uint8Array,
+    id: number = this.generateRandId()
+  ): Promise<number> {
     if (toRadio.length > 512) {
       throw new Error("Message longer than 512 bytes, it will not be sent!");
     } else {
@@ -245,7 +219,7 @@ export abstract class IMeshDevice {
   /**
    * Writes config to device
    */
-  public async setConfig({ config }: setConfigProps): Promise<number> {
+  public async setConfig(config: Protobuf.Config): Promise<number> {
     this.log.debug(Types.Emitter[Types.Emitter.setConfig], `Setting config`);
 
     const setRadio = new Protobuf.AdminMessage({
@@ -255,21 +229,19 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: setRadio.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      setRadio.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
    * Writes module config to device
    */
-  public async setModuleConfig({
-    moduleConfig
-  }: setModuleConfigProps): Promise<number> {
+  public async setModuleConfig(
+    moduleConfig: Protobuf.ModuleConfig
+  ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setModuleConfig],
       `Setting module config`
@@ -282,19 +254,17 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: setRadio.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      setRadio.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
    * Sets devices owner data
    */
-  public async setOwner({ owner }: setOwnerProps): Promise<number> {
+  public async setOwner(owner: Protobuf.User): Promise<number> {
     this.log.debug(Types.Emitter[Types.Emitter.setOwner], `Setting owner`);
 
     const setOwner = new Protobuf.AdminMessage({
@@ -304,19 +274,17 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: setOwner.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      setOwner.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
    * Sets devices ChannelSettings
    */
-  public async setChannel({ channel }: setChannelProps): Promise<number> {
+  public async setChannel(channel: Protobuf.Channel): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setChannel],
       `📻 Setting Channel: ${channel.index}`
@@ -329,29 +297,25 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: setChannel.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      setChannel.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
-  public async setPosition({ position }: setPositionProps): Promise<number> {
-    return this.sendPacket({
-      byteData: position.toBinary(),
-      portNum: Protobuf.PortNum.POSITION_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+  public async setPosition(position: Protobuf.Position): Promise<number> {
+    return this.sendPacket(
+      position.toBinary(),
+      Protobuf.PortNum.POSITION_APP,
+      "self"
+    );
   }
 
   /**
    * Gets specified channel information from the radio
    */
-  public async getChannel({ index }: getChannelProps): Promise<number> {
+  public async getChannel(index: number): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getChannel],
       `📻 Requesting Channel: ${index}`
@@ -364,20 +328,20 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: getChannelRequest.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      getChannelRequest.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
    * Gets devices config
    *   request
    */
-  public async getConfig({ configType }: getConfigProps): Promise<number> {
+  public async getConfig(
+    configType: Protobuf.AdminMessage_ConfigType
+  ): Promise<number> {
     this.log.debug(Types.Emitter[Types.Emitter.getConfig], `Requesting config`);
 
     const getRadioRequest = new Protobuf.AdminMessage({
@@ -387,21 +351,19 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: getRadioRequest.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      getRadioRequest.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
    * Gets Module config
    */
-  public async getModuleConfig({
-    moduleConfigType
-  }: getModuleConfigProps): Promise<number> {
+  public async getModuleConfig(
+    moduleConfigType: Protobuf.AdminMessage_ModuleConfigType
+  ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getModuleConfig],
       `Requesting module config`
@@ -414,13 +376,11 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: getRadioRequest.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      getRadioRequest.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /** Gets devices Owner */
@@ -434,19 +394,17 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: getOwnerRequest.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      getOwnerRequest.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
    * Gets devices metadata
    */
-  public async getMetadata({ nodeNum }: getMetadataProps): Promise<number> {
+  public async getMetadata(nodeNum: number): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getMetadata],
       `Requesting metadata from ${nodeNum}`
@@ -459,20 +417,18 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: getDeviceMetricsRequest.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: nodeNum,
-      wantAck: true,
-      channel: Types.ChannelNumber.ADMIN,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      getDeviceMetricsRequest.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      nodeNum,
+      Types.ChannelNumber.ADMIN
+    );
   }
 
   /**
    * Clears specific channel with the designated index
    */
-  public async clearChannel({ index }: clearChannelProps): Promise<number> {
+  public async clearChannel(index: number): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.clearChannel],
       `📻 Clearing Channel ${index}`
@@ -489,13 +445,11 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: setChannel.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      setChannel.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
@@ -515,13 +469,11 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: confirmSetChannel.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      confirmSetChannel.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   public async beginEditSettings(): Promise<number> {
@@ -534,11 +486,11 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: beginEditSettings.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self"
-    });
+    return this.sendPacket(
+      beginEditSettings.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   public async commitEditSettings(): Promise<number> {
@@ -551,11 +503,11 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: commitEditSettings.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self"
-    });
+    return this.sendPacket(
+      commitEditSettings.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
@@ -578,13 +530,11 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: confirmSetRadio.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      confirmSetRadio.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
@@ -604,17 +554,15 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: resetPeers.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      resetPeers.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /** Shuts down the current node after the specified amount of time has elapsed. */
-  public async shutdown({ time }: shutdownProps): Promise<number> {
+  public async shutdown(time: number): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.shutdown],
       `🔌 Shutting down ${time > 2 ? "now" : `in ${time} seconds`}`
@@ -627,17 +575,15 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: shutdown.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      shutdown.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /** Reboots the current node after the specified amount of time has elapsed. */
-  public async reboot({ time }: rebootProps): Promise<number> {
+  public async reboot(time: number): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.reboot],
       `🔌 Rebooting node ${time > 0 ? "now" : `in ${time} seconds`}`
@@ -650,20 +596,18 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: reboot.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      reboot.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /**
    * Reboots the current node into OTA mode after the specified amount of time
    * has elapsed.
    */
-  public async rebootOTA({ time }: rebootOTAProps): Promise<number> {
+  public async rebootOTA(time: number): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.rebootOTA],
       `🔌 Rebooting into OTA mode ${time > 0 ? "now" : `in ${time} seconds`}`
@@ -676,13 +620,11 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: rebootOTA.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      rebootOTA.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /** Factory resets the current node */
@@ -699,13 +641,11 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendPacket({
-      byteData: factoryReset.toBinary(),
-      portNum: Protobuf.PortNum.ADMIN_APP,
-      destination: "self",
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      factoryReset.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self"
+    );
   }
 
   /** Triggers the device configure process */
@@ -714,9 +654,7 @@ export abstract class IMeshDevice {
       Types.Emitter[Types.Emitter.configure],
       `⚙️ Requesting device configuration`
     );
-    this.updateDeviceStatus({
-      status: Types.DeviceStatusEnum.DEVICE_CONFIGURING
-    });
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
     const toRadio = new Protobuf.ToRadio({
       payloadVariant: {
@@ -725,44 +663,35 @@ export abstract class IMeshDevice {
       }
     });
 
-    return this.sendRaw({
-      id: this.generateRandId(),
-      toRadio: toRadio.toBinary()
-    });
+    return this.sendRaw(toRadio.toBinary());
   }
 
   /** Sends a trace route packet to the designated node */
-  public async traceRoute({ destination }: traceRouteProps): Promise<number> {
+  public async traceRoute(destination: number): Promise<number> {
     const routeDiscovery = new Protobuf.RouteDiscovery({
       route: []
     });
 
-    return this.sendPacket({
-      byteData: routeDiscovery.toBinary(),
-      portNum: Protobuf.PortNum.ROUTING_APP,
-      destination: destination,
-      wantAck: true,
-      wantResponse: true
-    });
+    return this.sendPacket(
+      routeDiscovery.toBinary(),
+      Protobuf.PortNum.ROUTING_APP,
+      destination
+    );
   }
 
   /** Requests position from the designated node */
-  public async requestPosition({
-    destination
-  }: requestPositionProps): Promise<number> {
-    return this.sendPacket({
-      byteData: new Uint8Array(),
-      portNum: Protobuf.PortNum.POSITION_APP,
-      destination: destination,
-      wantAck: true,
-      wantResponse: true
-    });
+  public async requestPosition(destination: number): Promise<number> {
+    return this.sendPacket(
+      new Uint8Array(),
+      Protobuf.PortNum.POSITION_APP,
+      destination
+    );
   }
 
   /**
    * Updates the device status eliminating duplicate status events
    */
-  public updateDeviceStatus({ status }: updateDeviceStatusProps): void {
+  public updateDeviceStatus(status: Types.DeviceStatusEnum): void {
     if (status !== this.deviceStatus) {
       this.events.onDeviceStatus.emit(status);
     }
@@ -786,7 +715,7 @@ export abstract class IMeshDevice {
    * Gets called whenever a fromRadio message is received from device, returns
    * fromRadio data
    */
-  protected handleFromRadio({ fromRadio }: handleFromRadioProps): void {
+  protected handleFromRadio(fromRadio: Uint8Array): void {
     const decodedMessage = Protobuf.FromRadio.fromBinary(fromRadio);
     this.events.onFromRadio.emit(decodedMessage);
 
@@ -827,7 +756,7 @@ export abstract class IMeshDevice {
             id: decodedMessage.id,
             rxTime: new Date(),
             from: decodedMessage.payloadVariant.value.num,
-            channel: ChannelNumber.PRIMARY,
+            channel: Types.ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.value.position
           });
         }
@@ -838,7 +767,7 @@ export abstract class IMeshDevice {
             id: decodedMessage.id,
             rxTime: new Date(),
             from: decodedMessage.payloadVariant.value.num,
-            channel: ChannelNumber.PRIMARY,
+            channel: Types.ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.value.user
           });
         }
@@ -881,9 +810,7 @@ export abstract class IMeshDevice {
           `⚙️ Valid config id reveived from device: ${this.configId}`
         );
 
-        this.updateDeviceStatus({
-          status: Types.DeviceStatusEnum.DEVICE_CONFIGURED
-        });
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
         break;
 
       case "rebooted":
@@ -965,10 +892,7 @@ export abstract class IMeshDevice {
 
     switch (meshPacket.payloadVariant.case) {
       case "decoded":
-        this.handleDecodedPacket({
-          dataPacket: meshPacket.payloadVariant.value,
-          meshPacket
-        });
+        this.handleDecodedPacket(meshPacket.payloadVariant.value, meshPacket);
         break;
 
       case "encrypted":
@@ -980,14 +904,14 @@ export abstract class IMeshDevice {
     }
   }
 
-  private handleDecodedPacket({
-    dataPacket,
-    meshPacket
-  }: handleDataPacketProps) {
+  private handleDecodedPacket(
+    dataPacket: Protobuf.Data,
+    meshPacket: Protobuf.MeshPacket
+  ) {
     let adminMessage: Protobuf.AdminMessage | undefined = undefined;
     let routingPacket: Protobuf.Routing | undefined = undefined;
 
-    const packetMetadata: Omit<PacketMetadata<unknown>, "data"> = {
+    const packetMetadata: Omit<Types.PacketMetadata<unknown>, "data"> = {
       id: meshPacket.id,
       rxTime: new Date(meshPacket.rxTime * 1000),
       from: meshPacket.from,

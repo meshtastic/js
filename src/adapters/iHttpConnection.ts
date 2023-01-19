@@ -46,9 +46,7 @@ export class IHTTPConnection extends IMeshDevice {
     receiveBatchRequests = false,
     tls = false
   }: Types.HTTPConnectionParameters): Promise<void> {
-    this.updateDeviceStatus({
-      status: Types.DeviceStatusEnum.DEVICE_CONNECTING
-    });
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
     this.receiveBatchRequests = receiveBatchRequests;
 
@@ -90,9 +88,7 @@ export class IHTTPConnection extends IMeshDevice {
   /** Disconnects from the Meshtastic device */
   public disconnect(): void {
     this.abortController.abort();
-    this.updateDeviceStatus({
-      status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
-    });
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     if (this.readLoop) {
       clearInterval(this.readLoop);
       this.complete();
@@ -113,16 +109,12 @@ export class IHTTPConnection extends IMeshDevice {
     await fetch(`${this.url}/hotspot-detect.html`, { signal, mode: "no-cors" })
       .then(() => {
         pingSuccessful = true;
-        this.updateDeviceStatus({
-          status: Types.DeviceStatusEnum.DEVICE_CONNECTED
-        });
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
       })
       .catch((e: Error) => {
         pingSuccessful = false;
         this.log.error(Types.Emitter[Types.Emitter.ping], `❌ ${e.message}`);
-        this.updateDeviceStatus({
-          status: Types.DeviceStatusEnum.DEVICE_RECONNECTING
-        });
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
     return pingSuccessful;
   }
@@ -151,16 +143,12 @@ export class IHTTPConnection extends IMeshDevice {
       )
         .then(async (response) => {
           this.peningRequest = false;
-          this.updateDeviceStatus({
-            status: Types.DeviceStatusEnum.DEVICE_CONNECTED
-          });
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
           readBuffer = await response.arrayBuffer();
 
           if (readBuffer.byteLength > 0) {
-            this.handleFromRadio({
-              fromRadio: new Uint8Array(readBuffer, 0)
-            });
+            this.handleFromRadio(new Uint8Array(readBuffer));
           }
         })
         .catch((e: Error) => {
@@ -170,9 +158,7 @@ export class IHTTPConnection extends IMeshDevice {
             `❌ ${e.message}`
           );
 
-          this.updateDeviceStatus({
-            status: Types.DeviceStatusEnum.DEVICE_RECONNECTING
-          });
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
         });
     }
   }
@@ -192,9 +178,7 @@ export class IHTTPConnection extends IMeshDevice {
       body: typedArrayToBuffer(data)
     })
       .then(async () => {
-        this.updateDeviceStatus({
-          status: Types.DeviceStatusEnum.DEVICE_CONNECTED
-        });
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
         await this.readFromRadio().catch((e: Error) => {
           this.log.error(
@@ -208,9 +192,7 @@ export class IHTTPConnection extends IMeshDevice {
           Types.Emitter[Types.Emitter.writeToRadio],
           `❌ ${e.message}`
         );
-        this.updateDeviceStatus({
-          status: Types.DeviceStatusEnum.DEVICE_RECONNECTING
-        });
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });
   }
 }

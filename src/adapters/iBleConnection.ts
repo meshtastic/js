@@ -91,9 +91,7 @@ export class IBLEConnection extends IMeshDevice {
     deviceFilter
   }: Types.BLEConnectionParameters): Promise<void> {
     /** Set device state to connecting */
-    this.updateDeviceStatus({
-      status: Types.DeviceStatusEnum.DEVICE_CONNECTING
-    });
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
     /** Set device if specified, else request. */
     this.device = device ?? (await this.getDevice(deviceFilter));
@@ -104,9 +102,7 @@ export class IBLEConnection extends IMeshDevice {
         Types.Emitter[Types.Emitter.connect],
         "Device disconnected"
       );
-      this.updateDeviceStatus({
-        status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
-      });
+      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
       this.complete();
     });
 
@@ -179,9 +175,7 @@ export class IBLEConnection extends IMeshDevice {
       }
     );
 
-    this.updateDeviceStatus({
-      status: Types.DeviceStatusEnum.DEVICE_CONNECTED
-    });
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
     void this.configure().catch(() => {
       // TODO: FIX, workaround for `wantConfigId` not getting acks.
@@ -192,9 +186,7 @@ export class IBLEConnection extends IMeshDevice {
   public disconnect(): void {
     this.userInitiatedDisconnect = true;
     this.device?.gatt?.disconnect();
-    this.updateDeviceStatus({
-      status: Types.DeviceStatusEnum.DEVICE_DISCONNECTED
-    });
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
   }
 
@@ -222,13 +214,9 @@ export class IBLEConnection extends IMeshDevice {
           readBuffer = value.buffer;
 
           if (value.byteLength > 0) {
-            this.handleFromRadio({
-              fromRadio: new Uint8Array(readBuffer, 0)
-            });
+            this.handleFromRadio(new Uint8Array(readBuffer));
           }
-          this.updateDeviceStatus({
-            status: Types.DeviceStatusEnum.DEVICE_CONNECTED
-          });
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
         })
         .catch((e: Error) => {
           readBuffer = new ArrayBuffer(0);

@@ -127,91 +127,9 @@ export type ConnectionType =
   | IHTTPConnection
   | ISerialConnection;
 
-export type destination = number | "self" | "broadcast";
+export type Destination = number | "self" | "broadcast";
 
 export interface PacketError {
   id: number;
   error: Protobuf.Routing_Error;
-}
-
-export interface sendTextProps {
-  text: string;
-  destination?: destination;
-  wantAck?: boolean;
-  channel?: ChannelNumber;
-}
-export interface sendWaypointProps {
-  waypoint: Protobuf.Waypoint;
-  destination: destination;
-  channel?: ChannelNumber;
-}
-export interface sendPacketProps {
-  byteData: Uint8Array;
-  portNum: Protobuf.PortNum;
-  destination: destination;
-  wantAck?: boolean;
-  channel?: ChannelNumber;
-  wantResponse?: boolean;
-  echoResponse?: boolean;
-  emoji?: number;
-  replyId?: number;
-}
-export interface sendRawProps {
-  id?: number;
-  toRadio: Uint8Array;
-}
-export interface setConfigProps {
-  config: Protobuf.Config;
-}
-export interface setModuleConfigProps {
-  moduleConfig: Protobuf.ModuleConfig;
-}
-export interface setOwnerProps {
-  owner: Protobuf.User;
-}
-export interface setChannelProps {
-  channel: Protobuf.Channel;
-}
-export interface setPositionProps {
-  position: Protobuf.Position;
-}
-export interface getChannelProps {
-  index: number;
-}
-export interface getConfigProps {
-  configType: Protobuf.AdminMessage_ConfigType;
-}
-export interface getModuleConfigProps {
-  moduleConfigType: Protobuf.AdminMessage_ModuleConfigType;
-}
-export interface getMetadataProps {
-  nodeNum: number;
-}
-export interface clearChannelProps {
-  index: number;
-}
-export interface traceRouteProps {
-  destination: number;
-}
-export interface requestPositionProps {
-  destination: number;
-}
-export interface shutdownProps {
-  time: number;
-}
-export interface rebootProps {
-  time: number;
-}
-export interface rebootOTAProps {
-  time: number;
-}
-export interface updateDeviceStatusProps {
-  status: DeviceStatusEnum;
-}
-export interface handleFromRadioProps {
-  fromRadio: Uint8Array;
-}
-export interface handleDataPacketProps {
-  dataPacket: Protobuf.Data;
-  meshPacket: Protobuf.MeshPacket;
 }
