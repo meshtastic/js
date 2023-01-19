@@ -19,12 +19,12 @@ specifiers:
   typescript: ^4.9.4
 
 dependencies:
-  '@buf/meshtastic_protobufs.bufbuild_es': 1.0.0-20230114035636-d95aa4c6a33c.1_@bufbuild+protobuf@1.0.0
   '@bufbuild/protobuf': 1.0.0
   sub-events: 1.9.0
   tslog: 4.7.1
 
 devDependencies:
+  '@buf/meshtastic_protobufs.bufbuild_es': 1.0.0-20230114035636-d95aa4c6a33c.1_@bufbuild+protobuf@1.0.0
   '@types/node': 18.11.18
   '@types/w3c-web-serial': 1.0.3
   '@types/web-bluetooth': 0.0.16
@@ -46,11 +46,10 @@ packages:
       '@bufbuild/protobuf': ^1.0.0
     dependencies:
       '@bufbuild/protobuf': 1.0.0
-    dev: false
+    dev: true
 
   /@bufbuild/protobuf/1.0.0:
     resolution: {integrity: sha512-oH3jHBrZ6to8Qf4zLg7O8KqSY42kQZNBRXJRMp5uSi0mqE4L8NbyMnZHeOsbXmTb0xpptRyH11LfS+KeVhXzAA==}
-    dev: false
 
   /@eslint/eslintrc/1.4.1:
     resolution: {integrity: sha512-XXrH9Uarn0stsyldqDYq8r++mROmWRI1xKMXa640Bb//SY1+ECYX6VzT6Lcx5frD0V30XieqJ0oX9I2Xj5aoMA==}

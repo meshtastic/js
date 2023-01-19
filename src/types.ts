@@ -157,7 +157,7 @@ export interface sendPacketProps {
   replyId?: number;
 }
 export interface sendRawProps {
-  id: number;
+  id?: number;
   toRadio: Uint8Array;
 }
 export interface setConfigProps {

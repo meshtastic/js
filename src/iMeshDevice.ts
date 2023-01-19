@@ -222,7 +222,10 @@ export abstract class IMeshDevice {
   /**
    * Sends raw packet over the radio
    */
-  public async sendRaw({ id, toRadio }: sendRawProps): Promise<number> {
+  public async sendRaw({
+    id = this.generateRandId(),
+    toRadio
+  }: sendRawProps): Promise<number> {
     if (toRadio.length > 512) {
       throw new Error("Message longer than 512 bytes, it will not be sent!");
     } else {
