@@ -16,20 +16,11 @@ jobs:
         with:
           version: latest
 
-      - name: Setup NodeJS
-        uses: actions/setup-node@v3
-        with:
-          node-version: latest
-
       - name: Install Dependencies
         run: pnpm install
 
       - name: Generate Protobufs
         run: pnpm generate:protobufs
-
-      # Workaround
-      - name: Fix file extensions
-        run: node patch.js
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
