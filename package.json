@@ -33,8 +33,9 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@buf/meshtastic_protobufs.bufbuild_es": "1.0.0-20230114035636-d95aa4c6a33c.1",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.0.0-20230123093810-ef786e1f4e00.1",
     "@bufbuild/protobuf": "^1.0.0",
+    "crc": "^4.3.1",
     "sub-events": "^1.9.0",
     "tslog": "^4.7.1"
   },

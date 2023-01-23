@@ -4,6 +4,7 @@ import { broadCastNum, minFwVer } from "./constants.js";
 import { Protobuf, Types } from "./index.js";
 import { EventSystem } from "./utils/eventSystem.js";
 import { Queue } from "./utils/queue.js";
+import { XModem } from "./utils/xmodem.js";
 
 /** Base class for connection methods to extend */
 export abstract class IMeshDevice {
@@ -36,6 +37,8 @@ export abstract class IMeshDevice {
 
   public events: EventSystem;
 
+  public XModem: XModem;
+
   constructor(configId?: number) {
     this.log = new Logger({
       name: "iMeshDevice",
@@ -50,6 +53,7 @@ export abstract class IMeshDevice {
     this.configId = configId ?? this.generateRandId();
     this.queue = new Queue();
     this.events = new EventSystem();
+    this.XModem = new XModem(this.sendRaw.bind(this)); //TODO: try wihtout bind
 
     this.events.onDeviceStatus.subscribe((status) => {
       this.deviceStatus = status;
@@ -844,6 +848,13 @@ export abstract class IMeshDevice {
         );
 
         this.events.onChannelPacket.emit(decodedMessage.payloadVariant.value);
+        break;
+
+      case "queueStatus":
+        break;
+
+      case "xmodemPacket":
+        void this.XModem.handlePacket(decodedMessage.payloadVariant.value);
         break;
     }
   }
