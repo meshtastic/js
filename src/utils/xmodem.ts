@@ -1,5 +1,5 @@
 import { Protobuf } from "../index.js";
-import crc16 from "crc/calculators/crc16";
+import crc16ccitt from "crc/calculators/crc16ccitt";
 
 type sendRawSignature = (toRadio: Uint8Array, id?: number) => Promise<number>;
 
@@ -8,47 +8,41 @@ export class XModem {
 
   private buffer: Uint8Array;
 
-  private sequence: number;
-
-  // private filename: string = "";
-
-  // private filesize: number = 0;
-
-  // private file: Uint8Array = new Uint8Array(0);
-
-  // private crc16: number = 0;
-
-  // private control: Protobuf.XModem_Control = Protobuf.XModem_Control.NUL;
-
-  // private timeout: number = 0;
-
-  // private textDecoder = new TextDecoder();
+  private maxFileSize: number;
 
   private textEncoder = new TextEncoder();
 
   constructor(sendRaw: sendRawSignature) {
     this.sendRaw = sendRaw;
     this.buffer = new Uint8Array();
-    this.sequence = 0;
+    this.maxFileSize = 2 ^ 5;
   }
 
-  async getFile(filename: string): Promise<number> {
+  async downloadFile(filename: string): Promise<number> {
     console.log("XModem - getFile");
     console.log(filename);
 
-    const tmp = await this.sendCommand(
+    return this.sendCommand(
       Protobuf.XModem_Control.STX,
       this.textEncoder.encode(filename),
       0
     );
+  }
 
-    return tmp;
+  async uploadFile(filename: string, data: Uint8Array): Promise<number> {
+    return this.sendCommand(
+      Protobuf.XModem_Control.SOH,
+      data,
+      0,
+      crc16ccitt(data)
+    );
   }
 
   async sendCommand(
     command: Protobuf.XModem_Control,
-    buffer: Uint8Array,
-    sequence: number
+    buffer?: Uint8Array,
+    sequence?: number,
+    crc16?: number
   ): Promise<number> {
     const toRadio = new Protobuf.ToRadio({
       payloadVariant: {
@@ -56,72 +50,65 @@ export class XModem {
         value: {
           buffer,
           control: command,
-          seq: sequence
+          seq: sequence,
+          crc16: crc16
         }
       }
     });
 
-    await this.sendRaw(toRadio.toBinary());
-
-    return Promise.resolve(0);
+    return this.sendRaw(toRadio.toBinary());
   }
 
-  async handlePacket(packet: Protobuf.XModem): Promise<void> {
+  async handlePacket(packet: Protobuf.XModem): Promise<number> {
     console.log(Protobuf.XModem_Control[packet.control]);
 
     switch (packet.control) {
       case Protobuf.XModem_Control.NUL:
-        //unknown
+        // nothing
         break;
       case Protobuf.XModem_Control.SOH:
+        // start of header
         if (this.validateCRC16(packet)) {
-          console.log("Valid CRC16");
-
           this.buffer = new Uint8Array([...this.buffer, ...packet.buffer]);
-          await this.sendCommand(
-            Protobuf.XModem_Control.ACK,
-            new Uint8Array(),
-            this.sequence
-          );
-          this.sequence++;
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          return this.sendCommand(Protobuf.XModem_Control.ACK);
         } else {
           console.log("Invalid CRC16");
-          await this.sendCommand(
+          return this.sendCommand(
             Protobuf.XModem_Control.NAK,
-            new Uint8Array(),
-            this.sequence
+            undefined,
+            packet.seq
           );
         }
-        break;
       case Protobuf.XModem_Control.STX:
-        // request file
+        // start of transmission
         break;
       case Protobuf.XModem_Control.EOT:
-        // complete, emit file
+        // end of transmission
         break;
       case Protobuf.XModem_Control.ACK:
+        // next packet
         break;
       case Protobuf.XModem_Control.NAK:
+        // resend
         break;
       case Protobuf.XModem_Control.CAN:
+        // cancel
+        this.clear();
         break;
       case Protobuf.XModem_Control.CTRLZ:
+        // end of file
         break;
     }
 
-    return Promise.resolve();
+    return Promise.resolve(0);
   }
 
   validateCRC16(packet: Protobuf.XModem): boolean {
-    const crc = crc16(packet.buffer);
-    // return crc.toString(16) === packet.crc16;
-    console.log(
-      `Calculated: ${crc.toString(16)}, Received: ${packet.crc16.toString(16)}`
-    );
-    return true;
+    return crc16ccitt(packet.buffer) === packet.crc16;
   }
 
   clear() {
-    console.log("XModem - clear");
+    this.buffer = new Uint8Array();
   }
 }
