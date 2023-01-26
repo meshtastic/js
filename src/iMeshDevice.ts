@@ -226,6 +226,10 @@ export abstract class IMeshDevice {
   public async setConfig(config: Protobuf.Config): Promise<number> {
     this.log.debug(Types.Emitter[Types.Emitter.setConfig], `Setting config`);
 
+    if (!this.pendingSettingsChanges) {
+      await this.beginEditSettings();
+    }
+
     const setRadio = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "setConfig",
@@ -456,31 +460,7 @@ export abstract class IMeshDevice {
     );
   }
 
-  /**
-   * Confirms the currently set channels, and prevents changes from reverting
-   * after 10 minutes.
-   */
-  public async confirmSetChannel(): Promise<number> {
-    this.log.debug(
-      Types.Emitter[Types.Emitter.confirmSetChannel],
-      `📻 Confirming Channel config`
-    );
-
-    const confirmSetChannel = new Protobuf.AdminMessage({
-      payloadVariant: {
-        case: "confirmSetRadio",
-        value: true
-      }
-    });
-
-    return this.sendPacket(
-      confirmSetChannel.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
-      "self"
-    );
-  }
-
-  public async beginEditSettings(): Promise<number> {
+  private async beginEditSettings(): Promise<number> {
     this.events.onPendingSettingsChange.emit(true);
 
     const beginEditSettings = new Protobuf.AdminMessage({
@@ -509,33 +489,6 @@ export abstract class IMeshDevice {
 
     return this.sendPacket(
       commitEditSettings.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
-      "self"
-    );
-  }
-
-  /**
-   * Confirms the currently set config, and prevents changes from reverting
-   * after 10 minutes.
-   */
-  public async confirmSetConfig(): Promise<number> {
-    this.log.debug(
-      Types.Emitter[Types.Emitter.confirmSetConfig],
-      `Confirming config`
-    );
-    if (!this.pendingSettingsChanges) {
-      await this.beginEditSettings();
-    }
-
-    const confirmSetRadio = new Protobuf.AdminMessage({
-      payloadVariant: {
-        case: "confirmSetRadio",
-        value: true
-      }
-    });
-
-    return this.sendPacket(
-      confirmSetRadio.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
