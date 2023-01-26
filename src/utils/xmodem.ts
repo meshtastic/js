@@ -1,21 +1,22 @@
 import { Protobuf } from "../index.js";
 import crc16ccitt from "crc/calculators/crc16ccitt";
 
-type sendRawSignature = (toRadio: Uint8Array, id?: number) => Promise<number>;
+//if counter > 35 then reset counter/clear/error/reject promise
+type XModemProps = (toRadio: Uint8Array, id?: number) => Promise<number>;
 
 export class XModem {
-  private sendRaw: sendRawSignature;
+  private sendRaw: XModemProps;
+  private rxBuffer: Uint8Array[];
+  private txBuffer: Uint8Array[];
+  private textEncoder: TextEncoder;
+  private counter: number;
 
-  private buffer: Uint8Array;
-
-  private maxFileSize: number;
-
-  private textEncoder = new TextEncoder();
-
-  constructor(sendRaw: sendRawSignature) {
+  constructor(sendRaw: XModemProps) {
     this.sendRaw = sendRaw;
-    this.buffer = new Uint8Array();
-    this.maxFileSize = 2 ^ 5;
+    this.rxBuffer = [];
+    this.txBuffer = [];
+    this.textEncoder = new TextEncoder();
+    this.counter = 0;
   }
 
   async downloadFile(filename: string): Promise<number> {
@@ -30,11 +31,14 @@ export class XModem {
   }
 
   async uploadFile(filename: string, data: Uint8Array): Promise<number> {
-    return this.sendCommand(
+    for (let i = 0; i < data.length; i += 128) {
+      this.txBuffer.push(data.slice(i, i + 128));
+    }
+
+    return await this.sendCommand(
       Protobuf.XModem_Control.SOH,
-      data,
-      0,
-      crc16ccitt(data)
+      this.textEncoder.encode(filename),
+      0
     );
   }
 
@@ -55,25 +59,23 @@ export class XModem {
         }
       }
     });
-
     return this.sendRaw(toRadio.toBinary());
   }
 
   async handlePacket(packet: Protobuf.XModem): Promise<number> {
-    console.log(Protobuf.XModem_Control[packet.control]);
+    console.log(`${Protobuf.XModem_Control[packet.control]} - ${packet.seq}`);
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     switch (packet.control) {
       case Protobuf.XModem_Control.NUL:
         // nothing
         break;
       case Protobuf.XModem_Control.SOH:
-        // start of header
+        this.counter = packet.seq;
         if (this.validateCRC16(packet)) {
-          this.buffer = new Uint8Array([...this.buffer, ...packet.buffer]);
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          this.rxBuffer[this.counter] = packet.buffer;
           return this.sendCommand(Protobuf.XModem_Control.ACK);
         } else {
-          console.log("Invalid CRC16");
           return this.sendCommand(
             Protobuf.XModem_Control.NAK,
             undefined,
@@ -81,23 +83,43 @@ export class XModem {
           );
         }
       case Protobuf.XModem_Control.STX:
-        // start of transmission
         break;
       case Protobuf.XModem_Control.EOT:
+        console.log(
+          this.rxBuffer.reduce(
+            (acc: Uint8Array, curr) => new Uint8Array([...acc, ...curr])
+          )
+        );
+
         // end of transmission
         break;
       case Protobuf.XModem_Control.ACK:
-        // next packet
-        break;
+        this.counter++;
+        if (this.txBuffer[this.counter - 1]) {
+          return this.sendCommand(
+            Protobuf.XModem_Control.SOH,
+            this.txBuffer[this.counter - 1],
+            this.counter,
+            crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array())
+          );
+        } else if (this.counter === this.txBuffer.length + 1) {
+          return this.sendCommand(Protobuf.XModem_Control.EOT);
+        } else {
+          this.clear();
+          break;
+        }
       case Protobuf.XModem_Control.NAK:
-        // resend
+        return this.sendCommand(
+          Protobuf.XModem_Control.SOH,
+          this.txBuffer[this.counter],
+          this.counter,
+          crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array())
+        );
         break;
       case Protobuf.XModem_Control.CAN:
-        // cancel
         this.clear();
         break;
       case Protobuf.XModem_Control.CTRLZ:
-        // end of file
         break;
     }
 
@@ -109,6 +131,8 @@ export class XModem {
   }
 
   clear() {
-    this.buffer = new Uint8Array();
+    this.counter = 0;
+    this.rxBuffer = [];
+    this.txBuffer = [];
   }
 }
