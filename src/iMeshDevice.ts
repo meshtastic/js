@@ -191,7 +191,7 @@ export abstract class IMeshDevice {
     });
 
     if (echoResponse) {
-      meshPacket.rxTime = new Date().getTime() / 1000;
+      meshPacket.rxTime = Math.trunc(new Date().getTime() / 1000);
       this.handleMeshPacket(meshPacket);
     }
     return this.sendRaw(toRadio.toBinary(), meshPacket.id);
