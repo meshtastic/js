@@ -18,6 +18,10 @@ export class ISerialConnection extends IMeshDevice {
   /** Should locks be prevented */
   private preventLock?: boolean;
 
+  /** Unfortunately, this is currently the only way to release the lock on a stream after piping it
+   *  through a transform stream (https://stackoverflow.com/questions/71262432) */
+  private pipePromise?: Promise<void>;
+
   /**
    * Fires when `disconnect()` is called, used to instruct serial port and
    * readers to release there locks
@@ -51,9 +55,9 @@ export class ISerialConnection extends IMeshDevice {
   ): Promise<void> {
     this.onReleaseEvent.subscribe(async () => {
       this.preventLock = true;
-      await reader.cancel();
-      reader.releaseLock();
-
+      await reader.cancel();    
+      await this.pipePromise?.catch(() => {});  
+      reader.releaseLock();      
       await this.port?.close();
     });
 
@@ -124,9 +128,9 @@ export class ISerialConnection extends IMeshDevice {
             concurrentLogOutput
           );
 
-          const reader = this.port.readable.pipeThrough(this.transformer);
-
-          void this.readFromRadio(reader.getReader());
+          this.pipePromise = this.port.readable.pipeTo(this.transformer.writable);
+          const reader = this.transformer.readable.getReader();
+          void this.readFromRadio(reader);
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
