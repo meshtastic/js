@@ -110,7 +110,7 @@ export abstract class IMeshDevice {
       destination ?? "broadcast",
       channel,
       wantAck,
-      true,
+      false,
       true
     );
   }
