@@ -127,6 +127,8 @@ export type ConnectionType =
   | IHTTPConnection
   | ISerialConnection;
 
+export type ConnectionTypeName = "ble" | "http" | "serial";
+
 export type Destination = number | "self" | "broadcast";
 
 export interface PacketError {

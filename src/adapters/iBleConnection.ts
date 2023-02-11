@@ -11,7 +11,7 @@ import { typedArrayToBuffer } from "../utils/general.js";
 /** Allows to connect to a Meshtastic device via bluetooth */
 export class IBLEConnection extends IMeshDevice {
   /** Defines the connection type as ble */
-  connType: string;
+  connType: Types.ConnectionTypeName;
 
   /** Currently connected BLE device */
   device: BluetoothDevice | undefined;
