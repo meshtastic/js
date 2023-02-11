@@ -5,7 +5,7 @@ import { typedArrayToBuffer } from "../utils/general.js";
 /** Allows to connect to a Meshtastic device over HTTP(S) */
 export class IHTTPConnection extends IMeshDevice {
   /** Defines the connection type as http */
-  connType: string;
+  connType: Types.ConnectionTypeName;
 
   /** URL of the device that is to be connected to. */
   url: string;

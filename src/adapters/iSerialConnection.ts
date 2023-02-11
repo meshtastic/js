@@ -7,7 +7,7 @@ import { transformHandler } from "../utils/transformHandler.js";
 /** Allows to connect to a Meshtastic device over WebSerial */
 export class ISerialConnection extends IMeshDevice {
   /** Defines the connection type as serial */
-  connType: string;
+  connType: Types.ConnectionTypeName;
 
   /** Serial port used to communicate with device. */
   private port: SerialPort | undefined;

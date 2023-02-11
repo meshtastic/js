@@ -9,7 +9,7 @@ import { XModem } from "./utils/xmodem.js";
 /** Base class for connection methods to extend */
 export abstract class IMeshDevice {
   /** Abstract property that states the connection type */
-  protected abstract connType: string;
+  protected abstract connType: Types.ConnectionTypeName;
 
   /** Logs to the console and the logging event emitter */
   protected log: Logger<unknown>;
