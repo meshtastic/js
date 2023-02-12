@@ -134,7 +134,9 @@ export abstract class IMeshDevice {
       waypointMessage.toBinary(),
       Protobuf.PortNum.WAYPOINT_APP,
       destination,
-      channel
+      channel,
+      true,
+      false
     );
   }
 
