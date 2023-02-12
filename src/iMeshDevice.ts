@@ -119,7 +119,7 @@ export abstract class IMeshDevice {
    * Sends a text over the radio
    */
   public sendWaypoint(
-    waypoint: Protobuf.Waypoint,
+    waypointMessage: Protobuf.Waypoint,
     destination: Types.Destination,
     channel?: Types.ChannelNumber
   ): Promise<number> {
@@ -131,7 +131,7 @@ export abstract class IMeshDevice {
     );
 
     return this.sendPacket(
-      waypoint.toBinary(),
+      waypointMessage.toBinary(),
       Protobuf.PortNum.WAYPOINT_APP,
       destination,
       channel
@@ -183,7 +183,7 @@ export abstract class IMeshDevice {
       channel
     });
 
-    const toRadio = new Protobuf.ToRadio({
+    const toRadioMessage = new Protobuf.ToRadio({
       payloadVariant: {
         case: "packet",
         value: meshPacket
@@ -194,7 +194,7 @@ export abstract class IMeshDevice {
       meshPacket.rxTime = Math.trunc(new Date().getTime() / 1000);
       this.handleMeshPacket(meshPacket);
     }
-    return this.sendRaw(toRadio.toBinary(), meshPacket.id);
+    return this.sendRaw(toRadioMessage.toBinary(), meshPacket.id);
   }
 
   /**
@@ -224,13 +224,16 @@ export abstract class IMeshDevice {
    * Writes config to device
    */
   public async setConfig(config: Protobuf.Config): Promise<number> {
-    this.log.debug(Types.Emitter[Types.Emitter.setConfig], `Setting config`);
+    this.log.debug(
+      Types.Emitter[Types.Emitter.setConfig],
+      `Setting config, Variant: ${config.payloadVariant.case ?? "Unknown"}`
+    );
 
     if (!this.pendingSettingsChanges) {
       await this.beginEditSettings();
     }
 
-    const setRadio = new Protobuf.AdminMessage({
+    const configMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "setConfig",
         value: config
@@ -238,7 +241,7 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      setRadio.toBinary(),
+      configMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
@@ -255,7 +258,7 @@ export abstract class IMeshDevice {
       `Setting module config`
     );
 
-    const setRadio = new Protobuf.AdminMessage({
+    const moduleConfigMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "setModuleConfig",
         value: moduleConfig
@@ -263,7 +266,7 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      setRadio.toBinary(),
+      moduleConfigMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
@@ -275,7 +278,7 @@ export abstract class IMeshDevice {
   public async setOwner(owner: Protobuf.User): Promise<number> {
     this.log.debug(Types.Emitter[Types.Emitter.setOwner], `Setting owner`);
 
-    const setOwner = new Protobuf.AdminMessage({
+    const setOwnerMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "setOwner",
         value: owner
@@ -283,7 +286,7 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      setOwner.toBinary(),
+      setOwnerMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
@@ -298,7 +301,7 @@ export abstract class IMeshDevice {
       `📻 Setting Channel: ${channel.index}`
     );
 
-    const setChannel = new Protobuf.AdminMessage({
+    const setChannelMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "setChannel",
         value: channel
@@ -306,15 +309,17 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      setChannel.toBinary(),
+      setChannelMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
   }
 
-  public async setPosition(position: Protobuf.Position): Promise<number> {
+  public async setPosition(
+    positionMessage: Protobuf.Position
+  ): Promise<number> {
     return this.sendPacket(
-      position.toBinary(),
+      positionMessage.toBinary(),
       Protobuf.PortNum.POSITION_APP,
       "self"
     );
@@ -329,7 +334,7 @@ export abstract class IMeshDevice {
       `📻 Requesting Channel: ${index}`
     );
 
-    const getChannelRequest = new Protobuf.AdminMessage({
+    const getChannelRequestMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "getChannelRequest",
         value: index + 1
@@ -337,7 +342,7 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      getChannelRequest.toBinary(),
+      getChannelRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
@@ -352,7 +357,7 @@ export abstract class IMeshDevice {
   ): Promise<number> {
     this.log.debug(Types.Emitter[Types.Emitter.getConfig], `Requesting config`);
 
-    const getRadioRequest = new Protobuf.AdminMessage({
+    const getRadioRequestMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "getConfigRequest",
         value: configType
@@ -360,7 +365,7 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      getRadioRequest.toBinary(),
+      getRadioRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
@@ -377,7 +382,7 @@ export abstract class IMeshDevice {
       `Requesting module config`
     );
 
-    const getRadioRequest = new Protobuf.AdminMessage({
+    const getRadioRequestMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "getModuleConfigRequest",
         value: moduleConfigType
@@ -385,7 +390,7 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      getRadioRequest.toBinary(),
+      getRadioRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
@@ -395,7 +400,7 @@ export abstract class IMeshDevice {
   public async getOwner(): Promise<number> {
     this.log.debug(Types.Emitter[Types.Emitter.getOwner], `Requesting owner`);
 
-    const getOwnerRequest = new Protobuf.AdminMessage({
+    const getOwnerRequestMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "getOwnerRequest",
         value: true
@@ -403,7 +408,7 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      getOwnerRequest.toBinary(),
+      getOwnerRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
@@ -418,7 +423,7 @@ export abstract class IMeshDevice {
       `Requesting metadata from ${nodeNum}`
     );
 
-    const getDeviceMetricsRequest = new Protobuf.AdminMessage({
+    const getDeviceMetricsRequestMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "getDeviceMetadataRequest",
         value: true
@@ -426,7 +431,7 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      getDeviceMetricsRequest.toBinary(),
+      getDeviceMetricsRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       nodeNum,
       Types.ChannelNumber.ADMIN
@@ -446,7 +451,7 @@ export abstract class IMeshDevice {
       index,
       role: Protobuf.Channel_Role.DISABLED
     });
-    const setChannel = new Protobuf.AdminMessage({
+    const setChannelMessage = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "setChannel",
         value: channel
@@ -454,7 +459,7 @@ export abstract class IMeshDevice {
     });
 
     return this.sendPacket(
-      setChannel.toBinary(),
+      setChannelMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self"
     );
