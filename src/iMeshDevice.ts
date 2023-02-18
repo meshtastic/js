@@ -130,6 +130,8 @@ export abstract class IMeshDevice {
       }`
     );
 
+    waypointMessage.id = this.generateRandId();
+
     return this.sendPacket(
       waypointMessage.toBinary(),
       Protobuf.PortNum.WAYPOINT_APP,
