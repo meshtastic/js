@@ -11,9 +11,14 @@ export interface IQueueItem {
 
 export class Queue {
   private queue: IQueueItem[] = [];
-  private locked = false;
+  private lock = false;
   private ackNotifier = new SubEvent<number>();
   private errorNotifier = new SubEvent<PacketError>();
+  private timeout: number;
+
+  constructor() {
+    this.timeout = 60000;
+  }
 
   public clear(): void {
     this.queue = [];
@@ -39,28 +44,34 @@ export class Queue {
         setTimeout(() => {
           if (this.queue.findIndex((qi) => qi.id === item.id) !== -1) {
             this.remove(item.id);
-            console.warn(`REMOVING PACKET THAT TIMED OUT ${item.id}`);
+            console.warn(`Packet ${item.id} timed out`);
 
             reject({
               id: item.id,
               error: Protobuf.Routing_Error.TIMEOUT
             });
           }
-        }, 60000);
+        }, this.timeout);
       })
     };
     this.queue.push(queueItem);
   }
 
   public remove(id: number): void {
+    if (this.lock) {
+      setTimeout(() => this.remove(id), 100);
+      return;
+    }
     this.queue = this.queue.filter((item) => item.id !== id);
   }
 
   public processAck(id: number): void {
+    console.log("ACK", id);
     this.ackNotifier.emit(id);
   }
 
   public processError(e: PacketError): void {
+    console.error(`Error received for packet ${e.id}: ${e.error}`);
     this.errorNotifier.emit(e);
   }
 
@@ -69,27 +80,28 @@ export class Queue {
     if (!queueItem) {
       throw new Error("Packet does not exist");
     }
-
     return queueItem.promise;
   }
 
   public async processQueue(
     writeToRadio: (data: Uint8Array) => Promise<void>
   ): Promise<void> {
-    if (this.locked) {
+    if (this.lock) {
       return;
     }
-    this.locked = true;
+    this.lock = true;
     while (this.queue.filter((p) => !p.sent).length > 0) {
       const item = this.queue.filter((p) => !p.sent)[0];
       if (item) {
         await new Promise((resolve) => setTimeout(resolve, 200));
-        await writeToRadio(item.data);
-        item.sent = true;
+        try {
+          await writeToRadio(item.data);
+          item.sent = true;
+        } catch (error) {
+          console.error(`Error sending packet ${item.id}`, error);
+        }
       }
     }
-    setTimeout(() => {
-      this.locked = false;
-    }, 100);
+    this.lock = false;
   }
 }
