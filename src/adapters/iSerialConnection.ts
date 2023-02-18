@@ -155,7 +155,7 @@ export class ISerialConnection extends IMeshDevice {
     this.onReleaseEvent.emit(true);
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
-    return Promise.resolve();
+    return await this.port?.close();
   }
 
   /** Pings device to check if it is avaliable */
