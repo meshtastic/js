@@ -16,7 +16,7 @@ export const fromNumUUID = "ed9da18c-a800-4f66-a670-aa7547e34453";
 export const serviceUUID = "6ba1b218-15a8-461f-9fa8-5dcae273eafd";
 
 /** Broadcast destination number */
-export const broadCastNum = 0xffffffff;
+export const broadcastNum = 0xffffffff;
 
 /** Minimum device firmware version supported by this version of the library. */
 export const minFwVer = 2.0;

@@ -1,6 +1,6 @@
 import { Logger } from "tslog";
 
-import { broadCastNum, minFwVer } from "./constants.js";
+import { broadcastNum, minFwVer } from "./constants.js";
 import { Protobuf, Types } from "./index.js";
 import { EventSystem } from "./utils/eventSystem.js";
 import { Queue } from "./utils/queue.js";
@@ -178,7 +178,7 @@ export abstract class IMeshDevice {
       from: this.myNodeInfo.myNodeNum,
       to:
         destination === "broadcast"
-          ? broadCastNum
+          ? broadcastNum
           : destination === "self"
           ? this.myNodeInfo.myNodeNum
           : destination,
@@ -722,6 +722,7 @@ export abstract class IMeshDevice {
             id: decodedMessage.id,
             rxTime: new Date(),
             from: decodedMessage.payloadVariant.value.num,
+            type: "direct",
             channel: Types.ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.value.position
           });
@@ -733,6 +734,7 @@ export abstract class IMeshDevice {
             id: decodedMessage.id,
             rxTime: new Date(),
             from: decodedMessage.payloadVariant.value.num,
+            type: "direct",
             channel: Types.ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.value.user
           });
@@ -887,6 +889,7 @@ export abstract class IMeshDevice {
     const packetMetadata: Omit<Types.PacketMetadata<unknown>, "data"> = {
       id: meshPacket.id,
       rxTime: new Date(meshPacket.rxTime * 1000),
+      type: meshPacket.to === broadcastNum ? "broadcast" : "direct",
       from: meshPacket.from,
       channel: meshPacket.channel
     };
