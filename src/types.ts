@@ -60,6 +60,7 @@ export interface PacketMetadata<T> {
   rxTime: Date;
   type: PacketDestination;
   from: number;
+  to: number;
   channel: ChannelNumber;
   data: T;
 }
