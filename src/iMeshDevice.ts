@@ -722,6 +722,7 @@ export abstract class IMeshDevice {
             id: decodedMessage.id,
             rxTime: new Date(),
             from: decodedMessage.payloadVariant.value.num,
+            to: decodedMessage.payloadVariant.value.num,
             type: "direct",
             channel: Types.ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.value.position
@@ -734,6 +735,7 @@ export abstract class IMeshDevice {
             id: decodedMessage.id,
             rxTime: new Date(),
             from: decodedMessage.payloadVariant.value.num,
+            to: decodedMessage.payloadVariant.value.num,
             type: "direct",
             channel: Types.ChannelNumber.PRIMARY,
             data: decodedMessage.payloadVariant.value.user
@@ -846,9 +848,13 @@ export abstract class IMeshDevice {
     this.events.onPositionPacket.cancelAll();
     this.events.onMessagePacket.cancelAll();
     this.events.onRemoteHardwarePacket.cancelAll();
+    this.events.onWaypointPacket.cancelAll();
     this.events.onDeviceStatus.cancelAll();
     this.events.onLogRecord.cancelAll();
     this.events.onMeshHeartbeat.cancelAll();
+    this.events.onDeviceDebugLog.cancelAll();
+    this.events.onDeviceMetadataPacket.cancelAll();
+    this.events.onPendingSettingsChange.cancelAll();
     this.queue.clear();
   }
 
@@ -891,6 +897,7 @@ export abstract class IMeshDevice {
       rxTime: new Date(meshPacket.rxTime * 1000),
       type: meshPacket.to === broadcastNum ? "broadcast" : "direct",
       from: meshPacket.from,
+      to: meshPacket.to,
       channel: meshPacket.channel
     };
 

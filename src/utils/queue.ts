@@ -66,7 +66,6 @@ export class Queue {
   }
 
   public processAck(id: number): void {
-    console.log("ACK", id);
     this.ackNotifier.emit(id);
   }
 
