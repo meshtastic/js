@@ -53,10 +53,12 @@ export interface SerialConnectionParameters {
 
 export type LogEventPacket = LogEvent & { date: Date };
 
+export type PacketDestination = "broadcast" | "direct";
+
 export interface PacketMetadata<T> {
   id: number;
   rxTime: Date;
-  type: "broadcast" | "direct";
+  type: PacketDestination;
   from: number;
   channel: ChannelNumber;
   data: T;
