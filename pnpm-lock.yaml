@@ -15,7 +15,7 @@ specifiers:
   eslint-plugin-import: ^2.27.5
   prettier: ^2.8.4
   sub-events: ^1.9.0
-  tslog: ^4.7.2
+  tslog: ^4.7.4
   typedoc: ^0.23.25
   typescript: ^4.9.5
 
@@ -24,7 +24,7 @@ dependencies:
   '@bufbuild/protobuf': 1.0.0
   crc: 4.3.2
   sub-events: 1.9.0
-  tslog: 4.7.2
+  tslog: 4.7.4
 
 devDependencies:
   '@types/node': 18.14.0
@@ -1654,8 +1654,8 @@ packages:
     resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
     dev: true
 
-  /tslog/4.7.2:
-    resolution: {integrity: sha512-NZCunFmbQK25tt+Egv28MLcmbo8M1HgUy6X2hdVbgrAlcR7zRGvPmM8SnpoljXZ48zHRRYWp9vYIHFHKWsR4HA==}
+  /tslog/4.7.4:
+    resolution: {integrity: sha512-/hz7E1ahN9KXNywEGJZ8SL4s3YLu9fKYBHOXsKgXwk73qZ7Y5NCkqktP6Y+0MQNfnqOdH8eRE0Rw0spmyTWLPg==}
     engines: {node: '>=16'}
     dev: false
 

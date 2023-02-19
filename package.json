@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "2.0.20-3",
+  "version": "2.0.20-4",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
@@ -37,7 +37,7 @@
     "@bufbuild/protobuf": "^1.0.0",
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
-    "tslog": "^4.7.2"
+    "tslog": "^4.7.4"
   },
   "devDependencies": {
     "@types/node": "^18.14.0",
