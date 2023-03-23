@@ -11,7 +11,7 @@ export class ISerialConnection extends IMeshDevice {
 
   /** Serial port used to communicate with device. */
   private port: SerialPort | undefined;
-
+  private  readerHack: ReadableStreamDefaultReader<Uint8Array> | undefined;
   /** Transform stream for parsing raw serial data */
   private transformer?: TransformStream<Uint8Array, Uint8Array>;
 
@@ -90,6 +90,11 @@ export class ISerialConnection extends IMeshDevice {
     return navigator.serial.requestPort(filter);
   }
 
+  public async freePort(): Promise<SerialPort | undefined> {
+    await this.disconnect();
+    return this.port;
+  }
+
   /**
    * Initiates the connect process to a Meshtastic device via Web Serial
    */
@@ -129,7 +134,7 @@ export class ISerialConnection extends IMeshDevice {
           );
 
           this.pipePromise = this.port.readable.pipeTo(this.transformer.writable);
-          const reader = this.transformer.readable.getReader();
+          const reader = this.readerHack = this.transformer.readable.getReader();
           void this.readFromRadio(reader);
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
@@ -156,9 +161,18 @@ export class ISerialConnection extends IMeshDevice {
 
   /** Disconnects from the serial port */
   public async disconnect(): Promise<void> {
-    this.onReleaseEvent.emit(true);
+    // this.onReleaseEvent.emit(true);
+    // HACK: Inline onReleaseEvent
+    // -- This should be used as an event, like intened
+    this.preventLock = true;
+      await this.readerHack?.cancel();    
+      await this.pipePromise?.catch(() => {});  
+      this.readerHack?.releaseLock();      
+      if(this.port?.readable) await this.port?.close();
+    // -------
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
+    // await this.onReleaseEvent.toPromise();
     return Promise.resolve();
   }
 
