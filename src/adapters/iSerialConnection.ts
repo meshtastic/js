@@ -91,11 +91,6 @@ export class ISerialConnection extends IMeshDevice {
     return navigator.serial.requestPort(filter);
   }
 
-  public async freePort(): Promise<SerialPort | undefined> {
-    await this.disconnect();
-    return this.port;
-  }
-
   /**
    * Initiates the connect process to a Meshtastic device via Web Serial
    */
@@ -161,7 +156,7 @@ export class ISerialConnection extends IMeshDevice {
   }
 
   /** Disconnects from the serial port */
-  public async disconnect(): Promise<void> {
+  public async disconnect(): Promise<SerialPort | undefined> {
     // this.onReleaseEvent.emit(true);
     // HACK: Inline onReleaseEvent
     // -- This should be used as an event, like intened
@@ -174,7 +169,7 @@ export class ISerialConnection extends IMeshDevice {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
     // await this.onReleaseEvent.toPromise();
-    return Promise.resolve();
+    return this.port;
   }
 
   /** Pings device to check if it is avaliable */
