@@ -7,7 +7,7 @@ import { transformHandler } from "../utils/transformHandler.js";
 /** Allows to connect to a Meshtastic device over WebSerial */
 export class ISerialConnection extends IMeshDevice {
   /** Defines the connection type as serial */
-  connType: string;
+  connType: Types.ConnectionTypeName;
 
   /** Serial port used to communicate with device. */
   private port: SerialPort | undefined;
@@ -43,7 +43,7 @@ export class ISerialConnection extends IMeshDevice {
 
     this.log.debug(
       Types.Emitter[Types.Emitter.constructor],
-      `🔷 iSerialConnection instantiated`
+      "🔷 iSerialConnection instantiated",
     );
   }
 
@@ -51,7 +51,7 @@ export class ISerialConnection extends IMeshDevice {
    * Reads packets from transformed serial port steam and processes them.
    */
   private async readFromRadio(
-    reader: ReadableStreamDefaultReader<Uint8Array>
+    reader: ReadableStreamDefaultReader<Uint8Array>,
   ): Promise<void> {
     this.onReleaseEvent.subscribe(async () => {
       this.preventLock = true;
@@ -72,8 +72,9 @@ export class ISerialConnection extends IMeshDevice {
         .catch(() => {
           this.log.debug(
             Types.Emitter[Types.Emitter.readFromRadio],
-            `Releasing reader`
+            `Releasing reader`,
           );
+          ("Releasing reader");
         });
     }
   }
@@ -101,7 +102,7 @@ export class ISerialConnection extends IMeshDevice {
   public async connect({
     port,
     baudRate = 115200,
-    concurrentLogOutput = false
+    concurrentLogOutput = false,
   }: Types.SerialConnectionParameters): Promise<void> {
     /** Set device state to connecting */
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
@@ -113,7 +114,7 @@ export class ISerialConnection extends IMeshDevice {
     this.port.addEventListener("disconnect", () => {
       this.log.info(
         Types.Emitter[Types.Emitter.connect],
-        "Device disconnected"
+        "Device disconnected",
       );
       this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
       this.complete();
@@ -122,7 +123,7 @@ export class ISerialConnection extends IMeshDevice {
     /** Connect to device */
     await this.port
       .open({
-        baudRate
+        baudRate,
       })
       .then(() => {
         if (this.port?.readable && this.port.writable) {
@@ -130,7 +131,7 @@ export class ISerialConnection extends IMeshDevice {
             this.log,
             this.onReleaseEvent,
             this.events.onDeviceDebugLog,
-            concurrentLogOutput
+            concurrentLogOutput,
           );
 
           this.pipePromise = this.port.readable.pipeTo(this.transformer.writable);
@@ -155,7 +156,7 @@ export class ISerialConnection extends IMeshDevice {
   public async reconnect(): Promise<void> {
     await this.connect({
       port: this.port,
-      concurrentLogOutput: false
+      concurrentLogOutput: false,
     });
   }
 
@@ -191,7 +192,7 @@ export class ISerialConnection extends IMeshDevice {
     const writer = this.port?.writable?.getWriter();
 
     await writer?.write(
-      new Uint8Array([0x94, 0xc3, 0x00, data.length, ...data])
+      new Uint8Array([0x94, 0xc3, 0x00, data.length, ...data]),
     );
     writer?.releaseLock();
   }

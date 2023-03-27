@@ -26,7 +26,7 @@ export class XModem {
     return this.sendCommand(
       Protobuf.XModem_Control.STX,
       this.textEncoder.encode(filename),
-      0
+      0,
     );
   }
 
@@ -38,7 +38,7 @@ export class XModem {
     return await this.sendCommand(
       Protobuf.XModem_Control.SOH,
       this.textEncoder.encode(filename),
-      0
+      0,
     );
   }
 
@@ -46,7 +46,7 @@ export class XModem {
     command: Protobuf.XModem_Control,
     buffer?: Uint8Array,
     sequence?: number,
-    crc16?: number
+    crc16?: number,
   ): Promise<number> {
     const toRadio = new Protobuf.ToRadio({
       payloadVariant: {
@@ -55,9 +55,9 @@ export class XModem {
           buffer,
           control: command,
           seq: sequence,
-          crc16: crc16
-        }
-      }
+          crc16: crc16,
+        },
+      },
     });
     return this.sendRaw(toRadio.toBinary());
   }
@@ -79,7 +79,7 @@ export class XModem {
           return this.sendCommand(
             Protobuf.XModem_Control.NAK,
             undefined,
-            packet.seq
+            packet.seq,
           );
         }
       case Protobuf.XModem_Control.STX:
@@ -87,8 +87,8 @@ export class XModem {
       case Protobuf.XModem_Control.EOT:
         console.log(
           this.rxBuffer.reduce(
-            (acc: Uint8Array, curr) => new Uint8Array([...acc, ...curr])
-          )
+            (acc: Uint8Array, curr) => new Uint8Array([...acc, ...curr]),
+          ),
         );
 
         // end of transmission
@@ -100,7 +100,7 @@ export class XModem {
             Protobuf.XModem_Control.SOH,
             this.txBuffer[this.counter - 1],
             this.counter,
-            crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array())
+            crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array()),
           );
         } else if (this.counter === this.txBuffer.length + 1) {
           return this.sendCommand(Protobuf.XModem_Control.EOT);
@@ -113,9 +113,8 @@ export class XModem {
           Protobuf.XModem_Control.SOH,
           this.txBuffer[this.counter],
           this.counter,
-          crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array())
+          crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array()),
         );
-        break;
       case Protobuf.XModem_Control.CAN:
         this.clear();
         break;

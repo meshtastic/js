@@ -5,7 +5,7 @@ import { typedArrayToBuffer } from "../utils/general.js";
 /** Allows to connect to a Meshtastic device over HTTP(S) */
 export class IHTTPConnection extends IMeshDevice {
   /** Defines the connection type as http */
-  connType: string;
+  connType: Types.ConnectionTypeName;
 
   /** URL of the device that is to be connected to. */
   url: string;
@@ -33,7 +33,7 @@ export class IHTTPConnection extends IMeshDevice {
 
     this.log.debug(
       Types.Emitter[Types.Emitter.constructor],
-      `🔷 iHttpConnection instantiated`
+      "🔷 iHttpConnection instantiated",
     );
   }
 
@@ -44,7 +44,7 @@ export class IHTTPConnection extends IMeshDevice {
     address,
     fetchInterval = 3000,
     receiveBatchRequests = false,
-    tls = false
+    tls = false,
   }: Types.HTTPConnectionParameters): Promise<void> {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
@@ -58,7 +58,7 @@ export class IHTTPConnection extends IMeshDevice {
     ) {
       this.log.debug(
         Types.Emitter[Types.Emitter.connect],
-        `Ping succeeded, starting configuration and request timer.`
+        "Ping succeeded, starting configuration and request timer.",
       );
       void this.configure().catch(() => {
         // TODO: FIX, workaround for `wantConfigId` not getting acks.
@@ -67,7 +67,7 @@ export class IHTTPConnection extends IMeshDevice {
         this.readFromRadio().catch((e: Error) => {
           this.log.error(
             Types.Emitter[Types.Emitter.connect],
-            `❌ ${e.message}`
+            `❌ ${e.message}`,
           );
         });
       }, fetchInterval);
@@ -78,7 +78,7 @@ export class IHTTPConnection extends IMeshDevice {
             address: address,
             fetchInterval: fetchInterval,
             receiveBatchRequests: receiveBatchRequests,
-            tls: tls
+            tls: tls,
           });
         }, 10000);
       }
@@ -99,7 +99,7 @@ export class IHTTPConnection extends IMeshDevice {
   public async ping(): Promise<boolean> {
     this.log.debug(
       Types.Emitter[Types.Emitter.ping],
-      `Attempting device ping.`
+      "Attempting device ping.",
     );
 
     const { signal } = this.abortController;
@@ -137,9 +137,9 @@ export class IHTTPConnection extends IMeshDevice {
           signal,
           method: "GET",
           headers: {
-            Accept: "application/x-protobuf"
-          }
-        }
+            Accept: "application/x-protobuf",
+          },
+        },
       )
         .then(async (response) => {
           this.peningRequest = false;
@@ -155,7 +155,7 @@ export class IHTTPConnection extends IMeshDevice {
           this.peningRequest = false;
           this.log.error(
             Types.Emitter[Types.Emitter.readFromRadio],
-            `❌ ${e.message}`
+            `❌ ${e.message}`,
           );
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
@@ -173,9 +173,9 @@ export class IHTTPConnection extends IMeshDevice {
       signal,
       method: "PUT",
       headers: {
-        "Content-Type": "application/x-protobuf"
+        "Content-Type": "application/x-protobuf",
       },
-      body: typedArrayToBuffer(data)
+      body: typedArrayToBuffer(data),
     })
       .then(async () => {
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
@@ -183,14 +183,14 @@ export class IHTTPConnection extends IMeshDevice {
         await this.readFromRadio().catch((e: Error) => {
           this.log.error(
             Types.Emitter[Types.Emitter.writeToRadio],
-            `❌ ${e.message}`
+            `❌ ${e.message}`,
           );
         });
       })
       .catch((e: Error) => {
         this.log.error(
           Types.Emitter[Types.Emitter.writeToRadio],
-          `❌ ${e.message}`
+          `❌ ${e.message}`,
         );
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
       });

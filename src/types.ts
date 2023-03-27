@@ -2,7 +2,7 @@ import type {
   IBLEConnection,
   IHTTPConnection,
   ISerialConnection,
-  Protobuf
+  Protobuf,
 } from "./index.js";
 
 export enum DeviceStatusEnum {
@@ -12,7 +12,7 @@ export enum DeviceStatusEnum {
   DEVICE_RECONNECTING,
   DEVICE_CONNECTED,
   DEVICE_CONFIGURING,
-  DEVICE_CONFIGURED
+  DEVICE_CONFIGURED,
 }
 
 export type ConnectionParameters =
@@ -53,54 +53,58 @@ export interface SerialConnectionParameters {
 
 export type LogEventPacket = LogEvent & { date: Date };
 
+export type PacketDestination = "broadcast" | "direct";
+
 export interface PacketMetadata<T> {
   id: number;
   rxTime: Date;
+  type: PacketDestination;
   from: number;
+  to: number;
   channel: ChannelNumber;
   data: T;
 }
 
 export enum EmitterScope {
-  "iMeshDevice",
-  "iSerialConnection",
-  "iNodeSerialConnection",
-  "iBleConnection",
-  "iHttpConnection"
+  iMeshDevice,
+  iSerialConnection,
+  iNodeSerialConnection,
+  iBleConnection,
+  iHttpConnection,
 }
 
 export enum Emitter {
-  "constructor",
-  "sendText",
-  "sendWaypoint",
-  "sendPacket",
-  "sendRaw",
-  "setConfig",
-  "setModuleConfig",
-  "confirmSetConfig",
-  "setOwner",
-  "setChannel",
-  "confirmSetChannel",
-  "clearChannel",
-  "getChannel",
-  "getAllChannels",
-  "getConfig",
-  "getModuleConfig",
-  "getOwner",
-  "configure",
-  "handleFromRadio",
-  "handleMeshPacket",
-  "connect",
-  "ping",
-  "readFromRadio",
-  "writeToRadio",
-  "setDebugMode",
-  "getMetadata",
-  "resetPeers",
-  "shutdown",
-  "reboot",
-  "rebootOTA",
-  "factoryReset"
+  constructor,
+  sendText,
+  sendWaypoint,
+  sendPacket,
+  sendRaw,
+  setConfig,
+  setModuleConfig,
+  confirmSetConfig,
+  setOwner,
+  setChannel,
+  confirmSetChannel,
+  clearChannel,
+  getChannel,
+  getAllChannels,
+  getConfig,
+  getModuleConfig,
+  getOwner,
+  configure,
+  handleFromRadio,
+  handleMeshPacket,
+  connect,
+  ping,
+  readFromRadio,
+  writeToRadio,
+  setDebugMode,
+  getMetadata,
+  resetPeers,
+  shutdown,
+  reboot,
+  rebootOTA,
+  factoryReset,
 }
 
 export interface LogEvent {
@@ -119,13 +123,15 @@ export enum ChannelNumber {
   CHANNEL4,
   CHANNEL5,
   CHANNEL6,
-  ADMIN
+  ADMIN,
 }
 
 export type ConnectionType =
   | IBLEConnection
   | IHTTPConnection
   | ISerialConnection;
+
+export type ConnectionTypeName = "ble" | "http" | "serial";
 
 export type Destination = number | "self" | "broadcast";
 
