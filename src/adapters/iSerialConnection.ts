@@ -91,6 +91,10 @@ export class ISerialConnection extends IMeshDevice {
     return navigator.serial.requestPort(filter);
   }
 
+  public getCurrentPort() {
+    return this.port;
+  }
+
   /**
    * Initiates the connect process to a Meshtastic device via Web Serial
    */
