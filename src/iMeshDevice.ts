@@ -259,7 +259,7 @@ export abstract class IMeshDevice {
   ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setModuleConfig],
-      `Setting module config`
+      "Setting module config"
     );
 
     const moduleConfigMessage = new Protobuf.AdminMessage({
@@ -280,7 +280,7 @@ export abstract class IMeshDevice {
    * Sets devices owner data
    */
   public async setOwner(owner: Protobuf.User): Promise<number> {
-    this.log.debug(Types.Emitter[Types.Emitter.setOwner], `Setting owner`);
+    this.log.debug(Types.Emitter[Types.Emitter.setOwner], "Setting owner");
 
     const setOwnerMessage = new Protobuf.AdminMessage({
       payloadVariant: {
@@ -359,7 +359,7 @@ export abstract class IMeshDevice {
   public async getConfig(
     configType: Protobuf.AdminMessage_ConfigType
   ): Promise<number> {
-    this.log.debug(Types.Emitter[Types.Emitter.getConfig], `Requesting config`);
+    this.log.debug(Types.Emitter[Types.Emitter.getConfig], "Requesting config");
 
     const getRadioRequestMessage = new Protobuf.AdminMessage({
       payloadVariant: {
@@ -383,7 +383,7 @@ export abstract class IMeshDevice {
   ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getModuleConfig],
-      `Requesting module config`
+      "Requesting module config"
     );
 
     const getRadioRequestMessage = new Protobuf.AdminMessage({
@@ -402,7 +402,7 @@ export abstract class IMeshDevice {
 
   /** Gets devices Owner */
   public async getOwner(): Promise<number> {
-    this.log.debug(Types.Emitter[Types.Emitter.getOwner], `Requesting owner`);
+    this.log.debug(Types.Emitter[Types.Emitter.getOwner], "Requesting owner");
 
     const getOwnerRequestMessage = new Protobuf.AdminMessage({
       payloadVariant: {
@@ -510,7 +510,7 @@ export abstract class IMeshDevice {
   public async resetPeers(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.resetPeers],
-      `📻 Resetting Peers`
+      "📻 Resetting Peers"
     );
 
     const resetPeers = new Protobuf.AdminMessage({
@@ -597,7 +597,7 @@ export abstract class IMeshDevice {
   public async factoryReset(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.factoryReset],
-      `♻️ Factory resetting node`
+      "♻️ Factory resetting node"
     );
 
     const factoryReset = new Protobuf.AdminMessage({
@@ -618,7 +618,7 @@ export abstract class IMeshDevice {
   public configure(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.configure],
-      `⚙️ Requesting device configuration`
+      "⚙️ Requesting device configuration"
     );
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
