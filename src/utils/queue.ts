@@ -48,11 +48,11 @@ export class Queue {
 
             reject({
               id: item.id,
-              error: Protobuf.Routing_Error.TIMEOUT
+              error: Protobuf.Routing_Error.TIMEOUT,
             });
           }
         }, this.timeout);
-      })
+      }),
     };
     this.queue.push(queueItem);
   }
@@ -83,7 +83,7 @@ export class Queue {
   }
 
   public async processQueue(
-    writeToRadio: (data: Uint8Array) => Promise<void>
+    writeToRadio: (data: Uint8Array) => Promise<void>,
   ): Promise<void> {
     if (this.lock) {
       return;

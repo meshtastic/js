@@ -3,7 +3,7 @@ import {
   fromNumUUID,
   fromRadioUUID,
   serviceUUID,
-  toRadioUUID
+  toRadioUUID,
 } from "../constants.js";
 import { IMeshDevice } from "../iMeshDevice.js";
 import { typedArrayToBuffer } from "../utils/general.js";
@@ -50,7 +50,7 @@ export class IBLEConnection extends IMeshDevice {
 
     this.log.debug(
       Types.Emitter[Types.Emitter.constructor],
-      `🔷 iBleConnection instantiated`
+      "🔷 iBleConnection instantiated",
     );
   }
 
@@ -78,8 +78,8 @@ export class IBLEConnection extends IMeshDevice {
   public getDevice(filter?: RequestDeviceOptions): Promise<BluetoothDevice> {
     return navigator.bluetooth.requestDevice(
       filter ?? {
-        filters: [{ services: [serviceUUID] }]
-      }
+        filters: [{ services: [serviceUUID] }],
+      },
     );
   }
 
@@ -88,7 +88,7 @@ export class IBLEConnection extends IMeshDevice {
    */
   public async connect({
     device,
-    deviceFilter
+    deviceFilter,
   }: Types.BLEConnectionParameters): Promise<void> {
     /** Set device state to connecting */
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
@@ -100,7 +100,7 @@ export class IBLEConnection extends IMeshDevice {
     this.device.addEventListener("gattserverdisconnected", () => {
       this.log.info(
         Types.Emitter[Types.Emitter.connect],
-        "Device disconnected"
+        "Device disconnected",
       );
       this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
       this.complete();
@@ -112,14 +112,14 @@ export class IBLEConnection extends IMeshDevice {
       .then((server) => {
         this.log.info(
           Types.Emitter[Types.Emitter.connect],
-          `✅ Got GATT Server for device: ${server.device.id}`
+          `✅ Got GATT Server for device: ${server.device.id}`,
         );
         this.GATTServer = server;
       })
       .catch((e: Error) => {
         this.log.error(
           Types.Emitter[Types.Emitter.connect],
-          `❌ Failed to connect: ${e.message}`
+          `❌ Failed to connect: ${e.message}`,
         );
       });
 
@@ -127,14 +127,14 @@ export class IBLEConnection extends IMeshDevice {
       .then((service) => {
         this.log.info(
           Types.Emitter[Types.Emitter.connect],
-          `✅ Got GATT Service for device: ${service.device.id}`
+          `✅ Got GATT Service for device: ${service.device.id}`,
         );
         this.service = service;
       })
       .catch((e: Error) => {
         this.log.error(
           Types.Emitter[Types.Emitter.connect],
-          `❌ Failed to get primary service: q${e.message}`
+          `❌ Failed to get primary service: q${e.message}`,
         );
       });
 
@@ -144,7 +144,7 @@ export class IBLEConnection extends IMeshDevice {
         .then((characteristic) => {
           this.log.info(
             Types.Emitter[Types.Emitter.connect],
-            `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.uuid}`
+            `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.uuid}`,
           );
           switch (uuid) {
             case toRadioUUID:
@@ -161,7 +161,7 @@ export class IBLEConnection extends IMeshDevice {
         .catch((e: Error) => {
           this.log.error(
             Types.Emitter[Types.Emitter.connect],
-            `❌ Failed to get toRadio characteristic: q${e.message}`
+            `❌ Failed to get toRadio characteristic: q${e.message}`,
           );
         });
     });
@@ -172,7 +172,7 @@ export class IBLEConnection extends IMeshDevice {
       "characteristicvaluechanged",
       () => {
         void this.readFromRadio();
-      }
+      },
     );
 
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
@@ -222,7 +222,7 @@ export class IBLEConnection extends IMeshDevice {
           readBuffer = new ArrayBuffer(0);
           this.log.error(
             Types.Emitter[Types.Emitter.readFromRadio],
-            `❌ ${e.message}`
+            `❌ ${e.message}`,
           );
         });
     }
