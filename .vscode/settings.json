@@ -1,4 +1,7 @@
 {
-  "editor.defaultFormatter": "trunk.io",
-  "editor.formatOnSave": true
+  "editor.defaultFormatter": "rome.rome",
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "rome.rome"
+  }
 }
