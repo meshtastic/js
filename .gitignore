@@ -13,7 +13,7 @@ pids
 docs
 
 # Build output
-dist
+# dist
 
 # Node Modules
 node_modules

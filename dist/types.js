@@ -1,0 +1,64 @@
+export var DeviceStatusEnum;
+(function (DeviceStatusEnum) {
+    DeviceStatusEnum[DeviceStatusEnum["DEVICE_RESTARTING"] = 0] = "DEVICE_RESTARTING";
+    DeviceStatusEnum[DeviceStatusEnum["DEVICE_DISCONNECTED"] = 1] = "DEVICE_DISCONNECTED";
+    DeviceStatusEnum[DeviceStatusEnum["DEVICE_CONNECTING"] = 2] = "DEVICE_CONNECTING";
+    DeviceStatusEnum[DeviceStatusEnum["DEVICE_RECONNECTING"] = 3] = "DEVICE_RECONNECTING";
+    DeviceStatusEnum[DeviceStatusEnum["DEVICE_CONNECTED"] = 4] = "DEVICE_CONNECTED";
+    DeviceStatusEnum[DeviceStatusEnum["DEVICE_CONFIGURING"] = 5] = "DEVICE_CONFIGURING";
+    DeviceStatusEnum[DeviceStatusEnum["DEVICE_CONFIGURED"] = 6] = "DEVICE_CONFIGURED";
+})(DeviceStatusEnum || (DeviceStatusEnum = {}));
+export var EmitterScope;
+(function (EmitterScope) {
+    EmitterScope[EmitterScope["iMeshDevice"] = 0] = "iMeshDevice";
+    EmitterScope[EmitterScope["iSerialConnection"] = 1] = "iSerialConnection";
+    EmitterScope[EmitterScope["iNodeSerialConnection"] = 2] = "iNodeSerialConnection";
+    EmitterScope[EmitterScope["iBleConnection"] = 3] = "iBleConnection";
+    EmitterScope[EmitterScope["iHttpConnection"] = 4] = "iHttpConnection";
+})(EmitterScope || (EmitterScope = {}));
+export var Emitter;
+(function (Emitter) {
+    Emitter[Emitter["constructor"] = 0] = "constructor";
+    Emitter[Emitter["sendText"] = 1] = "sendText";
+    Emitter[Emitter["sendWaypoint"] = 2] = "sendWaypoint";
+    Emitter[Emitter["sendPacket"] = 3] = "sendPacket";
+    Emitter[Emitter["sendRaw"] = 4] = "sendRaw";
+    Emitter[Emitter["setConfig"] = 5] = "setConfig";
+    Emitter[Emitter["setModuleConfig"] = 6] = "setModuleConfig";
+    Emitter[Emitter["confirmSetConfig"] = 7] = "confirmSetConfig";
+    Emitter[Emitter["setOwner"] = 8] = "setOwner";
+    Emitter[Emitter["setChannel"] = 9] = "setChannel";
+    Emitter[Emitter["confirmSetChannel"] = 10] = "confirmSetChannel";
+    Emitter[Emitter["clearChannel"] = 11] = "clearChannel";
+    Emitter[Emitter["getChannel"] = 12] = "getChannel";
+    Emitter[Emitter["getAllChannels"] = 13] = "getAllChannels";
+    Emitter[Emitter["getConfig"] = 14] = "getConfig";
+    Emitter[Emitter["getModuleConfig"] = 15] = "getModuleConfig";
+    Emitter[Emitter["getOwner"] = 16] = "getOwner";
+    Emitter[Emitter["configure"] = 17] = "configure";
+    Emitter[Emitter["handleFromRadio"] = 18] = "handleFromRadio";
+    Emitter[Emitter["handleMeshPacket"] = 19] = "handleMeshPacket";
+    Emitter[Emitter["connect"] = 20] = "connect";
+    Emitter[Emitter["ping"] = 21] = "ping";
+    Emitter[Emitter["readFromRadio"] = 22] = "readFromRadio";
+    Emitter[Emitter["writeToRadio"] = 23] = "writeToRadio";
+    Emitter[Emitter["setDebugMode"] = 24] = "setDebugMode";
+    Emitter[Emitter["getMetadata"] = 25] = "getMetadata";
+    Emitter[Emitter["resetPeers"] = 26] = "resetPeers";
+    Emitter[Emitter["shutdown"] = 27] = "shutdown";
+    Emitter[Emitter["reboot"] = 28] = "reboot";
+    Emitter[Emitter["rebootOTA"] = 29] = "rebootOTA";
+    Emitter[Emitter["factoryReset"] = 30] = "factoryReset";
+})(Emitter || (Emitter = {}));
+export var ChannelNumber;
+(function (ChannelNumber) {
+    ChannelNumber[ChannelNumber["PRIMARY"] = 0] = "PRIMARY";
+    ChannelNumber[ChannelNumber["CHANNEL1"] = 1] = "CHANNEL1";
+    ChannelNumber[ChannelNumber["CHANNEL2"] = 2] = "CHANNEL2";
+    ChannelNumber[ChannelNumber["CHANNEL3"] = 3] = "CHANNEL3";
+    ChannelNumber[ChannelNumber["CHANNEL4"] = 4] = "CHANNEL4";
+    ChannelNumber[ChannelNumber["CHANNEL5"] = 5] = "CHANNEL5";
+    ChannelNumber[ChannelNumber["CHANNEL6"] = 6] = "CHANNEL6";
+    ChannelNumber[ChannelNumber["ADMIN"] = 7] = "ADMIN";
+})(ChannelNumber || (ChannelNumber = {}));
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoidHlwZXMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi9zcmMvdHlwZXMudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBT0EsTUFBTSxDQUFOLElBQVksZ0JBUVg7QUFSRCxXQUFZLGdCQUFnQjtJQUMxQixpRkFBaUIsQ0FBQTtJQUNqQixxRkFBbUIsQ0FBQTtJQUNuQixpRkFBaUIsQ0FBQTtJQUNqQixxRkFBbUIsQ0FBQTtJQUNuQiwrRUFBZ0IsQ0FBQTtJQUNoQixtRkFBa0IsQ0FBQTtJQUNsQixpRkFBaUIsQ0FBQTtBQUNuQixDQUFDLEVBUlcsZ0JBQWdCLEtBQWhCLGdCQUFnQixRQVEzQjtBQW9ERCxNQUFNLENBQU4sSUFBWSxZQU1YO0FBTkQsV0FBWSxZQUFZO0lBQ3RCLDZEQUFXLENBQUE7SUFDWCx5RUFBaUIsQ0FBQTtJQUNqQixpRkFBcUIsQ0FBQTtJQUNyQixtRUFBYyxDQUFBO0lBQ2QscUVBQWUsQ0FBQTtBQUNqQixDQUFDLEVBTlcsWUFBWSxLQUFaLFlBQVksUUFNdkI7QUFFRCxNQUFNLENBQU4sSUFBWSxPQWdDWDtBQWhDRCxXQUFZLE9BQU87SUFDakIsbURBQVcsQ0FBQTtJQUNYLDZDQUFRLENBQUE7SUFDUixxREFBWSxDQUFBO0lBQ1osaURBQVUsQ0FBQTtJQUNWLDJDQUFPLENBQUE7SUFDUCwrQ0FBUyxDQUFBO0lBQ1QsMkRBQWUsQ0FBQTtJQUNmLDZEQUFnQixDQUFBO0lBQ2hCLDZDQUFRLENBQUE7SUFDUixpREFBVSxDQUFBO0lBQ1YsZ0VBQWlCLENBQUE7SUFDakIsc0RBQVksQ0FBQTtJQUNaLGtEQUFVLENBQUE7SUFDViwwREFBYyxDQUFBO0lBQ2QsZ0RBQVMsQ0FBQTtJQUNULDREQUFlLENBQUE7SUFDZiw4Q0FBUSxDQUFBO0lBQ1IsZ0RBQVMsQ0FBQTtJQUNULDREQUFlLENBQUE7SUFDZiw4REFBZ0IsQ0FBQTtJQUNoQiw0Q0FBTyxDQUFBO0lBQ1Asc0NBQUksQ0FBQTtJQUNKLHdEQUFhLENBQUE7SUFDYixzREFBWSxDQUFBO0lBQ1osc0RBQVksQ0FBQTtJQUNaLG9EQUFXLENBQUE7SUFDWCxrREFBVSxDQUFBO0lBQ1YsOENBQVEsQ0FBQTtJQUNSLDBDQUFNLENBQUE7SUFDTixnREFBUyxDQUFBO0lBQ1Qsc0RBQVksQ0FBQTtBQUNkLENBQUMsRUFoQ1csT0FBTyxLQUFQLE9BQU8sUUFnQ2xCO0FBVUQsTUFBTSxDQUFOLElBQVksYUFTWDtBQVRELFdBQVksYUFBYTtJQUN2Qix1REFBTyxDQUFBO0lBQ1AseURBQVEsQ0FBQTtJQUNSLHlEQUFRLENBQUE7SUFDUix5REFBUSxDQUFBO0lBQ1IseURBQVEsQ0FBQTtJQUNSLHlEQUFRLENBQUE7SUFDUix5REFBUSxDQUFBO0lBQ1IsbURBQUssQ0FBQTtBQUNQLENBQUMsRUFUVyxhQUFhLEtBQWIsYUFBYSxRQVN4QiJ9
