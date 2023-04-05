@@ -72,16 +72,16 @@ export class XModem {
         break;
       case Protobuf.XModem_Control.SOH:
         this.counter = packet.seq;
-        if (this.validateCRC16(packet)) {
+        //if (this.validateCRC16(packet)) {
           this.rxBuffer[this.counter] = packet.buffer;
           return this.sendCommand(Protobuf.XModem_Control.ACK);
-        } else {
-          return this.sendCommand(
-            Protobuf.XModem_Control.NAK,
-            undefined,
-            packet.seq,
-          );
-        }
+        //} else {
+        //  return this.sendCommand(
+        //    Protobuf.XModem_Control.NAK,
+        //    undefined,
+        //    packet.seq,
+        //  );
+        //}
       case Protobuf.XModem_Control.STX:
         break;
       case Protobuf.XModem_Control.EOT:
