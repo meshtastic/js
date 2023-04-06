@@ -88,7 +88,7 @@ export class XModem {
         console.log(
           this.rxBuffer.reduce(
             (acc: Uint8Array, curr) => new Uint8Array([...acc, ...curr])
-          )
+          ).reduce((acc: string, curr) => acc + String.fromCharCode(curr), "")
         );
 
         // end of transmission
