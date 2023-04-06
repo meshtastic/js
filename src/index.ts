@@ -15,5 +15,5 @@ export {
   ISerialConnection,
   Types,
   Constants,
-  Protobuf,
+  Protobuf
 };

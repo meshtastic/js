@@ -7,7 +7,7 @@ export const transformHandler = (
   log: Logger<unknown>,
   onReleaseEvent: SubEvent<boolean>,
   onDeviceDebugLog: SubEvent<Uint8Array>,
-  concurrentLogOutput: boolean,
+  concurrentLogOutput: boolean
 ) => {
   let byteBuffer = new Uint8Array([]);
   return new TransformStream<Uint8Array, Uint8Array>({
@@ -31,7 +31,7 @@ export const transformHandler = (
                 Types.Emitter.connect,
                 `⚠️ Found unneccesary message padding, removing: ${byteBuffer
                   .subarray(0, framingIndex)
-                  .toString()}`,
+                  .toString()}`
               );
             }
 
@@ -49,11 +49,11 @@ export const transformHandler = (
             const packet = byteBuffer.subarray(4, 4 + (msb << 8) + lsb);
 
             const malformedDetectorIndex = packet.findIndex(
-              (byte) => byte === 0x94,
+              (byte) => byte === 0x94
             );
             if (
               malformedDetectorIndex !== -1 &&
-              packet[malformedDetectorIndex + 1] === 0xc3
+              packet[malformedDetectorIndex + 1] == 0xc3
             ) {
               log.warn(
                 Types.EmitterScope.iSerialConnection,
@@ -61,7 +61,7 @@ export const transformHandler = (
                 `⚠️ Malformed packet found, discarding: ${byteBuffer
                   .subarray(0, malformedDetectorIndex - 1)
                   .toString()}`,
-                Protobuf.LogRecord_Level.WARNING,
+                Protobuf.LogRecord_Level.WARNING
               );
 
               byteBuffer = byteBuffer.subarray(malformedDetectorIndex);
@@ -78,6 +78,6 @@ export const transformHandler = (
           processingExhausted = true;
         }
       }
-    },
+    }
   });
 };

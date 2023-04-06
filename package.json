@@ -1,6 +1,6 @@
 {
-  "name": "@SmartRocksProject/meshtasticjs",
-  "version": "2.1.6-0",
+  "name": "@smartrocksproject/meshtasticjs",
+  "version": "2.0.20-5",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
@@ -34,18 +34,24 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@buf/meshtastic_protobufs.bufbuild_es": "1.2.0-20230328173351-271d1533a896.1",
-    "@bufbuild/protobuf": "^1.2.0",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.0.0-20230217124815-d362b2e8810a.1",
+    "@bufbuild/protobuf": "^1.0.0",
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
-    "tslog": "^4.8.2"
+    "tslog": "^4.7.4"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
+    "@types/node": "^18.14.0",
     "@types/w3c-web-serial": "^1.0.3",
     "@types/web-bluetooth": "^0.0.16",
-    "rome": "^12.0.0",
-    "typedoc": "^0.23.28",
-    "typescript": "^5.0.2"
+    "@typescript-eslint/eslint-plugin": "^5.52.0",
+    "@typescript-eslint/parser": "^5.52.0",
+    "eslint": "^8.34.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-import-resolver-typescript": "^3.5.3",
+    "eslint-plugin-import": "^2.27.5",
+    "prettier": "^2.8.4",
+    "typedoc": "^0.23.25",
+    "typescript": "^4.9.5"
   }
 }

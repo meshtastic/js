@@ -1,15 +1,17 @@
-name: CI
-
-on: push
+name: Nightly
+on:
+  schedule:
+    - cron: 0 8 * * 1-5
+  workflow_dispatch: {}
 
 jobs:
-  publish:
+  trunk_check:
+    name: Trunk Check Upload
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code & submodules
+      - name: Checkout
         uses: actions/checkout@v3
-        with:
-          submodules: true
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2.2.4
@@ -21,11 +23,5 @@ jobs:
 
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1
-
-      - name: Build Package
-        run: pnpm run build
-
-      - name: "Publish to NPM"
-        uses: JS-DevTools/npm-publish@v1
         with:
-          token: ${{ secrets.NPM_TOKEN }}
+          trunk-token: ${{ secrets.TRUNK_TOKEN }}
