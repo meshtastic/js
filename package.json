@@ -4,7 +4,7 @@
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
-    "prepare": "npm run build"
+    "prepare": "npm run build",
     "build": "tsc",
     "watch": "tsc -w",
     "generate:docs": "typedoc src/index.ts"
