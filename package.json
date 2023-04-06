@@ -1,5 +1,5 @@
 {
-  "name": "@meshtastic/meshtasticjs",
+  "name": "@SmartRocksProject/meshtasticjs",
   "version": "2.1.6-0",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
