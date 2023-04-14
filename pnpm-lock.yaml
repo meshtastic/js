@@ -13,6 +13,9 @@ dependencies:
   sub-events:
     specifier: ^1.9.0
     version: 1.9.0
+  tslib:
+    specifier: ^2.5.0
+    version: 2.5.0
   tslog:
     specifier: ^4.8.2
     version: 4.8.2
@@ -182,6 +185,10 @@ packages:
   /sub-events@1.9.0:
     resolution: {integrity: sha512-dnFBayilG9Ku0k/lNs1Y7WV4kv91+ovCoeBV3uIYrY49DylvBb6z9d9ED2ctcrvX2YlReFalpCgJNtSgmrOaJg==}
     engines: {node: '>=10.0.0'}
+    dev: false
+
+  /tslib@2.5.0:
+    resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
     dev: false
 
   /tslog@4.8.2:
