@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "generate:docs": "typedoc src/index.ts"
+    "generate:docs": "typedoc src/index.ts",
+    "postinstall": "tsc"
   },
   "keywords": [
     "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
@@ -33,7 +34,7 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@buf/meshtastic_protobufs.bufbuild_es": "git://github.com/trelbutate/protobufs.git#main",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.2.0-20230328173351-271d1533a896.1",
     "@bufbuild/protobuf": "^1.2.0",
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
