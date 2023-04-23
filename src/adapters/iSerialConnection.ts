@@ -119,6 +119,7 @@ export class ISerialConnection extends IMeshDevice {
       this.complete();
     });
 
+    this.preventLock = false;
     /** Connect to device */
     await this.port
       .open({
