@@ -7,7 +7,6 @@
     "build": "tsc",
     "watch": "tsc -w",
     "generate:docs": "typedoc src/index.ts",
-    "postinstall": "tsc"
   },
   "keywords": [
     "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
