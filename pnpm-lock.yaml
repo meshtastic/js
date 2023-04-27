@@ -19,8 +19,8 @@ dependencies:
 
 devDependencies:
   '@types/node':
-    specifier: ^18.15.13
-    version: 18.15.13
+    specifier: ^18.16.1
+    version: 18.16.1
   '@types/w3c-web-serial':
     specifier: ^1.0.3
     version: 1.0.3
@@ -31,8 +31,8 @@ devDependencies:
     specifier: ^12.0.0
     version: 12.0.0
   typedoc:
-    specifier: ^0.24.4
-    version: 0.24.4(typescript@5.0.4)
+    specifier: ^0.24.6
+    version: 0.24.6(typescript@5.0.4)
   typescript:
     specifier: ^5.0.4
     version: 5.0.4
@@ -99,8 +99,8 @@ packages:
     dev: true
     optional: true
 
-  /@types/node@18.15.13:
-    resolution: {integrity: sha512-N+0kuo9KgrUQ1Sn/ifDXsvg0TTleP7rIy4zOBGECxAljqvqfqpTfzx0Q1NUedOixRMBfe2Whhb056a42cWs26Q==}
+  /@types/node@18.16.1:
+    resolution: {integrity: sha512-DZxSZWXxFfOlx7k7Rv4LAyiMroaxa3Ly/7OOzZO8cBNho0YzAi4qlbrx8W27JGqG57IgR/6J7r+nOJWw6kcvZA==}
     dev: true
 
   /@types/w3c-web-serial@1.0.3:
@@ -189,8 +189,8 @@ packages:
     engines: {node: '>=16'}
     dev: false
 
-  /typedoc@0.24.4(typescript@5.0.4):
-    resolution: {integrity: sha512-vQuliyGhJEGeKzzCFHbkS3m0gHoIL6cfr0fHf6eX658iGELtq2J9mWe0b+X5McEYgFoMuHFt5Py3Zug6Sxjn/Q==}
+  /typedoc@0.24.6(typescript@5.0.4):
+    resolution: {integrity: sha512-c3y3h45xJv3qYwKDAwU6Cl+26CjT0ZvblHzfHJ+SjQDM4p1mZxtgHky4lhmG0+nNarRht8kADfZlbspJWdZarQ==}
     engines: {node: '>= 14.14'}
     hasBin: true
     peerDependencies:
