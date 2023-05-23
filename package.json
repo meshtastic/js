@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "2.1.6-0",
+  "version": "2.1.9-1",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
@@ -11,6 +11,9 @@
   "keywords": [
     "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
   ],
+  "publishConfig": {
+    "provenance": true
+  },
   "sideEffects": false,
   "type": "module",
   "module": "dist/index.d.ts",
@@ -33,19 +36,19 @@
     "url": "https://github.com/meshtastic/meshtastic.js.git"
   },
   "dependencies": {
-    "@buf/meshtastic_protobufs.bufbuild_es": "1.2.0-20230328173351-271d1533a896.1",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.2.0-20230521124105-4e2469f0d506.1",
     "@bufbuild/protobuf": "^1.2.0",
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
-    "tslib": "^2.5.0",
+    "tslib": "^2.5.2",
     "tslog": "^4.8.2"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11",
+    "@types/node": "^20.2.3",
     "@types/w3c-web-serial": "^1.0.3",
-    "@types/web-bluetooth": "^0.0.16",
-    "rome": "^12.0.0",
-    "typedoc": "^0.23.28",
-    "typescript": "^5.0.2"
+    "@types/web-bluetooth": "^0.0.17",
+    "rome": "^12.1.2",
+    "typedoc": "^0.24.7",
+    "typescript": "^5.0.4"
   }
 }
