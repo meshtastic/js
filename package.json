@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "2.1.12-0",
+  "version": "2.1.18-0",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
@@ -23,7 +23,10 @@
       "types": "./types/index.d.ts"
     }
   },
-  "files": ["dist", ".npmrc"],
+  "files": [
+    "dist",
+    ".npmrc"
+  ],
   "types": "dist/index.d.ts",
   "bugs": {
     "url": "https://github.com/meshtastic/js/issues"
@@ -33,19 +36,19 @@
     "url": "https://github.com/meshtastic/js.git"
   },
   "dependencies": {
-    "@buf/meshtastic_protobufs.bufbuild_es": "1.2.0-20230521124105-4e2469f0d506.1",
-    "@bufbuild/protobuf": "^1.2.0",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.2.1-20230707163131-95ca7454484c.1",
+    "@bufbuild/protobuf": "^1.2.1",
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
-    "tslib": "^2.5.2",
+    "tslib": "^2.6.0",
     "tslog": "^4.8.2"
   },
   "devDependencies": {
-    "@types/node": "^20.2.3",
+    "@types/node": "^20.4.1",
     "@types/w3c-web-serial": "^1.0.3",
     "@types/web-bluetooth": "^0.0.17",
-    "rome": "^12.1.2",
-    "typedoc": "^0.24.7",
-    "typescript": "^5.0.4"
+    "rome": "^12.1.3",
+    "typedoc": "^0.24.8",
+    "typescript": "^5.1.6"
   }
 }
