@@ -5,6 +5,14 @@ import type {
   Protobuf,
 } from "./index.js";
 
+export interface IQueueItem {
+  id: number;
+  data: Uint8Array;
+  sent: boolean;
+  added: Date;
+  promise: Promise<number>;
+}
+
 export enum DeviceStatusEnum {
   DEVICE_RESTARTING = 1,
   DEVICE_DISCONNECTED = 2,

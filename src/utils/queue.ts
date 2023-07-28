@@ -1,13 +1,6 @@
 import { Protobuf } from "../index.js";
-import { PacketError } from "../types.js";
+import { IQueueItem, PacketError } from "../types.js";
 import { SubEvent } from "sub-events";
-
-export interface IQueueItem {
-  id: number;
-  data: Uint8Array;
-  sent: boolean;
-  promise: Promise<number>;
-}
 
 export class Queue {
   private queue: IQueueItem[] = [];
@@ -20,14 +13,19 @@ export class Queue {
     this.timeout = 60000;
   }
 
+  public getState(): IQueueItem[] {
+    return this.queue;
+  }
+
   public clear(): void {
     this.queue = [];
   }
 
-  public push(item: Omit<IQueueItem, "promise" | "sent">): void {
+  public push(item: Omit<IQueueItem, "promise" | "sent" | "added">): void {
     const queueItem: IQueueItem = {
       ...item,
       sent: false,
+      added: new Date(),
       promise: new Promise<number>((resolve, reject) => {
         this.ackNotifier.subscribe((id) => {
           if (item.id === id) {
@@ -44,7 +42,10 @@ export class Queue {
         setTimeout(() => {
           if (this.queue.findIndex((qi) => qi.id === item.id) !== -1) {
             this.remove(item.id);
-            console.warn(`Packet ${item.id} timed out`);
+            const decoded = Protobuf.ToRadio.fromBinary(item.data);
+            console.warn(
+              `Packet ${item.id} of type ${decoded.payloadVariant.case} timed out`,
+            );
 
             reject({
               id: item.id,
