@@ -1,7 +1,7 @@
 import { SubEvent } from "sub-events";
 
-import { Types } from "../index.js";
 import { IMeshDevice } from "../iMeshDevice.js";
+import { Types } from "../index.js";
 import { transformHandler } from "../utils/transformHandler.js";
 
 /** Allows to connect to a Meshtastic device over WebSerial */
@@ -11,7 +11,7 @@ export class ISerialConnection extends IMeshDevice {
 
   /** Serial port used to communicate with device. */
   private port: SerialPort | undefined;
-  private  readerHack: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  private readerHack: ReadableStreamDefaultReader<Uint8Array> | undefined;
   /** Transform stream for parsing raw serial data */
   private transformer?: TransformStream<Uint8Array, Uint8Array>;
 
@@ -55,9 +55,9 @@ export class ISerialConnection extends IMeshDevice {
   ): Promise<void> {
     this.onReleaseEvent.subscribe(async () => {
       this.preventLock = true;
-      await reader.cancel();    
-      await this.pipePromise?.catch(() => {});  
-      reader.releaseLock();      
+      await reader.cancel();
+      await this.pipePromise?.catch(() => {});
+      reader.releaseLock();
       await this.port?.close();
     });
 
@@ -72,9 +72,8 @@ export class ISerialConnection extends IMeshDevice {
         .catch(() => {
           this.log.debug(
             Types.Emitter[Types.Emitter.readFromRadio],
-            `Releasing reader`,
+            "Releasing reader",
           );
-          ("Releasing reader");
         });
     }
   }
@@ -134,8 +133,11 @@ export class ISerialConnection extends IMeshDevice {
             concurrentLogOutput,
           );
 
-          this.pipePromise = this.port.readable.pipeTo(this.transformer.writable);
-          const reader = this.readerHack = this.transformer.readable.getReader();
+          this.pipePromise = this.port.readable.pipeTo(
+            this.transformer.writable,
+          );
+          const reader = (this.readerHack =
+            this.transformer.readable.getReader());
           void this.readFromRadio(reader);
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
@@ -166,10 +168,10 @@ export class ISerialConnection extends IMeshDevice {
     // HACK: Inline onReleaseEvent
     // -- This should be used as an event, like intened
     this.preventLock = true;
-      await this.readerHack?.cancel();    
-      await this.pipePromise?.catch(() => {});  
-      this.readerHack?.releaseLock();      
-      if(this.port?.readable) await this.port?.close();
+    await this.readerHack?.cancel();
+    await this.pipePromise?.catch(() => {});
+    this.readerHack?.releaseLock();
+    if (this.port?.readable) await this.port?.close();
     // -------
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();

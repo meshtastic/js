@@ -1,7 +1,7 @@
 import { IBLEConnection } from "./adapters/iBleConnection.js";
 import { IHTTPConnection } from "./adapters/iHttpConnection.js";
-import { Types } from "./index.js";
 import { ISerialConnection } from "./adapters/iSerialConnection.js";
+import { Types } from "./index.js";
 
 /**
  * Allows to create new connections to devices and manages them. Alternatively,

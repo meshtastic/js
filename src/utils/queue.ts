@@ -1,6 +1,6 @@
-import { SubEvent } from "sub-events";
 import { Protobuf } from "../index.js";
 import { PacketError } from "../types.js";
+import { SubEvent } from "sub-events";
 
 export interface IQueueItem {
   id: number;

@@ -1,5 +1,5 @@
-import { Types } from "../index.js";
 import { IMeshDevice } from "../iMeshDevice.js";
+import { Types } from "../index.js";
 import { typedArrayToBuffer } from "../utils/general.js";
 
 /** Allows to connect to a Meshtastic device over HTTP(S) */

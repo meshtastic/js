@@ -1,4 +1,3 @@
-import { Types } from "../index.js";
 import {
   fromNumUUID,
   fromRadioUUID,
@@ -6,6 +5,7 @@ import {
   toRadioUUID,
 } from "../constants.js";
 import { IMeshDevice } from "../iMeshDevice.js";
+import { Types } from "../index.js";
 import { typedArrayToBuffer } from "../utils/general.js";
 
 /** Allows to connect to a Meshtastic device via bluetooth */

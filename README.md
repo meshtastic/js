@@ -38,7 +38,7 @@ pnpm build
 Optionally the doccumentation can be built with:
 
 ```bash
-pnpm generate:docs
+pnpm docs
 ```
 
 ### Compatibility

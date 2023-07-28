@@ -230,7 +230,7 @@ export abstract class IMeshDevice {
   public async setConfig(config: Protobuf.Config): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setConfig],
-      `Setting config, Variant: ${config.payloadVariant.case ?? "Unknown"}`,
+      `⚙️ Setting config, Variant: ${config.payloadVariant.case ?? "Unknown"}`,
     );
 
     if (!this.pendingSettingsChanges) {
@@ -259,7 +259,7 @@ export abstract class IMeshDevice {
   ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setModuleConfig],
-      "Setting module config",
+      "⚙️ Setting module config",
     );
 
     const moduleConfigMessage = new Protobuf.AdminMessage({
@@ -280,7 +280,7 @@ export abstract class IMeshDevice {
    * Sets devices owner data
    */
   public async setOwner(owner: Protobuf.User): Promise<number> {
-    this.log.debug(Types.Emitter[Types.Emitter.setOwner], "Setting owner");
+    this.log.debug(Types.Emitter[Types.Emitter.setOwner], "👤 Setting owner");
 
     const setOwnerMessage = new Protobuf.AdminMessage({
       payloadVariant: {
@@ -359,7 +359,10 @@ export abstract class IMeshDevice {
   public async getConfig(
     configType: Protobuf.AdminMessage_ConfigType,
   ): Promise<number> {
-    this.log.debug(Types.Emitter[Types.Emitter.getConfig], "Requesting config");
+    this.log.debug(
+      Types.Emitter[Types.Emitter.getConfig],
+      "⚙️ Requesting config",
+    );
 
     const getRadioRequestMessage = new Protobuf.AdminMessage({
       payloadVariant: {
@@ -383,7 +386,7 @@ export abstract class IMeshDevice {
   ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getModuleConfig],
-      "Requesting module config",
+      "⚙️ Requesting module config",
     );
 
     const getRadioRequestMessage = new Protobuf.AdminMessage({
@@ -402,7 +405,10 @@ export abstract class IMeshDevice {
 
   /** Gets devices Owner */
   public async getOwner(): Promise<number> {
-    this.log.debug(Types.Emitter[Types.Emitter.getOwner], "Requesting owner");
+    this.log.debug(
+      Types.Emitter[Types.Emitter.getOwner],
+      "👤 Requesting owner",
+    );
 
     const getOwnerRequestMessage = new Protobuf.AdminMessage({
       payloadVariant: {
@@ -424,7 +430,7 @@ export abstract class IMeshDevice {
   public async getMetadata(nodeNum: number): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getMetadata],
-      `Requesting metadata from ${nodeNum}`,
+      `🏷️ Requesting metadata from ${nodeNum}`,
     );
 
     const getDeviceMetricsRequestMessage = new Protobuf.AdminMessage({
@@ -879,7 +885,7 @@ export abstract class IMeshDevice {
       case "encrypted":
         this.log.debug(
           Types.Emitter[Types.Emitter.handleMeshPacket],
-          "Device received encrypted data packet, ignoring.",
+          "🔐 Device received encrypted data packet, ignoring.",
         );
         break;
     }
