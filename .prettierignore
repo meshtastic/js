@@ -1,7 +1,0 @@
-# Ignore artifacts:
-dist
-docs
-examples
-src/generated
-protobufs
-pnpm-lock.yaml
