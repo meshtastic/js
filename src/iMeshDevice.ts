@@ -996,6 +996,11 @@ export abstract class IMeshDevice {
             );
             break;
           case "getDeviceMetadataResponse":
+            this.log.debug(
+              Types.Emitter[Types.Emitter.getMetadata],
+              `🏷️ Recieved metadata packet from ${dataPacket.source}`,
+            );
+
             this.events.onDeviceMetadataPacket.emit({
               ...packetMetadata,
               data: adminMessage.payloadVariant.value,
