@@ -828,6 +828,26 @@ export abstract class IMeshDevice {
       case "xmodemPacket":
         void this.XModem.handlePacket(decodedMessage.payloadVariant.value);
         break;
+      case "metadata":
+        this.log.debug(
+          Types.Emitter[Types.Emitter.getMetadata],
+          "🏷️ Recieved metadata packet",
+        );
+
+        this.events.onDeviceMetadataPacket.emit({
+          id: decodedMessage.id,
+          rxTime: new Date(),
+          from: 0,
+          to: 0,
+          type: "direct",
+          channel: Types.ChannelNumber.PRIMARY,
+          data: decodedMessage.payloadVariant.value,
+        });
+        break;
+      case "mqttClientProxyMessage":
+        break;
+      default:
+        throw new Error(`Unhandled case ${decodedMessage.payloadVariant.case}`);
     }
   }
 
@@ -888,6 +908,9 @@ export abstract class IMeshDevice {
           "🔐 Device received encrypted data packet, ignoring.",
         );
         break;
+
+      default:
+        throw new Error(`Unhandled case ${meshPacket.payloadVariant.case}`);
     }
   }
 
@@ -972,6 +995,9 @@ export abstract class IMeshDevice {
             console.log(routingPacket.variant.value);
 
             break;
+
+          default:
+            throw new Error(`Unhandled case ${routingPacket.variant.case}`);
         }
         break;
 
@@ -1007,7 +1033,7 @@ export abstract class IMeshDevice {
             });
             break;
           default:
-            this.log.warn(
+            this.log.error(
               Types.Emitter[Types.Emitter.handleMeshPacket],
               `⚠️ Received unhandled AdminMessage, type ${
                 adminMessage.payloadVariant.case ?? "undefined"
@@ -1082,6 +1108,9 @@ export abstract class IMeshDevice {
           data: dataPacket.payload,
         });
         break;
+
+      default:
+        throw new Error(`Unhandled case ${dataPacket.portnum}`);
     }
   }
 }
