@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "2.1.22-3",
+  "version": "2.1.22-4",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
@@ -42,10 +42,10 @@
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
     "tslib": "^2.6.1",
-    "tslog": "^4.8.2"
+    "tslog": "^4.8.4"
   },
   "devDependencies": {
-    "@types/node": "^20.4.7",
+    "@types/node": "^20.4.8",
     "@types/w3c-web-serial": "^1.0.3",
     "@types/web-bluetooth": "^0.0.17",
     "rome": "^12.1.3",

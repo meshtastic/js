@@ -823,11 +823,18 @@ export abstract class IMeshDevice {
         break;
 
       case "queueStatus":
+        this.log.trace(
+          Types.Emitter[Types.Emitter.handleFromRadio],
+          `🚧 Received Queue Status: ${decodedMessage.payloadVariant.value}`,
+        );
+
+        this.events.onQueueStatus.emit(decodedMessage.payloadVariant.value);
         break;
 
       case "xmodemPacket":
         void this.XModem.handlePacket(decodedMessage.payloadVariant.value);
         break;
+
       case "metadata":
         this.log.debug(
           Types.Emitter[Types.Emitter.getMetadata],

@@ -21,13 +21,13 @@ dependencies:
     specifier: ^2.6.1
     version: 2.6.1
   tslog:
-    specifier: ^4.8.2
-    version: 4.8.2
+    specifier: ^4.8.4
+    version: 4.8.4
 
 devDependencies:
   '@types/node':
-    specifier: ^20.4.7
-    version: 20.4.7
+    specifier: ^20.4.8
+    version: 20.4.8
   '@types/w3c-web-serial':
     specifier: ^1.0.3
     version: 1.0.3
@@ -106,8 +106,8 @@ packages:
     dev: true
     optional: true
 
-  /@types/node@20.4.7:
-    resolution: {integrity: sha512-bUBrPjEry2QUTsnuEjzjbS7voGWCc30W0qzgMf90GPeDGFRakvrz47ju+oqDAKCXLUCe39u57/ORMl/O/04/9g==}
+  /@types/node@20.4.8:
+    resolution: {integrity: sha512-0mHckf6D2DiIAzh8fM8f3HQCvMKDpK94YQ0DSVkfWTG9BZleYIWudw9cJxX8oCk9bM+vAkDyujDV6dmKHbvQpg==}
     dev: true
 
   /@types/w3c-web-serial@1.0.3:
@@ -195,8 +195,8 @@ packages:
     resolution: {integrity: sha512-t0hLfiEKfMUoqhG+U1oid7Pva4bbDPHYfJNiB7BiIjRkj1pyC++4N3huJfqY6aRH6VTB0rvtzQwjM4K6qpfOig==}
     dev: false
 
-  /tslog@4.8.2:
-    resolution: {integrity: sha512-eAKIRjxfSKYLs06r1wT7oou6Uv9VN6NW9g0JPidBlqQwPBBl5+84dm7r8zSOPVq1kyfEw1P6B3/FLSpZCorAgA==}
+  /tslog@4.8.4:
+    resolution: {integrity: sha512-JMiLMY27EG95/lY2OUP9Oh7cSznN6m7Kb23RuEgBYDy6zG70Bb9n0jYz2DbhGRJB7HOfqz60uSf9OCoWBIAeoA==}
     engines: {node: '>=16'}
     dev: false
 

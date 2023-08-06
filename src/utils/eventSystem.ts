@@ -229,7 +229,14 @@ export class EventSystem {
   /**
    * Outputs status of pending settings changes
    *
-   * @event pendingSettingsChange
+   * @event onpendingSettingsChange
    */
   public readonly onPendingSettingsChange = new SubEvent<boolean>();
+
+  /**
+   * Fires when a QueueStatus message is generated
+   *
+   * @event onQueueStatus
+   */
+  public readonly onQueueStatus = new SubEvent<Protobuf.QueueStatus>();
 }
