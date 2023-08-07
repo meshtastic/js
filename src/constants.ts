@@ -17,4 +17,4 @@ export const serviceUUID = "6ba1b218-15a8-461f-9fa8-5dcae273eafd";
 export const broadcastNum = 0xffffffff;
 
 /** Minimum device firmware version supported by this version of the library. */
-export const minFwVer = 2.0;
+export const minFwVer = 2.2;
