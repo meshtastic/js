@@ -698,15 +698,6 @@ export abstract class IMeshDevice {
         break;
 
       case "myInfo":
-        if (
-          parseFloat(decodedMessage.payloadVariant.value.firmwareVersion) <
-          minFwVer
-        ) {
-          this.log.fatal(
-            Types.Emitter[Types.Emitter.handleFromRadio],
-            `Device firmware outdated. Min supported: ${minFwVer} got : ${decodedMessage.payloadVariant.value.firmwareVersion}`,
-          );
-        }
         this.events.onMyNodeInfo.emit(decodedMessage.payloadVariant.value);
         this.log.info(
           Types.Emitter[Types.Emitter.handleFromRadio],
@@ -836,6 +827,15 @@ export abstract class IMeshDevice {
         break;
 
       case "metadata":
+        if (
+          parseFloat(decodedMessage.payloadVariant.value.firmwareVersion) <
+          minFwVer
+        ) {
+          this.log.fatal(
+            Types.Emitter[Types.Emitter.handleFromRadio],
+            `Device firmware outdated. Min supported: ${minFwVer} got : ${decodedMessage.payloadVariant.value.firmwareVersion}`,
+          );
+        }
         this.log.debug(
           Types.Emitter[Types.Emitter.getMetadata],
           "🏷️ Recieved metadata packet",

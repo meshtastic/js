@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "2.1.22-5",
+  "version": "2.2.0-0",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
@@ -37,12 +37,12 @@
     "url": "https://github.com/meshtastic/js.git"
   },
   "dependencies": {
-    "@buf/meshtastic_protobufs.bufbuild_es": "1.3.0-20230803114510-a8a400a4f3ea.1",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.3.0-20230807174505-db3cb0c7cf53.1",
     "@bufbuild/protobuf": "^1.3.0",
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
     "tslib": "^2.6.1",
-    "tslog": "^4.8.6"
+    "tslog": "^4.8.7"
   },
   "devDependencies": {
     "@types/node": "^20.4.8",
