@@ -42,7 +42,7 @@
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
     "tslib": "^2.6.1",
-    "tslog": "^4.8.4"
+    "tslog": "^4.8.6"
   },
   "devDependencies": {
     "@types/node": "^20.4.8",

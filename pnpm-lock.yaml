@@ -21,8 +21,8 @@ dependencies:
     specifier: ^2.6.1
     version: 2.6.1
   tslog:
-    specifier: ^4.8.4
-    version: 4.8.4
+    specifier: ^4.8.6
+    version: 4.8.6
 
 devDependencies:
   '@types/node':
@@ -195,8 +195,8 @@ packages:
     resolution: {integrity: sha512-t0hLfiEKfMUoqhG+U1oid7Pva4bbDPHYfJNiB7BiIjRkj1pyC++4N3huJfqY6aRH6VTB0rvtzQwjM4K6qpfOig==}
     dev: false
 
-  /tslog@4.8.4:
-    resolution: {integrity: sha512-JMiLMY27EG95/lY2OUP9Oh7cSznN6m7Kb23RuEgBYDy6zG70Bb9n0jYz2DbhGRJB7HOfqz60uSf9OCoWBIAeoA==}
+  /tslog@4.8.6:
+    resolution: {integrity: sha512-aUlFTEU0PrdtIUASfzhQ4Dnz8WLjaXagPKrSeUADRqMkskZXE4p37F4LA2LWNmCD2b41bGptnsq8E1TIBeE7tg==}
     engines: {node: '>=16'}
     dev: false
 
