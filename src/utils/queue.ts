@@ -71,7 +71,9 @@ export class Queue {
   }
 
   public processError(e: PacketError): void {
-    console.error(`Error received for packet ${e.id}: ${e.error}`);
+    console.error(
+      `Error received for packet ${e.id}: ${Protobuf.Routing_Error[e.error]}`,
+    );
     this.errorNotifier.emit(e);
   }
 
