@@ -5,19 +5,19 @@ import { typedArrayToBuffer } from "../utils/general.js";
 /** Allows to connect to a Meshtastic device over HTTP(S) */
 export class IHTTPConnection extends IMeshDevice {
   /** Defines the connection type as http */
-  connType: Types.ConnectionTypeName;
+  public connType: Types.ConnectionTypeName;
 
   /** URL of the device that is to be connected to. */
-  url: string;
+  protected portId: string;
 
   /** Enables receiving messages all at once, versus one per request */
-  receiveBatchRequests: boolean;
+  private receiveBatchRequests: boolean;
 
-  readLoop: ReturnType<typeof setInterval> | null;
+  private readLoop: ReturnType<typeof setInterval> | null;
 
-  peningRequest: boolean;
+  private peningRequest: boolean;
 
-  abortController: AbortController;
+  private abortController: AbortController;
 
   constructor(configId?: number) {
     super(configId);
@@ -25,7 +25,7 @@ export class IHTTPConnection extends IMeshDevice {
     this.log = this.log.getSubLogger({ name: "iHttpConnection" });
 
     this.connType = "http";
-    this.url = "http://meshtastic.local";
+    this.portId = "";
     this.receiveBatchRequests = false;
     this.readLoop = null;
     this.peningRequest = false;
@@ -50,7 +50,7 @@ export class IHTTPConnection extends IMeshDevice {
 
     this.receiveBatchRequests = receiveBatchRequests;
 
-    this.url = `${tls ? "https://" : "http://"}${address}`;
+    this.portId = `${tls ? "https://" : "http://"}${address}`;
 
     if (
       this.deviceStatus === Types.DeviceStatusEnum.DEVICE_CONNECTING &&
@@ -106,7 +106,10 @@ export class IHTTPConnection extends IMeshDevice {
 
     let pingSuccessful = false;
 
-    await fetch(`${this.url}/hotspot-detect.html`, { signal, mode: "no-cors" })
+    await fetch(`${this.portId}/hotspot-detect.html`, {
+      signal,
+      mode: "no-cors",
+    })
       .then(() => {
         pingSuccessful = true;
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
@@ -130,7 +133,7 @@ export class IHTTPConnection extends IMeshDevice {
     while (readBuffer.byteLength > 0) {
       this.peningRequest = true;
       await fetch(
-        `${this.url}/api/v1/fromradio?all=${
+        `${this.portId}/api/v1/fromradio?all=${
           this.receiveBatchRequests ? "true" : "false"
         }`,
         {
@@ -169,7 +172,7 @@ export class IHTTPConnection extends IMeshDevice {
   protected async writeToRadio(data: Uint8Array): Promise<void> {
     const { signal } = this.abortController;
 
-    await fetch(`${this.url}/api/v1/toradio`, {
+    await fetch(`${this.portId}/api/v1/toradio`, {
       signal,
       method: "PUT",
       headers: {

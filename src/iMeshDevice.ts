@@ -11,6 +11,8 @@ export abstract class IMeshDevice {
   /** Abstract property that states the connection type */
   protected abstract connType: Types.ConnectionTypeName;
 
+  protected abstract portId: string;
+
   /** Logs to the console and the logging event emitter */
   protected log: Logger<unknown>;
 

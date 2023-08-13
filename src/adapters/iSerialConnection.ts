@@ -7,11 +7,15 @@ import { transformHandler } from "../utils/transformHandler.js";
 /** Allows to connect to a Meshtastic device over WebSerial */
 export class ISerialConnection extends IMeshDevice {
   /** Defines the connection type as serial */
-  connType: Types.ConnectionTypeName;
+  public connType: Types.ConnectionTypeName;
+
+  protected portId: string;
 
   /** Serial port used to communicate with device. */
-  private port: SerialPort | undefined;
+  public port: SerialPort | undefined;
+
   private readerHack: ReadableStreamDefaultReader<Uint8Array> | undefined;
+
   /** Transform stream for parsing raw serial data */
   private transformer?: TransformStream<Uint8Array, Uint8Array>;
 
@@ -36,6 +40,7 @@ export class ISerialConnection extends IMeshDevice {
     this.log = this.log.getSubLogger({ name: "iSerialConnection" });
 
     this.connType = "serial";
+    this.portId = "";
     this.port = undefined;
     this.transformer = undefined;
     this.onReleaseEvent = new SubEvent<boolean>();
@@ -107,6 +112,8 @@ export class ISerialConnection extends IMeshDevice {
 
     /** Set device if specified, else request. */
     this.port = port ?? (await this.getPort());
+
+    // this.portId = this.port. TODO: add once WebSerial adds unique/port identifiers
 
     /** Setup event listners */
     this.port.addEventListener("disconnect", () => {

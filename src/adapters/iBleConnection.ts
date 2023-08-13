@@ -11,27 +11,28 @@ import { typedArrayToBuffer } from "../utils/general.js";
 /** Allows to connect to a Meshtastic device via bluetooth */
 export class IBLEConnection extends IMeshDevice {
   /** Defines the connection type as ble */
-  connType: Types.ConnectionTypeName;
+  public connType: Types.ConnectionTypeName;
+
+  public portId: string;
 
   /** Currently connected BLE device */
-  device: BluetoothDevice | undefined;
+  public device: BluetoothDevice | undefined;
 
-  GATTServer: BluetoothRemoteGATTServer | undefined;
-
-  /** Short Description */
-  service: BluetoothRemoteGATTService | undefined;
+  private GATTServer: BluetoothRemoteGATTServer | undefined;
 
   /** Short Description */
-  toRadioCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
+  private service: BluetoothRemoteGATTService | undefined;
 
   /** Short Description */
-  fromRadioCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
+  private toRadioCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
   /** Short Description */
-  fromNumCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
+  private fromRadioCharacteristic:
+    | BluetoothRemoteGATTCharacteristic
+    | undefined;
 
-  /** States if the device was force disconnected by a user */
-  userInitiatedDisconnect: boolean;
+  /** Short Description */
+  private fromNumCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
   constructor(configId?: number) {
     super(configId);
@@ -39,13 +40,13 @@ export class IBLEConnection extends IMeshDevice {
     this.log = this.log.getSubLogger({ name: "iHttpConnection" });
 
     this.connType = "ble";
+    this.portId = "";
     this.device = undefined;
     this.service = undefined;
     this.GATTServer = undefined;
     this.toRadioCharacteristic = undefined;
     this.fromRadioCharacteristic = undefined;
     this.fromNumCharacteristic = undefined;
-    this.userInitiatedDisconnect = false;
     // this.pendingRead = false;
 
     this.log.debug(
@@ -95,6 +96,8 @@ export class IBLEConnection extends IMeshDevice {
 
     /** Set device if specified, else request. */
     this.device = device ?? (await this.getDevice(deviceFilter));
+
+    this.portId = this.device.id;
 
     /** Setup event listners */
     this.device.addEventListener("gattserverdisconnected", () => {
@@ -184,7 +187,6 @@ export class IBLEConnection extends IMeshDevice {
 
   /** Disconnects from the Meshtastic device */
   public disconnect(): void {
-    this.userInitiatedDisconnect = true;
     this.device?.gatt?.disconnect();
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
