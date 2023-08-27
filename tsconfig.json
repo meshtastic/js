@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ESNext",
     "inlineSourceMap": true,
@@ -25,7 +25,9 @@
     "importHelpers": true,
     "removeComments": false
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "typedocOptions": {
     "out": "docs"
   }
