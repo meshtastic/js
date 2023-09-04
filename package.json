@@ -1,5 +1,5 @@
 {
-  "name": "@meshtastic/meshtasticjs",
+  "name": "@pdxlocs/pdxlocsmeshtasticjs",
   "version": "2.2.3-0",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
