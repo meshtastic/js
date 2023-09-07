@@ -124,14 +124,14 @@ export interface LogEvent {
 }
 
 export enum ChannelNumber {
-  PRIMARY = 1,
-  CHANNEL1 = 2,
-  CHANNEL2 = 3,
-  CHANNEL3 = 4,
-  CHANNEL4 = 5,
-  CHANNEL5 = 6,
-  CHANNEL6 = 7,
-  ADMIN = 8,
+  PRIMARY = 0,
+  CHANNEL1 = 1,
+  CHANNEL2 = 2,
+  CHANNEL3 = 3,
+  CHANNEL4 = 4,
+  CHANNEL5 = 5,
+  CHANNEL6 = 6,
+  ADMIN = 7,
 }
 
 export type ConnectionType =
