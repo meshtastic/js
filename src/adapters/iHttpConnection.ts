@@ -15,7 +15,7 @@ export class IHTTPConnection extends IMeshDevice {
 
   private readLoop: ReturnType<typeof setInterval> | null;
 
-  private peningRequest: boolean;
+  private pendingRequest: boolean;
 
   private abortController: AbortController;
 
@@ -28,7 +28,7 @@ export class IHTTPConnection extends IMeshDevice {
     this.portId = "";
     this.receiveBatchRequests = false;
     this.readLoop = null;
-    this.peningRequest = false;
+    this.pendingRequest = false;
     this.abortController = new AbortController();
 
     this.log.debug(
@@ -124,14 +124,14 @@ export class IHTTPConnection extends IMeshDevice {
 
   /** Reads any avaliable protobuf messages from the radio */
   protected async readFromRadio(): Promise<void> {
-    if (this.peningRequest) {
+    if (this.pendingRequest) {
       return;
     }
     let readBuffer = new ArrayBuffer(1);
     const { signal } = this.abortController;
 
     while (readBuffer.byteLength > 0) {
-      this.peningRequest = true;
+      this.pendingRequest = true;
       await fetch(
         `${this.portId}/api/v1/fromradio?all=${
           this.receiveBatchRequests ? "true" : "false"
@@ -145,7 +145,7 @@ export class IHTTPConnection extends IMeshDevice {
         },
       )
         .then(async (response) => {
-          this.peningRequest = false;
+          this.pendingRequest = false;
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
           readBuffer = await response.arrayBuffer();
@@ -155,7 +155,7 @@ export class IHTTPConnection extends IMeshDevice {
           }
         })
         .catch((e: Error) => {
-          this.peningRequest = false;
+          this.pendingRequest = false;
           this.log.error(
             Types.Emitter[Types.Emitter.readFromRadio],
             `❌ ${e.message}`,
