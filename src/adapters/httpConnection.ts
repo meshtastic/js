@@ -1,9 +1,9 @@
-import { IMeshDevice } from "../iMeshDevice.js";
+import { MeshDevice } from "../meshDevice.js";
 import { Types } from "../index.js";
 import { typedArrayToBuffer } from "../utils/general.js";
 
 /** Allows to connect to a Meshtastic device over HTTP(S) */
-export class IHTTPConnection extends IMeshDevice {
+export class HttpConnection extends MeshDevice {
   /** Defines the connection type as http */
   public connType: Types.ConnectionTypeName;
 
@@ -45,7 +45,7 @@ export class IHTTPConnection extends IMeshDevice {
     fetchInterval = 3000,
     receiveBatchRequests = false,
     tls = false,
-  }: Types.HTTPConnectionParameters): Promise<void> {
+  }: Types.HttpConnectionParameters): Promise<void> {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
     this.receiveBatchRequests = receiveBatchRequests;

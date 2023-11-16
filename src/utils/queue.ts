@@ -1,9 +1,9 @@
 import { Protobuf } from "../index.js";
-import { IQueueItem, PacketError } from "../types.js";
+import { QueueItem, PacketError } from "../types.js";
 import { SubEvent } from "sub-events";
 
 export class Queue {
-  private queue: IQueueItem[] = [];
+  private queue: QueueItem[] = [];
   private lock = false;
   private ackNotifier = new SubEvent<number>();
   private errorNotifier = new SubEvent<PacketError>();
@@ -13,7 +13,7 @@ export class Queue {
     this.timeout = 60000;
   }
 
-  public getState(): IQueueItem[] {
+  public getState(): QueueItem[] {
     return this.queue;
   }
 
@@ -21,8 +21,8 @@ export class Queue {
     this.queue = [];
   }
 
-  public push(item: Omit<IQueueItem, "promise" | "sent" | "added">): void {
-    const queueItem: IQueueItem = {
+  public push(item: Omit<QueueItem, "promise" | "sent" | "added">): void {
+    const queueItem: QueueItem = {
       ...item,
       sent: false,
       added: new Date(),

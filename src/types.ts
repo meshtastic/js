@@ -5,7 +5,7 @@ import type {
   Protobuf,
 } from "./index.js";
 
-export interface IQueueItem {
+export interface QueueItem {
   id: number;
   data: Uint8Array;
   sent: boolean;
@@ -24,11 +24,11 @@ export enum DeviceStatusEnum {
 }
 
 export type ConnectionParameters =
-  | HTTPConnectionParameters
-  | BLEConnectionParameters
+  | HttpConnectionParameters
+  | BleConnectionParameters
   | SerialConnectionParameters;
 
-export interface HTTPConnectionParameters {
+export interface HttpConnectionParameters {
   /** Address The IP Address/Domain to connect to, without protocol */
   address: string;
   /**
@@ -45,7 +45,7 @@ export interface HTTPConnectionParameters {
   fetchInterval: number;
 }
 
-export interface BLEConnectionParameters {
+export interface BleConnectionParameters {
   /** Optional filter options for the web bluetooth api requestDevice() method */
   deviceFilter?: RequestDeviceOptions;
   /** Connect directly to a Bluetooth deivce, obtained from `getDevices()` */

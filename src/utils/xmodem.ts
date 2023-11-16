@@ -2,16 +2,16 @@ import { Protobuf } from "../index.js";
 import crc16ccitt from "crc/calculators/crc16ccitt";
 
 //if counter > 35 then reset counter/clear/error/reject promise
-type XModemProps = (toRadio: Uint8Array, id?: number) => Promise<number>;
+type XmodemProps = (toRadio: Uint8Array, id?: number) => Promise<number>;
 
-export class XModem {
-  private sendRaw: XModemProps;
+export class Xmodem {
+  private sendRaw: XmodemProps;
   private rxBuffer: Uint8Array[];
   private txBuffer: Uint8Array[];
   private textEncoder: TextEncoder;
   private counter: number;
 
-  constructor(sendRaw: XModemProps) {
+  constructor(sendRaw: XmodemProps) {
     this.sendRaw = sendRaw;
     this.rxBuffer = [];
     this.txBuffer = [];

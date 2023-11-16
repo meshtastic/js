@@ -1,11 +1,11 @@
 import { SubEvent } from "sub-events";
 
-import { IMeshDevice } from "../iMeshDevice.js";
+import { MeshDevice } from "../meshDevice.js";
 import { Types } from "../index.js";
 import { transformHandler } from "../utils/transformHandler.js";
 
 /** Allows to connect to a Meshtastic device over WebSerial */
-export class ISerialConnection extends IMeshDevice {
+export class SerialConnection extends MeshDevice {
   /** Defines the connection type as serial */
   public connType: Types.ConnectionTypeName;
 

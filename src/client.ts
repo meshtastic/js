@@ -1,6 +1,6 @@
-import { IBLEConnection } from "./adapters/iBleConnection.js";
-import { IHTTPConnection } from "./adapters/iHttpConnection.js";
-import { ISerialConnection } from "./adapters/iSerialConnection.js";
+import { BleConnection } from "./adapters/bleConnection.js";
+import { HttpConnection } from "./adapters/httpConnection.js";
+import { SerialConnection } from "./adapters/serialConnection.js";
 import { Types } from "./index.js";
 
 /**
@@ -19,26 +19,26 @@ export class Client {
   /**
    * Creates a new Bluetooth Low Enery connection interface
    */
-  public createBLEConnection(configId?: number): IBLEConnection {
-    const iBLEConnection = new IBLEConnection(configId);
-    this.deviceInterfaces.push(iBLEConnection);
-    return iBLEConnection;
+  public createBleConnection(configId?: number): BleConnection {
+    const bleConnection = new BleConnection(configId);
+    this.deviceInterfaces.push(bleConnection);
+    return bleConnection;
   }
 
   /**
    * Creates a new HTTP(S) connection interface
    */
-  public createHTTPConnection(configId?: number): IHTTPConnection {
-    const iHTTPConnection = new IHTTPConnection(configId);
-    this.deviceInterfaces.push(iHTTPConnection);
-    return iHTTPConnection;
+  public createHttpConnection(configId?: number): HttpConnection {
+    const httpConnection = new HttpConnection(configId);
+    this.deviceInterfaces.push(httpConnection);
+    return httpConnection;
   }
 
   /**
    * Creates a new Serial connection interface
    */
-  public createSerialConnection(configId?: number): ISerialConnection {
-    const iSerialConnection = new ISerialConnection(configId);
+  public createSerialConnection(configId?: number): SerialConnection {
+    const iSerialConnection = new SerialConnection(configId);
     this.deviceInterfaces.push(iSerialConnection);
     return iSerialConnection;
   }

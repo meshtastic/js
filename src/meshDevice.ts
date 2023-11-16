@@ -4,10 +4,10 @@ import { broadcastNum, minFwVer } from "./constants.js";
 import { Protobuf, Types } from "./index.js";
 import { EventSystem } from "./utils/eventSystem.js";
 import { Queue } from "./utils/queue.js";
-import { XModem } from "./utils/xmodem.js";
+import { Xmodem } from "./utils/xmodem.js";
 
 /** Base class for connection methods to extend */
-export abstract class IMeshDevice {
+export abstract class MeshDevice {
   /** Abstract property that states the connection type */
   protected abstract connType: Types.ConnectionTypeName;
 
@@ -39,7 +39,7 @@ export abstract class IMeshDevice {
 
   public events: EventSystem;
 
-  public XModem: XModem;
+  public XModem: Xmodem;
 
   constructor(configId?: number) {
     this.log = new Logger({
@@ -55,7 +55,7 @@ export abstract class IMeshDevice {
     this.configId = configId ?? this.generateRandId();
     this.queue = new Queue();
     this.events = new EventSystem();
-    this.XModem = new XModem(this.sendRaw.bind(this)); //TODO: try wihtout bind
+    this.XModem = new Xmodem(this.sendRaw.bind(this)); //TODO: try wihtout bind
 
     this.events.onDeviceStatus.subscribe((status) => {
       this.deviceStatus = status;
@@ -212,18 +212,17 @@ export abstract class IMeshDevice {
   ): Promise<number> {
     if (toRadio.length > 512) {
       throw new Error("Message longer than 512 bytes, it will not be sent!");
-    } else {
-      this.queue.push({
-        id,
-        data: toRadio,
-      });
-
-      await this.queue.processQueue(async (data) => {
-        await this.writeToRadio(data);
-      });
-
-      return this.queue.wait(id);
     }
+    this.queue.push({
+      id,
+      data: toRadio,
+    });
+
+    await this.queue.processQueue(async (data) => {
+      await this.writeToRadio(data);
+    });
+
+    return this.queue.wait(id);
   }
 
   /**
@@ -682,7 +681,7 @@ export abstract class IMeshDevice {
       throw new Error("Cannot generate CSPRN");
     }
 
-    return Math.floor(seed[0] * Math.pow(2, -32) * 1e9);
+    return Math.floor(seed[0] * 2 ** -32 * 1e9);
   }
 
   /**

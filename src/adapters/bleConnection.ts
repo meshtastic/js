@@ -1,15 +1,15 @@
 import {
-  fromNumUUID,
-  fromRadioUUID,
-  serviceUUID,
-  toRadioUUID,
+  FromNumUuid,
+  FromRadioUuid,
+  ServiceUuid,
+  ToRadioUuid,
 } from "../constants.js";
-import { IMeshDevice } from "../iMeshDevice.js";
+import { MeshDevice } from "../meshDevice.js";
 import { Types } from "../index.js";
 import { typedArrayToBuffer } from "../utils/general.js";
 
 /** Allows to connect to a Meshtastic device via bluetooth */
-export class IBLEConnection extends IMeshDevice {
+export class BleConnection extends MeshDevice {
   /** Defines the connection type as ble */
   public connType: Types.ConnectionTypeName;
 
@@ -79,7 +79,7 @@ export class IBLEConnection extends IMeshDevice {
   public getDevice(filter?: RequestDeviceOptions): Promise<BluetoothDevice> {
     return navigator.bluetooth.requestDevice(
       filter ?? {
-        filters: [{ services: [serviceUUID] }],
+        filters: [{ services: [ServiceUuid] }],
       },
     );
   }
@@ -90,7 +90,7 @@ export class IBLEConnection extends IMeshDevice {
   public async connect({
     device,
     deviceFilter,
-  }: Types.BLEConnectionParameters): Promise<void> {
+  }: Types.BleConnectionParameters): Promise<void> {
     /** Set device state to connecting */
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
 
@@ -126,7 +126,7 @@ export class IBLEConnection extends IMeshDevice {
         );
       });
 
-    await this.GATTServer?.getPrimaryService(serviceUUID)
+    await this.GATTServer?.getPrimaryService(ServiceUuid)
       .then((service) => {
         this.log.info(
           Types.Emitter[Types.Emitter.connect],
@@ -141,7 +141,7 @@ export class IBLEConnection extends IMeshDevice {
         );
       });
 
-    [toRadioUUID, fromRadioUUID, fromNumUUID].map(async (uuid) => {
+    [ToRadioUuid, FromRadioUuid, FromNumUuid].map(async (uuid) => {
       await this.service
         ?.getCharacteristic(uuid)
         .then((characteristic) => {
@@ -150,13 +150,13 @@ export class IBLEConnection extends IMeshDevice {
             `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.uuid}`,
           );
           switch (uuid) {
-            case toRadioUUID:
+            case ToRadioUuid:
               this.toRadioCharacteristic = characteristic;
               break;
-            case fromRadioUUID:
+            case FromRadioUuid:
               this.fromRadioCharacteristic = characteristic;
               break;
-            case fromNumUUID:
+            case FromNumUuid:
               this.fromNumCharacteristic = characteristic;
               break;
           }
