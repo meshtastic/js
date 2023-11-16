@@ -1,12 +1,11 @@
 {
   "name": "@meshtastic/meshtasticjs",
-  "version": "2.2.13-0",
+  "version": "2.2.13-1",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "check": "rome check .",
     "generate:docs": "typedoc src/index.ts"
   },
   "keywords": [
