@@ -23,7 +23,10 @@
       "types": "./types/index.d.ts"
     }
   },
-  "files": ["dist", ".npmrc"],
+  "files": [
+    "dist",
+    ".npmrc"
+  ],
   "types": "dist/index.d.ts",
   "bugs": {
     "url": "https://github.com/meshtastic/js/issues"
@@ -35,7 +38,6 @@
   "dependencies": {
     "@buf/meshtastic_protobufs.bufbuild_es": "1.4.2-20231115125959-252a144b0286.1",
     "@bufbuild/protobuf": "^1.4.2",
-    "biome": "^0.3.3",
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
     "tslib": "^2.6.2",
@@ -45,6 +47,7 @@
     "@types/node": "^20.9.0",
     "@types/w3c-web-serial": "^1.0.6",
     "@types/web-bluetooth": "^0.0.20",
+    "biome": "^0.3.3",
     "typedoc": "^0.25.3",
     "typescript": "^5.2.2"
   }
