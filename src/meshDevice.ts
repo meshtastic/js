@@ -1,6 +1,6 @@
 import { Logger } from "tslog";
 
-import { broadcastNum, minFwVer } from "./constants.js";
+import { broadcastNum } from "./constants.js";
 import { Protobuf, Types } from "./index.js";
 import { EventSystem } from "./utils/eventSystem.js";
 import { Queue } from "./utils/queue.js";
@@ -827,33 +827,6 @@ export abstract class MeshDevice {
         void this.XModem.handlePacket(decodedMessage.payloadVariant.value);
         break;
 
-      case "metadata":
-        if (
-          parseFloat(decodedMessage.payloadVariant.value.firmwareVersion) <
-          minFwVer
-        ) {
-          this.log.fatal(
-            Types.Emitter[Types.Emitter.handleFromRadio],
-            `Device firmware outdated. Min supported: ${minFwVer} got : ${decodedMessage.payloadVariant.value.firmwareVersion}`,
-          );
-        }
-        this.log.debug(
-          Types.Emitter[Types.Emitter.getMetadata],
-          "🏷️ Recieved metadata packet",
-        );
-
-        this.events.onDeviceMetadataPacket.emit({
-          id: decodedMessage.id,
-          rxTime: new Date(),
-          from: 0,
-          to: 0,
-          type: "direct",
-          channel: Types.ChannelNumber.PRIMARY,
-          data: decodedMessage.payloadVariant.value,
-        });
-        break;
-      case "mqttClientProxyMessage":
-        break;
       default:
         throw new Error(`Unhandled case ${decodedMessage.payloadVariant.case}`);
     }
