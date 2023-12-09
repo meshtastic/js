@@ -39,7 +39,7 @@ export abstract class MeshDevice {
 
   public events: EventSystem;
 
-  public XModem: Xmodem;
+  public xModem: Xmodem;
 
   constructor(configId?: number) {
     this.log = new Logger({
@@ -55,14 +55,15 @@ export abstract class MeshDevice {
     this.configId = configId ?? this.generateRandId();
     this.queue = new Queue();
     this.events = new EventSystem();
-    this.XModem = new Xmodem(this.sendRaw.bind(this)); //TODO: try wihtout bind
+    this.xModem = new Xmodem(this.sendRaw.bind(this)); //TODO: try wihtout bind
 
     this.events.onDeviceStatus.subscribe((status) => {
       this.deviceStatus = status;
-      if (status === Types.DeviceStatusEnum.DEVICE_CONFIGURED)
+      if (status === Types.DeviceStatusEnum.DEVICE_CONFIGURED) {
         this.isConfigured = true;
-      else if (status === Types.DeviceStatusEnum.DEVICE_CONFIGURING)
+      } else if (status === Types.DeviceStatusEnum.DEVICE_CONFIGURING) {
         this.isConfigured = false;
+      }
     });
 
     this.events.onMyNodeInfo.subscribe((myNodeInfo) => {
@@ -106,7 +107,7 @@ export abstract class MeshDevice {
 
     const enc = new TextEncoder();
 
-    return this.sendPacket(
+    return await this.sendPacket(
       enc.encode(text),
       Protobuf.PortNum.TEXT_MESSAGE_APP,
       destination ?? "broadcast",
@@ -182,8 +183,8 @@ export abstract class MeshDevice {
         destination === "broadcast"
           ? broadcastNum
           : destination === "self"
-          ? this.myNodeInfo.myNodeNum
-          : destination,
+            ? this.myNodeInfo.myNodeNum
+            : destination,
       id: this.generateRandId(),
       wantAck: wantAck,
       channel,
@@ -200,7 +201,7 @@ export abstract class MeshDevice {
       meshPacket.rxTime = Math.trunc(new Date().getTime() / 1000);
       this.handleMeshPacket(meshPacket);
     }
-    return this.sendRaw(toRadioMessage.toBinary(), meshPacket.id);
+    return await this.sendRaw(toRadioMessage.toBinary(), meshPacket.id);
   }
 
   /**
@@ -270,7 +271,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       moduleConfigMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -290,7 +291,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       setOwnerMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -313,7 +314,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       setChannelMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -323,7 +324,7 @@ export abstract class MeshDevice {
   public async setPosition(
     positionMessage: Protobuf.Position,
   ): Promise<number> {
-    return this.sendPacket(
+    return await this.sendPacket(
       positionMessage.toBinary(),
       Protobuf.PortNum.POSITION_APP,
       "self",
@@ -346,7 +347,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       getChannelRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -372,7 +373,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       getRadioRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -397,7 +398,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       getRadioRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -418,7 +419,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       getOwnerRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -441,7 +442,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       getDeviceMetricsRequestMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       nodeNum,
@@ -469,7 +470,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       setChannelMessage.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -486,7 +487,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       beginEditSettings.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -503,7 +504,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       commitEditSettings.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -527,7 +528,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       resetPeers.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -548,7 +549,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       shutdown.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -569,7 +570,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       reboot.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -580,21 +581,21 @@ export abstract class MeshDevice {
    * Reboots the current node into OTA mode after the specified amount of time
    * has elapsed.
    */
-  public async rebootOTA(time: number): Promise<number> {
+  public async rebootOta(time: number): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.rebootOTA],
       `🔌 Rebooting into OTA mode ${time > 0 ? "now" : `in ${time} seconds`}`,
     );
 
-    const rebootOTA = new Protobuf.AdminMessage({
+    const rebootOta = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "rebootOtaSeconds",
         value: time,
       },
     });
 
-    return this.sendPacket(
-      rebootOTA.toBinary(),
+    return await this.sendPacket(
+      rebootOta.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
     );
@@ -614,7 +615,7 @@ export abstract class MeshDevice {
       },
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       factoryReset.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
@@ -645,7 +646,7 @@ export abstract class MeshDevice {
       route: [],
     });
 
-    return this.sendPacket(
+    return await this.sendPacket(
       routeDiscovery.toBinary(),
       Protobuf.PortNum.ROUTING_APP,
       destination,
@@ -654,7 +655,7 @@ export abstract class MeshDevice {
 
   /** Requests position from the designated node */
   public async requestPosition(destination: number): Promise<number> {
-    return this.sendPacket(
+    return await this.sendPacket(
       new Uint8Array(),
       Protobuf.PortNum.POSITION_APP,
       destination,
@@ -694,19 +695,21 @@ export abstract class MeshDevice {
 
     /** @todo Add map here when `all=true` gets fixed. */
     switch (decodedMessage.payloadVariant.case) {
-      case "packet":
+      case "packet": {
         this.handleMeshPacket(decodedMessage.payloadVariant.value);
         break;
+      }
 
-      case "myInfo":
+      case "myInfo": {
         this.events.onMyNodeInfo.emit(decodedMessage.payloadVariant.value);
         this.log.info(
           Types.Emitter[Types.Emitter.handleFromRadio],
           "📱 Received Node info for this device",
         );
         break;
+      }
 
-      case "nodeInfo":
+      case "nodeInfo": {
         this.log.info(
           Types.Emitter[Types.Emitter.handleFromRadio],
           `📱 Received Node Info packet for node: ${decodedMessage.payloadVariant.value.num}`,
@@ -740,8 +743,9 @@ export abstract class MeshDevice {
           });
         }
         break;
+      }
 
-      case "config":
+      case "config": {
         if (decodedMessage.payloadVariant.value.payloadVariant.case) {
           this.log.trace(
             Types.Emitter[Types.Emitter.handleFromRadio],
@@ -756,16 +760,18 @@ export abstract class MeshDevice {
 
         this.events.onConfigPacket.emit(decodedMessage.payloadVariant.value);
         break;
+      }
 
-      case "logRecord":
+      case "logRecord": {
         this.log.trace(
           Types.Emitter[Types.Emitter.handleFromRadio],
           "Received onLogRecord",
         );
         this.events.onLogRecord.emit(decodedMessage.payloadVariant.value);
         break;
+      }
 
-      case "configCompleteId":
+      case "configCompleteId": {
         if (decodedMessage.payloadVariant.value !== this.configId) {
           this.log.error(
             Types.Emitter[Types.Emitter.handleFromRadio],
@@ -780,14 +786,16 @@ export abstract class MeshDevice {
 
         this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURED);
         break;
+      }
 
-      case "rebooted":
-        void this.configure().catch(() => {
+      case "rebooted": {
+        this.configure().catch(() => {
           // TODO: FIX, workaround for `wantConfigId` not getting acks.
         });
         break;
+      }
 
-      case "moduleConfig":
+      case "moduleConfig": {
         if (decodedMessage.payloadVariant.value.payloadVariant.case) {
           this.log.trace(
             Types.Emitter[Types.Emitter.handleFromRadio],
@@ -804,8 +812,9 @@ export abstract class MeshDevice {
           decodedMessage.payloadVariant.value,
         );
         break;
+      }
 
-      case "channel":
+      case "channel": {
         this.log.trace(
           Types.Emitter[Types.Emitter.handleFromRadio],
           `🔐 Received Channel: ${decodedMessage.payloadVariant.value.index}`,
@@ -813,8 +822,9 @@ export abstract class MeshDevice {
 
         this.events.onChannelPacket.emit(decodedMessage.payloadVariant.value);
         break;
+      }
 
-      case "queueStatus":
+      case "queueStatus": {
         this.log.trace(
           Types.Emitter[Types.Emitter.handleFromRadio],
           `🚧 Received Queue Status: ${decodedMessage.payloadVariant.value}`,
@@ -822,12 +832,14 @@ export abstract class MeshDevice {
 
         this.events.onQueueStatus.emit(decodedMessage.payloadVariant.value);
         break;
+      }
 
-      case "xmodemPacket":
-        void this.XModem.handlePacket(decodedMessage.payloadVariant.value);
+      case "xmodemPacket": {
+        this.xModem.handlePacket(decodedMessage.payloadVariant.value);
         break;
+      }
 
-      case "metadata":
+      case "metadata": {
         if (
           parseFloat(decodedMessage.payloadVariant.value.firmwareVersion) <
           minFwVer
@@ -852,10 +864,13 @@ export abstract class MeshDevice {
           data: decodedMessage.payloadVariant.value,
         });
         break;
-      case "mqttClientProxyMessage":
+      }
+      case "mqttClientProxyMessage": {
         break;
-      default:
+      }
+      default: {
         throw new Error(`Unhandled case ${decodedMessage.payloadVariant.case}`);
+      }
     }
   }
 
@@ -906,16 +921,18 @@ export abstract class MeshDevice {
     }
 
     switch (meshPacket.payloadVariant.case) {
-      case "decoded":
+      case "decoded": {
         this.handleDecodedPacket(meshPacket.payloadVariant.value, meshPacket);
         break;
+      }
 
-      case "encrypted":
+      case "encrypted": {
         this.log.debug(
           Types.Emitter[Types.Emitter.handleMeshPacket],
           "🔐 Device received encrypted data packet, ignoring.",
         );
         break;
+      }
 
       default:
         throw new Error(`Unhandled case ${meshPacket.payloadVariant.case}`);
@@ -944,35 +961,39 @@ export abstract class MeshDevice {
     );
 
     switch (dataPacket.portnum) {
-      case Protobuf.PortNum.TEXT_MESSAGE_APP:
+      case Protobuf.PortNum.TEXT_MESSAGE_APP: {
         this.events.onMessagePacket.emit({
           ...packetMetadata,
           data: new TextDecoder().decode(dataPacket.payload),
         });
         break;
+      }
 
-      case Protobuf.PortNum.REMOTE_HARDWARE_APP:
+      case Protobuf.PortNum.REMOTE_HARDWARE_APP: {
         this.events.onRemoteHardwarePacket.emit({
           ...packetMetadata,
           data: Protobuf.HardwareMessage.fromBinary(dataPacket.payload),
         });
         break;
+      }
 
-      case Protobuf.PortNum.POSITION_APP:
+      case Protobuf.PortNum.POSITION_APP: {
         this.events.onPositionPacket.emit({
           ...packetMetadata,
           data: Protobuf.Position.fromBinary(dataPacket.payload),
         });
         break;
+      }
 
-      case Protobuf.PortNum.NODEINFO_APP:
+      case Protobuf.PortNum.NODEINFO_APP: {
         this.events.onUserPacket.emit({
           ...packetMetadata,
           data: Protobuf.User.fromBinary(dataPacket.payload),
         });
         break;
+      }
 
-      case Protobuf.PortNum.ROUTING_APP:
+      case Protobuf.PortNum.ROUTING_APP: {
         routingPacket = Protobuf.Routing.fromBinary(dataPacket.payload);
 
         this.events.onRoutingPacket.emit({
@@ -980,7 +1001,7 @@ export abstract class MeshDevice {
           data: routingPacket,
         });
         switch (routingPacket.variant.case) {
-          case "errorReason":
+          case "errorReason": {
             if (routingPacket.variant.value === Protobuf.Routing_Error.NONE) {
               this.queue.processAck(dataPacket.requestId);
             } else {
@@ -991,45 +1012,54 @@ export abstract class MeshDevice {
             }
 
             break;
-          case "routeReply":
+          }
+          case "routeReply": {
             console.log("routeReply");
 
             console.log(routingPacket.variant.value);
 
             break;
-          case "routeRequest":
+          }
+          case "routeRequest": {
             console.log("routeRequest");
 
             console.log(routingPacket.variant.value);
 
             break;
+          }
 
-          default:
+          default: {
             throw new Error(`Unhandled case ${routingPacket.variant.case}`);
+          }
         }
         break;
+      }
 
-      case Protobuf.PortNum.ADMIN_APP:
+      case Protobuf.PortNum.ADMIN_APP: {
         adminMessage = Protobuf.AdminMessage.fromBinary(dataPacket.payload);
         switch (adminMessage.payloadVariant.case) {
-          case "getChannelResponse":
+          case "getChannelResponse": {
             this.events.onChannelPacket.emit(adminMessage.payloadVariant.value);
             break;
-          case "getOwnerResponse":
+          }
+          case "getOwnerResponse": {
             this.events.onUserPacket.emit({
               ...packetMetadata,
               data: adminMessage.payloadVariant.value,
             });
             break;
-          case "getConfigResponse":
+          }
+          case "getConfigResponse": {
             this.events.onConfigPacket.emit(adminMessage.payloadVariant.value);
             break;
-          case "getModuleConfigResponse":
+          }
+          case "getModuleConfigResponse": {
             this.events.onModuleConfigPacket.emit(
               adminMessage.payloadVariant.value,
             );
             break;
-          case "getDeviceMetadataResponse":
+          }
+          case "getDeviceMetadataResponse": {
             this.log.debug(
               Types.Emitter[Types.Emitter.getMetadata],
               `🏷️ Recieved metadata packet from ${dataPacket.source}`,
@@ -1040,7 +1070,8 @@ export abstract class MeshDevice {
               data: adminMessage.payloadVariant.value,
             });
             break;
-          default:
+          }
+          default: {
             this.log.error(
               Types.Emitter[Types.Emitter.handleMeshPacket],
               `⚠️ Received unhandled AdminMessage, type ${
@@ -1048,74 +1079,85 @@ export abstract class MeshDevice {
               }`,
               dataPacket.payload,
             );
+          }
         }
         break;
+      }
 
-      case Protobuf.PortNum.TEXT_MESSAGE_COMPRESSED_APP:
+      case Protobuf.PortNum.TEXT_MESSAGE_COMPRESSED_APP: {
         break;
-
-      case Protobuf.PortNum.WAYPOINT_APP:
+      }
+      case Protobuf.PortNum.WAYPOINT_APP: {
         this.events.onWaypointPacket.emit({
           ...packetMetadata,
           data: Protobuf.Waypoint.fromBinary(dataPacket.payload),
         });
         break;
+      }
 
-      case Protobuf.PortNum.REPLY_APP:
+      case Protobuf.PortNum.REPLY_APP: {
         this.events.onPingPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload, //TODO: decode
         });
         break;
+      }
 
-      case Protobuf.PortNum.IP_TUNNEL_APP:
+      case Protobuf.PortNum.IP_TUNNEL_APP: {
         this.events.onIpTunnelPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
         });
         break;
+      }
 
-      case Protobuf.PortNum.SERIAL_APP:
+      case Protobuf.PortNum.SERIAL_APP: {
         this.events.onSerialPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
         });
         break;
+      }
 
-      case Protobuf.PortNum.STORE_FORWARD_APP:
+      case Protobuf.PortNum.STORE_FORWARD_APP: {
         this.events.onStoreForwardPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
         });
         break;
+      }
 
-      case Protobuf.PortNum.RANGE_TEST_APP:
+      case Protobuf.PortNum.RANGE_TEST_APP: {
         this.events.onRangeTestPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
         });
         break;
+      }
 
-      case Protobuf.PortNum.TELEMETRY_APP:
+      case Protobuf.PortNum.TELEMETRY_APP: {
         this.events.onTelemetryPacket.emit({
           ...packetMetadata,
           data: Protobuf.Telemetry.fromBinary(dataPacket.payload),
         });
         break;
+      }
 
-      case Protobuf.PortNum.PRIVATE_APP:
+      case Protobuf.PortNum.PRIVATE_APP: {
         this.events.onPrivatePacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
         });
         break;
+      }
 
-      case Protobuf.PortNum.ATAK_FORWARDER:
+      case Protobuf.PortNum.ATAK_FORWARDER: {
         this.events.onAtakPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
         });
         break;
+      }
 
       default:
         throw new Error(`Unhandled case ${dataPacket.portnum}`);
