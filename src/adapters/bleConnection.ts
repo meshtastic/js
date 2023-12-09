@@ -34,6 +34,8 @@ export class BleConnection extends MeshDevice {
   /** Short Description */
   private fromNumCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
+  private timerUpdateFromRadio: NodeJS.Timeout | null = null;
+
   constructor(configId?: number) {
     super(configId);
 
@@ -183,6 +185,9 @@ export class BleConnection extends MeshDevice {
     void this.configure().catch(() => {
       // TODO: FIX, workaround for `wantConfigId` not getting acks.
     });
+
+
+    this.timerUpdateFromRadio = setInterval(() => this.readFromRadio(), 1000);
   }
 
   /** Disconnects from the Meshtastic device */
@@ -190,6 +195,8 @@ export class BleConnection extends MeshDevice {
     this.device?.gatt?.disconnect();
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
+    clearInterval(this.timerUpdateFromRadio!);
+    this.timerUpdateFromRadio = null;
   }
 
   /**
