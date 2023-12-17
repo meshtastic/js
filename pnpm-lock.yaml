@@ -6,20 +6,17 @@ settings:
 
 dependencies:
   '@buf/meshtastic_protobufs.bufbuild_es':
-    specifier: 1.5.1-20231206215336-8002ce9b3c7a.1
-    version: 1.5.1-20231206215336-8002ce9b3c7a.1(@bufbuild/protobuf@1.5.1)
+    specifier: 1.6.0-20231206215336-8002ce9b3c7a.1
+    version: 1.6.0-20231206215336-8002ce9b3c7a.1(@bufbuild/protobuf@1.6.0)
   '@bufbuild/protobuf':
-    specifier: ^1.5.1
-    version: 1.5.1
+    specifier: ^1.6.0
+    version: 1.6.0
   crc:
     specifier: ^4.3.2
     version: 4.3.2
   sub-events:
     specifier: ^1.9.0
     version: 1.9.0
-  tslib:
-    specifier: ^2.6.2
-    version: 2.6.2
   tslog:
     specifier: ^4.9.2
     version: 4.9.2
@@ -37,6 +34,9 @@ devDependencies:
   biome:
     specifier: ^0.3.3
     version: 0.3.3
+  tslib:
+    specifier: ^2.6.2
+    version: 2.6.2
   typedoc:
     specifier: ^0.25.4
     version: 0.25.4(typescript@5.3.3)
@@ -46,16 +46,16 @@ devDependencies:
 
 packages:
 
-  /@buf/meshtastic_protobufs.bufbuild_es@1.5.1-20231206215336-8002ce9b3c7a.1(@bufbuild/protobuf@1.5.1):
-    resolution: {tarball: https://buf.build/gen/npm/v1/@buf/meshtastic_protobufs.bufbuild_es/-/meshtastic_protobufs.bufbuild_es-1.5.1-20231206215336-8002ce9b3c7a.1.tgz}
+  /@buf/meshtastic_protobufs.bufbuild_es@1.6.0-20231206215336-8002ce9b3c7a.1(@bufbuild/protobuf@1.6.0):
+    resolution: {tarball: https://buf.build/gen/npm/v1/@buf/meshtastic_protobufs.bufbuild_es/-/meshtastic_protobufs.bufbuild_es-1.6.0-20231206215336-8002ce9b3c7a.1.tgz}
     peerDependencies:
-      '@bufbuild/protobuf': ^1.5.1
+      '@bufbuild/protobuf': ^1.6.0
     dependencies:
-      '@bufbuild/protobuf': 1.5.1
+      '@bufbuild/protobuf': 1.6.0
     dev: false
 
-  /@bufbuild/protobuf@1.5.1:
-    resolution: {integrity: sha512-LX+MeB1AzlbqgJXkq83lilQpLGnPvsAMj7SH8KtJAmQfBc55ee78Stxuff/HMw0xLMYJN3P1FBh5TENgjJof1w==}
+  /@bufbuild/protobuf@1.6.0:
+    resolution: {integrity: sha512-hp19vSFgNw3wBBcVBx5qo5pufCqjaJ0Cfk5H/pfjNOfNWU+4/w0QVOmfAOZNRrNWRrVuaJWxcN8P2vhOkkzbBQ==}
     dev: false
 
   /@types/node@20.10.4:
@@ -757,7 +757,7 @@ packages:
 
   /tslib@2.6.2:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
-    dev: false
+    dev: true
 
   /tslog@4.9.2:
     resolution: {integrity: sha512-wBM+LRJoNl34Bdu8mYEFxpvmOUedpNUwMNQB/NcuPIZKwdDde6xLHUev3bBjXQU7gdurX++X/YE7gLH8eXYsiQ==}
