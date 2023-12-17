@@ -24,12 +24,26 @@ Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic]
 The library is available from [NPM](https://www.npmjs.com/package/@meshtastic/meshtasticjs) and can be installed with:
 
 ```bash
+pnpm config set @buf:registry https://buf.build/gen/npm/v1
+```
+
+Alternatevly, create a `.npmrc` file with the following contents:
+
+```conf
+@buf:registry=https://buf.build/gen/npm/v1
+```
+
+Finally, install the package:
+
+```bash
 pnpm add @meshtastic/meshtasticjs
 ```
 
+
+
 ## Development & Building
 
-Finally the project can be built:
+The project can be built by running:
 
 ```bash
 pnpm build
