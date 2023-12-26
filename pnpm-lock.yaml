@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@buf/meshtastic_protobufs.bufbuild_es':
-    specifier: 1.6.0-20231206215336-8002ce9b3c7a.1
-    version: 1.6.0-20231206215336-8002ce9b3c7a.1(@bufbuild/protobuf@1.6.0)
+    specifier: 1.6.0-20231217172755-5fd2f2d6c2a0.1
+    version: 1.6.0-20231217172755-5fd2f2d6c2a0.1(@bufbuild/protobuf@1.6.0)
   '@bufbuild/protobuf':
     specifier: ^1.6.0
     version: 1.6.0
@@ -23,8 +23,8 @@ dependencies:
 
 devDependencies:
   '@types/node':
-    specifier: ^20.10.4
-    version: 20.10.4
+    specifier: ^20.10.5
+    version: 20.10.5
   '@types/w3c-web-serial':
     specifier: ^1.0.6
     version: 1.0.6
@@ -46,8 +46,8 @@ devDependencies:
 
 packages:
 
-  /@buf/meshtastic_protobufs.bufbuild_es@1.6.0-20231206215336-8002ce9b3c7a.1(@bufbuild/protobuf@1.6.0):
-    resolution: {tarball: https://buf.build/gen/npm/v1/@buf/meshtastic_protobufs.bufbuild_es/-/meshtastic_protobufs.bufbuild_es-1.6.0-20231206215336-8002ce9b3c7a.1.tgz}
+  /@buf/meshtastic_protobufs.bufbuild_es@1.6.0-20231217172755-5fd2f2d6c2a0.1(@bufbuild/protobuf@1.6.0):
+    resolution: {tarball: https://buf.build/gen/npm/v1/@buf/meshtastic_protobufs.bufbuild_es/-/meshtastic_protobufs.bufbuild_es-1.6.0-20231217172755-5fd2f2d6c2a0.1.tgz}
     peerDependencies:
       '@bufbuild/protobuf': ^1.6.0
     dependencies:
@@ -58,8 +58,8 @@ packages:
     resolution: {integrity: sha512-hp19vSFgNw3wBBcVBx5qo5pufCqjaJ0Cfk5H/pfjNOfNWU+4/w0QVOmfAOZNRrNWRrVuaJWxcN8P2vhOkkzbBQ==}
     dev: false
 
-  /@types/node@20.10.4:
-    resolution: {integrity: sha512-D08YG6rr8X90YB56tSIuBaddy/UXAA9RKJoFvrsnogAum/0pmjkgi4+2nx96A330FmioegBWmEYQ+syqCFaveg==}
+  /@types/node@20.10.5:
+    resolution: {integrity: sha512-nNPsNE65wjMxEKI93yOP+NPGGBJz/PoN3kZsVLee0XMiJolxSekEVD8wRwBUBqkwc7UWop0edW50yrCQW4CyRw==}
     dependencies:
       undici-types: 5.26.5
     dev: true
