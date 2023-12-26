@@ -23,14 +23,17 @@
       "types": "./types/index.d.ts"
     }
   },
-  "files": ["dist", ".npmrc"],
+  "files": [
+    "dist",
+    ".npmrc"
+  ],
   "types": "dist/index.d.ts",
   "bugs": {
     "url": "https://github.com/meshtastic/js/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/meshtastic/js.git"
+    "url": "git+https://github.com/meshtastic/js.git"
   },
   "dependencies": {
     "@buf/meshtastic_protobufs.bufbuild_es": "1.6.0-20231217172755-5fd2f2d6c2a0.1",
