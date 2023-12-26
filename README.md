@@ -1,7 +1,7 @@
 # Meshtastic.js
 
-[![NPM](https://badgen.net/npm/v/@meshtastic/meshtasticjs)](https://www.npmjs.com/package/@meshtastic/meshtasticjs)
-[![Downloads](https://badgen.net/npm/dt/@meshtastic/meshtasticjs)](https://www.npmjs.com/package/@meshtastic/meshtasticjs)
+[![NPM](https://badgen.net/npm/v/@meshtastic/js)](https://www.npmjs.com/package/@meshtastic/js)
+[![Downloads](https://badgen.net/npm/dt/@meshtastic/js)](https://www.npmjs.com/package/@meshtastic/js)
 [![CI](https://img.shields.io/github/actions/workflow/status/meshtastic/js/ci.yml?branch=master&label=actions&logo=github&color=yellow)](https://github.com/meshtastic/js/actions/workflows/ci.yml)
 [![CLA assistant](https://cla-assistant.io/readme/badge/meshtastic/meshtastic.js)](https://cla-assistant.io/meshtastic/meshtastic.js)
 [![Fiscal Contributors](https://opencollective.com/meshtastic/tiers/badge.svg?label=Fiscal%20Contributors&color=deeppink)](https://opencollective.com/meshtastic/)
@@ -21,7 +21,7 @@ Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic]
 
 ## Installation & Usage
 
-The library is available from [NPM](https://www.npmjs.com/package/@meshtastic/meshtasticjs) and can be installed with:
+The library is available from [NPM](https://www.npmjs.com/package/@meshtastic/js) and can be installed with:
 
 ```bash
 pnpm config set @buf:registry https://buf.build/gen/npm/v1
@@ -36,7 +36,7 @@ Alternatevly, create a `.npmrc` file with the following contents:
 Finally, install the package:
 
 ```bash
-pnpm add @meshtastic/meshtasticjs
+pnpm add @meshtastic/js
 ```
 
 

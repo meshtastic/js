@@ -1,5 +1,5 @@
 {
-  "name": "@meshtastic/meshtasticjs",
+  "name": "@meshtastic/js",
   "version": "2.2.16-0",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
@@ -9,7 +9,7 @@
     "generate:docs": "typedoc src/index.ts"
   },
   "keywords": [
-    "meshtastic bluetooth serial webserial webbluetooth ble http library meshtasticjs"
+    "meshtastic bluetooth serial webserial webbluetooth ble http library typescript javascript"
   ],
   "publishConfig": {
     "provenance": true
@@ -23,10 +23,7 @@
       "types": "./types/index.d.ts"
     }
   },
-  "files": [
-    "dist",
-    ".npmrc"
-  ],
+  "files": ["dist", ".npmrc"],
   "types": "dist/index.d.ts",
   "bugs": {
     "url": "https://github.com/meshtastic/js/issues"
