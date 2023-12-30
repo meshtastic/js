@@ -1,7 +1,7 @@
 import { SubEvent } from "sub-events";
 
 import { MeshDevice } from "../meshDevice.js";
-import { Types } from "../index.js";
+import * as Types from "../types.js";
 import { transformHandler } from "../utils/transformHandler.js";
 
 /** Allows to connect to a Meshtastic device over WebSerial */
@@ -37,7 +37,7 @@ export class SerialConnection extends MeshDevice {
   constructor(configId?: number) {
     super(configId);
 
-    this.log = this.log.getSubLogger({ name: "iSerialConnection" });
+    this.log = this.log.getSubLogger({ name: "SerialConnection" });
 
     this.connType = "serial";
     this.portId = "";
@@ -48,7 +48,7 @@ export class SerialConnection extends MeshDevice {
 
     this.log.debug(
       Types.Emitter[Types.Emitter.constructor],
-      "🔷 iSerialConnection instantiated",
+      "🔷 SerialConnection instantiated",
     );
   }
 
@@ -85,14 +85,14 @@ export class SerialConnection extends MeshDevice {
 
   /** Gets list of serial ports that can be passed to `connect` */
   public async getPorts(): Promise<SerialPort[]> {
-    return navigator.serial.getPorts();
+    return await navigator.serial.getPorts();
   }
 
   /**
    * Opens browsers connection dialogue to select a serial port
    */
   public async getPort(filter?: SerialPortRequestOptions): Promise<SerialPort> {
-    return navigator.serial.requestPort(filter);
+    return await navigator.serial.requestPort(filter);
   }
 
   public getCurrentPort() {
@@ -145,11 +145,11 @@ export class SerialConnection extends MeshDevice {
           );
           const reader = (this.readerHack =
             this.transformer.readable.getReader());
-          void this.readFromRadio(reader);
+          this.readFromRadio(reader);
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
-          void this.configure().catch(() => {
+          this.configure().catch(() => {
             // TODO: FIX, workaround for `wantConfigId` not getting acks.
           });
         } else {
@@ -178,7 +178,9 @@ export class SerialConnection extends MeshDevice {
     await this.readerHack?.cancel();
     await this.pipePromise?.catch(() => {});
     this.readerHack?.releaseLock();
-    if (this.port?.readable) await this.port?.close();
+    if (this.port?.readable) {
+      await this.port?.close();
+    }
     // -------
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
@@ -188,7 +190,7 @@ export class SerialConnection extends MeshDevice {
 
   /** Pings device to check if it is avaliable */
   public async ping(): Promise<boolean> {
-    return Promise.resolve(true);
+    return await Promise.resolve(true);
   }
 
   /**

@@ -18,3 +18,12 @@ export const broadcastNum = 0xffffffff;
 
 /** Minimum device firmware version supported by this version of the library. */
 export const minFwVer = 2.2;
+
+export const Constants = {
+  ToRadioUuid,
+  FromRadioUuid,
+  FromNumUuid,
+  ServiceUuid,
+  broadcastNum,
+  minFwVer,
+};

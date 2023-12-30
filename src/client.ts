@@ -1,7 +1,7 @@
 import { BleConnection } from "./adapters/bleConnection.js";
 import { HttpConnection } from "./adapters/httpConnection.js";
 import { SerialConnection } from "./adapters/serialConnection.js";
-import { Types } from "./index.js";
+import * as Types from "./types.js";
 
 /**
  * Allows to create new connections to devices and manages them. Alternatively,
@@ -38,9 +38,9 @@ export class Client {
    * Creates a new Serial connection interface
    */
   public createSerialConnection(configId?: number): SerialConnection {
-    const iSerialConnection = new SerialConnection(configId);
-    this.deviceInterfaces.push(iSerialConnection);
-    return iSerialConnection;
+    const serialConnection = new SerialConnection(configId);
+    this.deviceInterfaces.push(serialConnection);
+    return serialConnection;
   }
 
   /**

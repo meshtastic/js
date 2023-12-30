@@ -1,7 +1,7 @@
 import { SubEvent } from "sub-events";
 import { Logger } from "tslog";
-
-import { Protobuf, Types } from "../index.js";
+import * as Types from "../types.js";
+import * as Protobuf from "../protobufs.js";
 
 export const transformHandler = (
   log: Logger<unknown>,
@@ -27,7 +27,7 @@ export const transformHandler = (
               onDeviceDebugLog.emit(byteBuffer.subarray(0, framingIndex));
             } else {
               log.warn(
-                Types.EmitterScope.iSerialConnection,
+                Types.EmitterScope.SerialConnection,
                 Types.Emitter.connect,
                 `⚠️ Found unneccesary message padding, removing: ${byteBuffer
                   .subarray(0, framingIndex)
@@ -56,7 +56,7 @@ export const transformHandler = (
               packet[malformedDetectorIndex + 1] === 0xc3
             ) {
               log.warn(
-                Types.EmitterScope.iSerialConnection,
+                Types.EmitterScope.SerialConnection,
                 Types.Emitter.connect,
                 `⚠️ Malformed packet found, discarding: ${byteBuffer
                   .subarray(0, malformedDetectorIndex - 1)

@@ -1,5 +1,5 @@
 import { MeshDevice } from "../meshDevice.js";
-import { Types } from "../index.js";
+import * as Types from "../types.js";
 import { typedArrayToBuffer } from "../utils/general.js";
 
 /** Allows to connect to a Meshtastic device over HTTP(S) */
@@ -22,7 +22,7 @@ export class HttpConnection extends MeshDevice {
   constructor(configId?: number) {
     super(configId);
 
-    this.log = this.log.getSubLogger({ name: "iHttpConnection" });
+    this.log = this.log.getSubLogger({ name: "HttpConnection" });
 
     this.connType = "http";
     this.portId = "";
@@ -33,7 +33,7 @@ export class HttpConnection extends MeshDevice {
 
     this.log.debug(
       Types.Emitter[Types.Emitter.constructor],
-      "🔷 iHttpConnection instantiated",
+      "🔷 HttpConnection instantiated",
     );
   }
 
@@ -60,7 +60,7 @@ export class HttpConnection extends MeshDevice {
         Types.Emitter[Types.Emitter.connect],
         "Ping succeeded, starting configuration and request timer.",
       );
-      void this.configure().catch(() => {
+      this.configure().catch(() => {
         // TODO: FIX, workaround for `wantConfigId` not getting acks.
       });
       this.readLoop = setInterval(() => {
@@ -71,17 +71,17 @@ export class HttpConnection extends MeshDevice {
           );
         });
       }, fetchInterval);
-    } else {
-      if (this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_DISCONNECTED) {
-        setTimeout(() => {
-          void this.connect({
-            address: address,
-            fetchInterval: fetchInterval,
-            receiveBatchRequests: receiveBatchRequests,
-            tls: tls,
-          });
-        }, 10000);
-      }
+    } else if (
+      this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+    ) {
+      setTimeout(() => {
+        this.connect({
+          address: address,
+          fetchInterval: fetchInterval,
+          receiveBatchRequests: receiveBatchRequests,
+          tls: tls,
+        });
+      }, 10000);
     }
   }
 

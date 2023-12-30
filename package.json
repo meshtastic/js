@@ -4,8 +4,7 @@
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
+    "build": "tsup",
     "generate:docs": "typedoc src/index.ts"
   },
   "keywords": [
@@ -16,18 +15,17 @@
   },
   "sideEffects": false,
   "type": "module",
-  "module": "dist/index.d.ts",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.cts",
   "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./types/index.d.ts"
+    "import": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
-    "dist",
-    ".npmrc"
+    "dist"
   ],
-  "types": "dist/index.d.ts",
   "bugs": {
     "url": "https://github.com/meshtastic/js/issues"
   },
@@ -36,18 +34,17 @@
     "url": "git+https://github.com/meshtastic/js.git"
   },
   "dependencies": {
-    "@buf/meshtastic_protobufs.bufbuild_es": "1.6.0-20231217172755-5fd2f2d6c2a0.1",
-    "@bufbuild/protobuf": "^1.6.0",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.6.0-20231227193150-3f9c1dfd2a29.1",
     "crc": "^4.3.2",
     "sub-events": "^1.9.0",
     "tslog": "^4.9.2"
   },
   "devDependencies": {
-    "@types/node": "^20.10.5",
+    "@types/node": "^20.10.6",
     "@types/w3c-web-serial": "^1.0.6",
     "@types/web-bluetooth": "^0.0.20",
     "biome": "^0.3.3",
-    "tslib": "^2.6.2",
+    "tsup": "^8.0.1",
     "typedoc": "^0.25.4",
     "typescript": "^5.3.3"
   }

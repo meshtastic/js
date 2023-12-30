@@ -1,4 +1,4 @@
-import { Protobuf } from "../index.js";
+import * as Protobuf from "../protobufs.js";
 import { QueueItem, PacketError } from "../types.js";
 import { SubEvent } from "sub-events";
 

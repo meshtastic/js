@@ -1,10 +1,10 @@
 import { Logger } from "tslog";
-
 import { broadcastNum, minFwVer } from "./constants.js";
-import { Protobuf, Types } from "./index.js";
 import { EventSystem } from "./utils/eventSystem.js";
 import { Queue } from "./utils/queue.js";
 import { Xmodem } from "./utils/xmodem.js";
+import * as Types from "./types.js";
+import * as Protobuf from "./protobufs.js";
 
 /** Base class for connection methods to extend */
 export abstract class MeshDevice {

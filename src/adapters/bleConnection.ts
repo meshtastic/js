@@ -5,7 +5,7 @@ import {
   ToRadioUuid,
 } from "../constants.js";
 import { MeshDevice } from "../meshDevice.js";
-import { Types } from "../index.js";
+import * as Types from "../types.js";
 import { typedArrayToBuffer } from "../utils/general.js";
 
 /** Allows to connect to a Meshtastic device via bluetooth */
@@ -18,7 +18,7 @@ export class BleConnection extends MeshDevice {
   /** Currently connected BLE device */
   public device: BluetoothDevice | undefined;
 
-  private GATTServer: BluetoothRemoteGATTServer | undefined;
+  private gattServer: BluetoothRemoteGATTServer | undefined;
 
   /** Short Description */
   private service: BluetoothRemoteGATTService | undefined;
@@ -39,13 +39,13 @@ export class BleConnection extends MeshDevice {
   constructor(configId?: number) {
     super(configId);
 
-    this.log = this.log.getSubLogger({ name: "iHttpConnection" });
+    this.log = this.log.getSubLogger({ name: "HttpConnection" });
 
     this.connType = "ble";
     this.portId = "";
     this.device = undefined;
     this.service = undefined;
-    this.GATTServer = undefined;
+    this.gattServer = undefined;
     this.toRadioCharacteristic = undefined;
     this.fromRadioCharacteristic = undefined;
     this.fromNumCharacteristic = undefined;
@@ -53,7 +53,7 @@ export class BleConnection extends MeshDevice {
 
     this.log.debug(
       Types.Emitter[Types.Emitter.constructor],
-      "🔷 iBleConnection instantiated",
+      "🔷 BleConnection instantiated",
     );
   }
 
@@ -119,7 +119,7 @@ export class BleConnection extends MeshDevice {
           Types.Emitter[Types.Emitter.connect],
           `✅ Got GATT Server for device: ${server.device.id}`,
         );
-        this.GATTServer = server;
+        this.gattServer = server;
       })
       .catch((e: Error) => {
         this.log.error(
@@ -128,7 +128,8 @@ export class BleConnection extends MeshDevice {
         );
       });
 
-    await this.GATTServer?.getPrimaryService(ServiceUuid)
+    await this.gattServer
+      ?.getPrimaryService(ServiceUuid)
       .then((service) => {
         this.log.info(
           Types.Emitter[Types.Emitter.connect],
@@ -152,15 +153,18 @@ export class BleConnection extends MeshDevice {
             `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.uuid}`,
           );
           switch (uuid) {
-            case ToRadioUuid:
+            case ToRadioUuid: {
               this.toRadioCharacteristic = characteristic;
               break;
-            case FromRadioUuid:
+            }
+            case FromRadioUuid: {
               this.fromRadioCharacteristic = characteristic;
               break;
-            case FromNumUuid:
+            }
+            case FromNumUuid: {
               this.fromNumCharacteristic = characteristic;
               break;
+            }
           }
         })
         .catch((e: Error) => {
@@ -176,16 +180,15 @@ export class BleConnection extends MeshDevice {
     this.fromNumCharacteristic?.addEventListener(
       "characteristicvaluechanged",
       () => {
-        void this.readFromRadio();
+        this.readFromRadio();
       },
     );
 
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
 
-    void this.configure().catch(() => {
+    this.configure().catch(() => {
       // TODO: FIX, workaround for `wantConfigId` not getting acks.
     });
-
 
     this.timerUpdateFromRadio = setInterval(() => this.readFromRadio(), 1000);
   }
@@ -195,7 +198,9 @@ export class BleConnection extends MeshDevice {
     this.device?.gatt?.disconnect();
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
     this.complete();
-    clearInterval(this.timerUpdateFromRadio!);
+    if (this.timerUpdateFromRadio) {
+      clearInterval(this.timerUpdateFromRadio);
+    }
     this.timerUpdateFromRadio = null;
   }
 
@@ -205,7 +210,7 @@ export class BleConnection extends MeshDevice {
    * @todo Implement
    */
   public async ping(): Promise<boolean> {
-    return Promise.resolve(true);
+    return await Promise.resolve(true);
   }
 
   /** Short description */

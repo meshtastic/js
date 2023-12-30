@@ -1,5 +1,5 @@
-import { Protobuf } from "../index.js";
 import crc16ccitt from "crc/calculators/crc16ccitt";
+import * as Protobuf from "../protobufs.js";
 
 //if counter > 35 then reset counter/clear/error/reject promise
 type XmodemProps = (toRadio: Uint8Array, id?: number) => Promise<number>;
@@ -23,7 +23,7 @@ export class Xmodem {
     console.log("XModem - getFile");
     console.log(filename);
 
-    return this.sendCommand(
+    return await this.sendCommand(
       Protobuf.XModem_Control.STX,
       this.textEncoder.encode(filename),
       0,
@@ -59,7 +59,7 @@ export class Xmodem {
         },
       },
     });
-    return this.sendRaw(toRadio.toBinary());
+    return await this.sendRaw(toRadio.toBinary());
   }
 
   async handlePacket(packet: Protobuf.XModem): Promise<number> {
@@ -67,24 +67,26 @@ export class Xmodem {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     switch (packet.control) {
-      case Protobuf.XModem_Control.NUL:
+      case Protobuf.XModem_Control.NUL: {
         // nothing
         break;
-      case Protobuf.XModem_Control.SOH:
+      }
+      case Protobuf.XModem_Control.SOH: {
         this.counter = packet.seq;
         if (this.validateCRC16(packet)) {
           this.rxBuffer[this.counter] = packet.buffer;
           return this.sendCommand(Protobuf.XModem_Control.ACK);
-        } else {
-          return this.sendCommand(
-            Protobuf.XModem_Control.NAK,
-            undefined,
-            packet.seq,
-          );
         }
-      case Protobuf.XModem_Control.STX:
+        return await this.sendCommand(
+          Protobuf.XModem_Control.NAK,
+          undefined,
+          packet.seq,
+        );
+      }
+      case Protobuf.XModem_Control.STX: {
         break;
-      case Protobuf.XModem_Control.EOT:
+      }
+      case Protobuf.XModem_Control.EOT: {
         console.log(
           this.rxBuffer.reduce(
             (acc: Uint8Array, curr) => new Uint8Array([...acc, ...curr]),
@@ -93,7 +95,8 @@ export class Xmodem {
 
         // end of transmission
         break;
-      case Protobuf.XModem_Control.ACK:
+      }
+      case Protobuf.XModem_Control.ACK: {
         this.counter++;
         if (this.txBuffer[this.counter - 1]) {
           return this.sendCommand(
@@ -102,24 +105,28 @@ export class Xmodem {
             this.counter,
             crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array()),
           );
-        } else if (this.counter === this.txBuffer.length + 1) {
-          return this.sendCommand(Protobuf.XModem_Control.EOT);
-        } else {
-          this.clear();
-          break;
         }
-      case Protobuf.XModem_Control.NAK:
+        if (this.counter === this.txBuffer.length + 1) {
+          return this.sendCommand(Protobuf.XModem_Control.EOT);
+        }
+        this.clear();
+        break;
+      }
+      case Protobuf.XModem_Control.NAK: {
         return this.sendCommand(
           Protobuf.XModem_Control.SOH,
           this.txBuffer[this.counter],
           this.counter,
           crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array()),
         );
-      case Protobuf.XModem_Control.CAN:
+      }
+      case Protobuf.XModem_Control.CAN: {
         this.clear();
         break;
-      case Protobuf.XModem_Control.CTRLZ:
+      }
+      case Protobuf.XModem_Control.CTRLZ: {
         break;
+      }
     }
 
     return Promise.resolve(0);

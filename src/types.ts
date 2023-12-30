@@ -1,9 +1,7 @@
-import type {
-  IBLEConnection,
-  IHTTPConnection,
-  ISerialConnection,
-  Protobuf,
-} from "./index.js";
+import * as Protobuf from "./protobufs.js";
+import { BleConnection } from "./adapters/bleConnection.js";
+import { HttpConnection } from "./adapters/httpConnection.js";
+import { SerialConnection } from "./adapters/serialConnection.js";
 
 export interface QueueItem {
   id: number;
@@ -74,11 +72,11 @@ export interface PacketMetadata<T> {
 }
 
 export enum EmitterScope {
-  iMeshDevice = 1,
-  iSerialConnection = 2,
-  iNodeSerialConnection = 3,
-  iBleConnection = 4,
-  iHttpConnection = 5,
+  MeshDevice = 1,
+  SerialConnection = 2,
+  NodeSerialConnection = 3,
+  BleConnection = 4,
+  HttpConnection = 5,
 }
 
 export enum Emitter {
@@ -134,10 +132,7 @@ export enum ChannelNumber {
   ADMIN = 7,
 }
 
-export type ConnectionType =
-  | IBLEConnection
-  | IHTTPConnection
-  | ISerialConnection;
+export type ConnectionType = BleConnection | HttpConnection | SerialConnection;
 
 export type ConnectionTypeName = "ble" | "http" | "serial";
 
