@@ -1,10 +1,14 @@
-import { Logger } from "tslog";
-import { broadcastNum, minFwVer } from "./constants.js";
-import { EventSystem } from "./utils/eventSystem.js";
-import { Queue } from "./utils/queue.js";
-import { Xmodem } from "./utils/xmodem.js";
-import * as Types from "./types.js";
-import * as Protobuf from "./protobufs.js";
+import { Logger } from 'tslog';
+
+import {
+  broadcastNum,
+  minFwVer,
+} from './constants.js';
+import * as Protobuf from './protobufs.js';
+import * as Types from './types.js';
+import { EventSystem } from './utils/eventSystem.js';
+import { Queue } from './utils/queue.js';
+import { Xmodem } from './utils/xmodem.js';
 
 /** Base class for connection methods to extend */
 export abstract class MeshDevice {
@@ -596,6 +600,27 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       rebootOta.toBinary(),
+      Protobuf.PortNum.ADMIN_APP,
+      "self",
+    );
+  }
+
+  /** Enter DFU mode on the current node. */
+  public async enterDfuMode(): Promise<Number> {
+    this.log.debug(
+      Types.Emitter[Types.Emitter.enterDfuMode],
+      `🔌 Entering DFU mode`,
+    );
+
+    const dfu = new Protobuf.AdminMessage({
+      payloadVariant: {
+        case: "enterDfuModeRequest",
+        value: true,
+      },
+    });
+
+    return await this.sendPacket(
+      dfu.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
     );
