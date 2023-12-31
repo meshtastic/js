@@ -1,7 +1,7 @@
-import * as Protobuf from "./protobufs.js";
-import { BleConnection } from "./adapters/bleConnection.js";
-import { HttpConnection } from "./adapters/httpConnection.js";
-import { SerialConnection } from "./adapters/serialConnection.js";
+import { BleConnection } from './adapters/bleConnection.js';
+import { HttpConnection } from './adapters/httpConnection.js';
+import { SerialConnection } from './adapters/serialConnection.js';
+import * as Protobuf from './protobufs.js';
 
 export interface QueueItem {
   id: number;
@@ -111,6 +111,7 @@ export enum Emitter {
   reboot = 28,
   rebootOTA = 29,
   factoryReset = 30,
+  enterDfuMode = 31,
 }
 
 export interface LogEvent {
