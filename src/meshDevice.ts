@@ -612,7 +612,7 @@ export abstract class MeshDevice {
       `🔌 Entering DFU mode`,
     );
 
-    const reboot = new Protobuf.AdminMessage({
+    const dfu = new Protobuf.AdminMessage({
       payloadVariant: {
         case: "enterDfuModeRequest",
         value: true,
@@ -620,7 +620,7 @@ export abstract class MeshDevice {
     });
 
     return await this.sendPacket(
-      reboot.toBinary(),
+      dfu.toBinary(),
       Protobuf.PortNum.ADMIN_APP,
       "self",
     );
