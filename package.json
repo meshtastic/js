@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/js",
-  "version": "2.2.17-2",
+  "version": "2.2.17-3",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
