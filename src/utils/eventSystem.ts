@@ -16,7 +16,7 @@ export class EventSystem {
    *
    * @event onFromRadio
    */
-  public readonly onFromRadio = new SubEvent<Protobuf.FromRadio>();
+  public readonly onFromRadio = new SubEvent<Protobuf.Mesh.FromRadio>();
 
   /**
    * Fires when a new FromRadio message containing a Data packet has been
@@ -24,14 +24,14 @@ export class EventSystem {
    *
    * @event onMeshPacket
    */
-  public readonly onMeshPacket = new SubEvent<Protobuf.MeshPacket>();
+  public readonly onMeshPacket = new SubEvent<Protobuf.Mesh.MeshPacket>();
 
   /**
    * Fires when a new MyNodeInfo message has been received from the device
    *
    * @event onMyNodeInfo
    */
-  public readonly onMyNodeInfo = new SubEvent<Protobuf.MyNodeInfo>();
+  public readonly onMyNodeInfo = new SubEvent<Protobuf.Mesh.MyNodeInfo>();
 
   /**
    * Fires when a new MeshPacket message containing a NodeInfo packet has been
@@ -39,7 +39,7 @@ export class EventSystem {
    *
    * @event onNodeInfoPacket
    */
-  public readonly onNodeInfoPacket = new SubEvent<Protobuf.NodeInfo>();
+  public readonly onNodeInfoPacket = new SubEvent<Protobuf.Mesh.NodeInfo>();
 
   /**
    * Fires when a new MeshPacket message containing a User packet has been
@@ -47,28 +47,31 @@ export class EventSystem {
    *
    * @event onUserPacket
    */
-  public readonly onUserPacket = new SubEvent<PacketMetadata<Protobuf.User>>();
+  public readonly onUserPacket = new SubEvent<
+    PacketMetadata<Protobuf.Mesh.User>
+  >();
 
   /**
    * Fires when a new Channel message is recieved
    *
    * @event onChannelPacket
    */
-  public readonly onChannelPacket = new SubEvent<Protobuf.Channel>();
+  public readonly onChannelPacket = new SubEvent<Protobuf.Channel.Channel>();
 
   /**
    * Fires when a new Config message is recieved
    *
    * @event onConfigPacket
    */
-  public readonly onConfigPacket = new SubEvent<Protobuf.Config>();
+  public readonly onConfigPacket = new SubEvent<Protobuf.Config.Config>();
 
   /**
    * Fires when a new ModuleConfig message is recieved
    *
    * @event onModuleConfigPacket
    */
-  public readonly onModuleConfigPacket = new SubEvent<Protobuf.ModuleConfig>();
+  public readonly onModuleConfigPacket =
+    new SubEvent<Protobuf.ModuleConfig.ModuleConfig>();
 
   /**
    * Fires when a new MeshPacket message containing a Ping packet has been
@@ -122,7 +125,7 @@ export class EventSystem {
    * @event onTelemetryPacket
    */
   public readonly onTelemetryPacket = new SubEvent<
-    PacketMetadata<Protobuf.Telemetry>
+    PacketMetadata<Protobuf.Telemetry.Telemetry>
   >();
 
   /**
@@ -148,7 +151,7 @@ export class EventSystem {
    * @event onRoutingPacket
    */
   public readonly onRoutingPacket = new SubEvent<
-    PacketMetadata<Protobuf.Routing>
+    PacketMetadata<Protobuf.Mesh.Routing>
   >();
 
   /**
@@ -158,7 +161,7 @@ export class EventSystem {
    * @event onPositionPacket
    */
   public readonly onPositionPacket = new SubEvent<
-    PacketMetadata<Protobuf.Position>
+    PacketMetadata<Protobuf.Mesh.Position>
   >();
 
   /**
@@ -176,7 +179,7 @@ export class EventSystem {
    * @event onRemoteHardwarePacket
    */
   public readonly onRemoteHardwarePacket = new SubEvent<
-    PacketMetadata<Protobuf.HardwareMessage>
+    PacketMetadata<Protobuf.RemoteHardware.HardwareMessage>
   >();
 
   /**
@@ -186,7 +189,7 @@ export class EventSystem {
    * @event onWaypointPacket
    */
   public readonly onWaypointPacket = new SubEvent<
-    PacketMetadata<Protobuf.Waypoint>
+    PacketMetadata<Protobuf.Mesh.Waypoint>
   >();
 
   /**
@@ -202,7 +205,7 @@ export class EventSystem {
    *
    * @event onLogRecord
    */
-  public readonly onLogRecord = new SubEvent<Protobuf.LogRecord>();
+  public readonly onLogRecord = new SubEvent<Protobuf.Mesh.LogRecord>();
 
   /**
    * Fires when the device receives a meshPacket, returns a timestamp
@@ -224,7 +227,7 @@ export class EventSystem {
    * @event onDeviceMetadataPacket
    */
   public readonly onDeviceMetadataPacket = new SubEvent<
-    PacketMetadata<Protobuf.DeviceMetadata>
+    PacketMetadata<Protobuf.Mesh.DeviceMetadata>
   >();
 
   /**
@@ -239,5 +242,5 @@ export class EventSystem {
    *
    * @event onQueueStatus
    */
-  public readonly onQueueStatus = new SubEvent<Protobuf.QueueStatus>();
+  public readonly onQueueStatus = new SubEvent<Protobuf.Mesh.QueueStatus>();
 }

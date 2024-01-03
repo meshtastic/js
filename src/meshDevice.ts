@@ -1,14 +1,8 @@
-import { Logger } from 'tslog';
-
-import {
-  broadcastNum,
-  minFwVer,
-} from './constants.js';
-import * as Protobuf from './protobufs.js';
-import * as Types from './types.js';
-import { EventSystem } from './utils/eventSystem.js';
-import { Queue } from './utils/queue.js';
-import { Xmodem } from './utils/xmodem.js';
+import { Logger } from "tslog";
+import { broadcastNum, minFwVer } from "./constants.js";
+import { EventSystem, Queue, Xmodem } from "./utils/index.js";
+import * as Types from "./types.js";
+import * as Protobuf from "./protobufs.js";
 
 /** Base class for connection methods to extend */
 export abstract class MeshDevice {
@@ -30,7 +24,7 @@ export abstract class MeshDevice {
   protected pendingSettingsChanges: boolean;
 
   /** Device's node number */
-  private myNodeInfo: Protobuf.MyNodeInfo;
+  private myNodeInfo: Protobuf.Mesh.MyNodeInfo;
 
   /** Randomly generated number to ensure confiuration lockstep */
   public configId: number;
@@ -55,7 +49,7 @@ export abstract class MeshDevice {
     this.deviceStatus = Types.DeviceStatusEnum.DEVICE_DISCONNECTED;
     this.isConfigured = false;
     this.pendingSettingsChanges = false;
-    this.myNodeInfo = new Protobuf.MyNodeInfo();
+    this.myNodeInfo = new Protobuf.Mesh.MyNodeInfo();
     this.configId = configId ?? this.generateRandId();
     this.queue = new Queue();
     this.events = new EventSystem();
@@ -113,7 +107,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       enc.encode(text),
-      Protobuf.PortNum.TEXT_MESSAGE_APP,
+      Protobuf.Portnums.PortNum.TEXT_MESSAGE_APP,
       destination ?? "broadcast",
       channel,
       wantAck,
@@ -126,7 +120,7 @@ export abstract class MeshDevice {
    * Sends a text over the radio
    */
   public sendWaypoint(
-    waypointMessage: Protobuf.Waypoint,
+    waypointMessage: Protobuf.Mesh.Waypoint,
     destination: Types.Destination,
     channel?: Types.ChannelNumber,
   ): Promise<number> {
@@ -141,7 +135,7 @@ export abstract class MeshDevice {
 
     return this.sendPacket(
       waypointMessage.toBinary(),
-      Protobuf.PortNum.WAYPOINT_APP,
+      Protobuf.Portnums.PortNum.WAYPOINT_APP,
       destination,
       channel,
       true,
@@ -154,7 +148,7 @@ export abstract class MeshDevice {
    */
   public async sendPacket(
     byteData: Uint8Array,
-    portNum: Protobuf.PortNum,
+    portNum: Protobuf.Portnums.PortNum,
     destination: Types.Destination,
     channel: Types.ChannelNumber = Types.ChannelNumber.PRIMARY,
     wantAck = true,
@@ -165,10 +159,10 @@ export abstract class MeshDevice {
   ): Promise<number> {
     this.log.trace(
       Types.Emitter[Types.Emitter.sendPacket],
-      `📤 Sending ${Protobuf.PortNum[portNum]} to ${destination}`,
+      `📤 Sending ${Protobuf.Portnums.PortNum[portNum]} to ${destination}`,
     );
 
-    const meshPacket = new Protobuf.MeshPacket({
+    const meshPacket = new Protobuf.Mesh.MeshPacket({
       payloadVariant: {
         case: "decoded",
         value: {
@@ -194,7 +188,7 @@ export abstract class MeshDevice {
       channel,
     });
 
-    const toRadioMessage = new Protobuf.ToRadio({
+    const toRadioMessage = new Protobuf.Mesh.ToRadio({
       payloadVariant: {
         case: "packet",
         value: meshPacket,
@@ -233,7 +227,7 @@ export abstract class MeshDevice {
   /**
    * Writes config to device
    */
-  public async setConfig(config: Protobuf.Config): Promise<number> {
+  public async setConfig(config: Protobuf.Config.Config): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setConfig],
       `⚙️ Setting config, Variant: ${config.payloadVariant.case ?? "Unknown"}`,
@@ -243,7 +237,7 @@ export abstract class MeshDevice {
       await this.beginEditSettings();
     }
 
-    const configMessage = new Protobuf.AdminMessage({
+    const configMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "setConfig",
         value: config,
@@ -252,7 +246,7 @@ export abstract class MeshDevice {
 
     return this.sendPacket(
       configMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -261,14 +255,14 @@ export abstract class MeshDevice {
    * Writes module config to device
    */
   public async setModuleConfig(
-    moduleConfig: Protobuf.ModuleConfig,
+    moduleConfig: Protobuf.ModuleConfig.ModuleConfig,
   ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setModuleConfig],
       "⚙️ Setting module config",
     );
 
-    const moduleConfigMessage = new Protobuf.AdminMessage({
+    const moduleConfigMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "setModuleConfig",
         value: moduleConfig,
@@ -277,7 +271,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       moduleConfigMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -285,10 +279,10 @@ export abstract class MeshDevice {
   /**
    * Sets devices owner data
    */
-  public async setOwner(owner: Protobuf.User): Promise<number> {
+  public async setOwner(owner: Protobuf.Mesh.User): Promise<number> {
     this.log.debug(Types.Emitter[Types.Emitter.setOwner], "👤 Setting owner");
 
-    const setOwnerMessage = new Protobuf.AdminMessage({
+    const setOwnerMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "setOwner",
         value: owner,
@@ -297,7 +291,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       setOwnerMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -305,13 +299,13 @@ export abstract class MeshDevice {
   /**
    * Sets devices ChannelSettings
    */
-  public async setChannel(channel: Protobuf.Channel): Promise<number> {
+  public async setChannel(channel: Protobuf.Channel.Channel): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.setChannel],
       `📻 Setting Channel: ${channel.index}`,
     );
 
-    const setChannelMessage = new Protobuf.AdminMessage({
+    const setChannelMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "setChannel",
         value: channel,
@@ -320,17 +314,17 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       setChannelMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
 
   public async setPosition(
-    positionMessage: Protobuf.Position,
+    positionMessage: Protobuf.Mesh.Position,
   ): Promise<number> {
     return await this.sendPacket(
       positionMessage.toBinary(),
-      Protobuf.PortNum.POSITION_APP,
+      Protobuf.Portnums.PortNum.POSITION_APP,
       "self",
     );
   }
@@ -344,7 +338,7 @@ export abstract class MeshDevice {
       `📻 Requesting Channel: ${index}`,
     );
 
-    const getChannelRequestMessage = new Protobuf.AdminMessage({
+    const getChannelRequestMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "getChannelRequest",
         value: index + 1,
@@ -353,7 +347,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       getChannelRequestMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -363,14 +357,14 @@ export abstract class MeshDevice {
    *   request
    */
   public async getConfig(
-    configType: Protobuf.AdminMessage_ConfigType,
+    configType: Protobuf.Admin.AdminMessage_ConfigType,
   ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getConfig],
       "⚙️ Requesting config",
     );
 
-    const getRadioRequestMessage = new Protobuf.AdminMessage({
+    const getRadioRequestMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "getConfigRequest",
         value: configType,
@@ -379,7 +373,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       getRadioRequestMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -388,14 +382,14 @@ export abstract class MeshDevice {
    * Gets Module config
    */
   public async getModuleConfig(
-    moduleConfigType: Protobuf.AdminMessage_ModuleConfigType,
+    moduleConfigType: Protobuf.Admin.AdminMessage_ModuleConfigType,
   ): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.getModuleConfig],
       "⚙️ Requesting module config",
     );
 
-    const getRadioRequestMessage = new Protobuf.AdminMessage({
+    const getRadioRequestMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "getModuleConfigRequest",
         value: moduleConfigType,
@@ -404,7 +398,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       getRadioRequestMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -416,7 +410,7 @@ export abstract class MeshDevice {
       "👤 Requesting owner",
     );
 
-    const getOwnerRequestMessage = new Protobuf.AdminMessage({
+    const getOwnerRequestMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "getOwnerRequest",
         value: true,
@@ -425,7 +419,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       getOwnerRequestMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -439,7 +433,7 @@ export abstract class MeshDevice {
       `🏷️ Requesting metadata from ${nodeNum}`,
     );
 
-    const getDeviceMetricsRequestMessage = new Protobuf.AdminMessage({
+    const getDeviceMetricsRequestMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "getDeviceMetadataRequest",
         value: true,
@@ -448,7 +442,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       getDeviceMetricsRequestMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       nodeNum,
       Types.ChannelNumber.ADMIN,
     );
@@ -463,11 +457,11 @@ export abstract class MeshDevice {
       `📻 Clearing Channel ${index}`,
     );
 
-    const channel = new Protobuf.Channel({
+    const channel = new Protobuf.Channel.Channel({
       index,
-      role: Protobuf.Channel_Role.DISABLED,
+      role: Protobuf.Channel.Channel_Role.DISABLED,
     });
-    const setChannelMessage = new Protobuf.AdminMessage({
+    const setChannelMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "setChannel",
         value: channel,
@@ -476,7 +470,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       setChannelMessage.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -484,7 +478,7 @@ export abstract class MeshDevice {
   private async beginEditSettings(): Promise<number> {
     this.events.onPendingSettingsChange.emit(true);
 
-    const beginEditSettings = new Protobuf.AdminMessage({
+    const beginEditSettings = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "beginEditSettings",
         value: true,
@@ -493,7 +487,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       beginEditSettings.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -501,7 +495,7 @@ export abstract class MeshDevice {
   public async commitEditSettings(): Promise<number> {
     this.events.onPendingSettingsChange.emit(false);
 
-    const commitEditSettings = new Protobuf.AdminMessage({
+    const commitEditSettings = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "commitEditSettings",
         value: true,
@@ -510,7 +504,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       commitEditSettings.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -525,7 +519,7 @@ export abstract class MeshDevice {
       "📻 Resetting Peers",
     );
 
-    const resetPeers = new Protobuf.AdminMessage({
+    const resetPeers = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "nodedbReset",
         value: 1,
@@ -534,7 +528,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       resetPeers.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -546,7 +540,7 @@ export abstract class MeshDevice {
       `🔌 Shutting down ${time > 2 ? "now" : `in ${time} seconds`}`,
     );
 
-    const shutdown = new Protobuf.AdminMessage({
+    const shutdown = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "shutdownSeconds",
         value: time,
@@ -555,7 +549,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       shutdown.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -567,7 +561,7 @@ export abstract class MeshDevice {
       `🔌 Rebooting node ${time > 0 ? "now" : `in ${time} seconds`}`,
     );
 
-    const reboot = new Protobuf.AdminMessage({
+    const reboot = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "rebootSeconds",
         value: time,
@@ -576,7 +570,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       reboot.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -591,7 +585,7 @@ export abstract class MeshDevice {
       `🔌 Rebooting into OTA mode ${time > 0 ? "now" : `in ${time} seconds`}`,
     );
 
-    const rebootOta = new Protobuf.AdminMessage({
+    const rebootOta = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "rebootOtaSeconds",
         value: time,
@@ -600,28 +594,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       rebootOta.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
-      "self",
-    );
-  }
-
-  /** Enter DFU mode on the current node. */
-  public async enterDfuMode(): Promise<Number> {
-    this.log.debug(
-      Types.Emitter[Types.Emitter.enterDfuMode],
-      `🔌 Entering DFU mode`,
-    );
-
-    const dfu = new Protobuf.AdminMessage({
-      payloadVariant: {
-        case: "enterDfuModeRequest",
-        value: true,
-      },
-    });
-
-    return await this.sendPacket(
-      dfu.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -633,7 +606,7 @@ export abstract class MeshDevice {
       "♻️ Factory resetting node",
     );
 
-    const factoryReset = new Protobuf.AdminMessage({
+    const factoryReset = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "factoryReset",
         value: 1,
@@ -642,7 +615,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       factoryReset.toBinary(),
-      Protobuf.PortNum.ADMIN_APP,
+      Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
   }
@@ -655,7 +628,7 @@ export abstract class MeshDevice {
     );
     this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONFIGURING);
 
-    const toRadio = new Protobuf.ToRadio({
+    const toRadio = new Protobuf.Mesh.ToRadio({
       payloadVariant: {
         case: "wantConfigId",
         value: this.configId,
@@ -667,13 +640,13 @@ export abstract class MeshDevice {
 
   /** Sends a trace route packet to the designated node */
   public async traceRoute(destination: number): Promise<number> {
-    const routeDiscovery = new Protobuf.RouteDiscovery({
+    const routeDiscovery = new Protobuf.Mesh.RouteDiscovery({
       route: [],
     });
 
     return await this.sendPacket(
       routeDiscovery.toBinary(),
-      Protobuf.PortNum.ROUTING_APP,
+      Protobuf.Portnums.PortNum.ROUTING_APP,
       destination,
     );
   }
@@ -682,7 +655,7 @@ export abstract class MeshDevice {
   public async requestPosition(destination: number): Promise<number> {
     return await this.sendPacket(
       new Uint8Array(),
-      Protobuf.PortNum.POSITION_APP,
+      Protobuf.Portnums.PortNum.POSITION_APP,
       destination,
     );
   }
@@ -715,7 +688,7 @@ export abstract class MeshDevice {
    * fromRadio data
    */
   protected handleFromRadio(fromRadio: Uint8Array): void {
-    const decodedMessage = Protobuf.FromRadio.fromBinary(fromRadio);
+    const decodedMessage = Protobuf.Mesh.FromRadio.fromBinary(fromRadio);
     this.events.onFromRadio.emit(decodedMessage);
 
     /** @todo Add map here when `all=true` gets fixed. */
@@ -935,7 +908,7 @@ export abstract class MeshDevice {
   /**
    * Gets called when a MeshPacket is received from device
    */
-  private handleMeshPacket(meshPacket: Protobuf.MeshPacket): void {
+  private handleMeshPacket(meshPacket: Protobuf.Mesh.MeshPacket): void {
     this.events.onMeshPacket.emit(meshPacket);
     if (meshPacket.from !== this.myNodeInfo.myNodeNum) {
       /**
@@ -965,11 +938,11 @@ export abstract class MeshDevice {
   }
 
   private handleDecodedPacket(
-    dataPacket: Protobuf.Data,
-    meshPacket: Protobuf.MeshPacket,
+    dataPacket: Protobuf.Mesh.Data,
+    meshPacket: Protobuf.Mesh.MeshPacket,
   ) {
-    let adminMessage: Protobuf.AdminMessage | undefined = undefined;
-    let routingPacket: Protobuf.Routing | undefined = undefined;
+    let adminMessage: Protobuf.Admin.AdminMessage | undefined = undefined;
+    let routingPacket: Protobuf.Mesh.Routing | undefined = undefined;
 
     const packetMetadata: Omit<Types.PacketMetadata<unknown>, "data"> = {
       id: meshPacket.id,
@@ -982,11 +955,11 @@ export abstract class MeshDevice {
 
     this.log.trace(
       Types.Emitter[Types.Emitter.handleMeshPacket],
-      `📦 Received ${Protobuf.PortNum[dataPacket.portnum]} packet`,
+      `📦 Received ${Protobuf.Portnums.PortNum[dataPacket.portnum]} packet`,
     );
 
     switch (dataPacket.portnum) {
-      case Protobuf.PortNum.TEXT_MESSAGE_APP: {
+      case Protobuf.Portnums.PortNum.TEXT_MESSAGE_APP: {
         this.events.onMessagePacket.emit({
           ...packetMetadata,
           data: new TextDecoder().decode(dataPacket.payload),
@@ -994,32 +967,34 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.PortNum.REMOTE_HARDWARE_APP: {
+      case Protobuf.Portnums.PortNum.REMOTE_HARDWARE_APP: {
         this.events.onRemoteHardwarePacket.emit({
           ...packetMetadata,
-          data: Protobuf.HardwareMessage.fromBinary(dataPacket.payload),
+          data: Protobuf.RemoteHardware.HardwareMessage.fromBinary(
+            dataPacket.payload,
+          ),
         });
         break;
       }
 
-      case Protobuf.PortNum.POSITION_APP: {
+      case Protobuf.Portnums.PortNum.POSITION_APP: {
         this.events.onPositionPacket.emit({
           ...packetMetadata,
-          data: Protobuf.Position.fromBinary(dataPacket.payload),
+          data: Protobuf.Mesh.Position.fromBinary(dataPacket.payload),
         });
         break;
       }
 
-      case Protobuf.PortNum.NODEINFO_APP: {
+      case Protobuf.Portnums.PortNum.NODEINFO_APP: {
         this.events.onUserPacket.emit({
           ...packetMetadata,
-          data: Protobuf.User.fromBinary(dataPacket.payload),
+          data: Protobuf.Mesh.User.fromBinary(dataPacket.payload),
         });
         break;
       }
 
-      case Protobuf.PortNum.ROUTING_APP: {
-        routingPacket = Protobuf.Routing.fromBinary(dataPacket.payload);
+      case Protobuf.Portnums.PortNum.ROUTING_APP: {
+        routingPacket = Protobuf.Mesh.Routing.fromBinary(dataPacket.payload);
 
         this.events.onRoutingPacket.emit({
           ...packetMetadata,
@@ -1027,7 +1002,9 @@ export abstract class MeshDevice {
         });
         switch (routingPacket.variant.case) {
           case "errorReason": {
-            if (routingPacket.variant.value === Protobuf.Routing_Error.NONE) {
+            if (
+              routingPacket.variant.value === Protobuf.Mesh.Routing_Error.NONE
+            ) {
               this.queue.processAck(dataPacket.requestId);
             } else {
               this.queue.processError({
@@ -1060,8 +1037,10 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.PortNum.ADMIN_APP: {
-        adminMessage = Protobuf.AdminMessage.fromBinary(dataPacket.payload);
+      case Protobuf.Portnums.PortNum.ADMIN_APP: {
+        adminMessage = Protobuf.Admin.AdminMessage.fromBinary(
+          dataPacket.payload,
+        );
         switch (adminMessage.payloadVariant.case) {
           case "getChannelResponse": {
             this.events.onChannelPacket.emit(adminMessage.payloadVariant.value);
@@ -1109,18 +1088,18 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.PortNum.TEXT_MESSAGE_COMPRESSED_APP: {
+      case Protobuf.Portnums.PortNum.TEXT_MESSAGE_COMPRESSED_APP: {
         break;
       }
-      case Protobuf.PortNum.WAYPOINT_APP: {
+      case Protobuf.Portnums.PortNum.WAYPOINT_APP: {
         this.events.onWaypointPacket.emit({
           ...packetMetadata,
-          data: Protobuf.Waypoint.fromBinary(dataPacket.payload),
+          data: Protobuf.Mesh.Waypoint.fromBinary(dataPacket.payload),
         });
         break;
       }
 
-      case Protobuf.PortNum.REPLY_APP: {
+      case Protobuf.Portnums.PortNum.REPLY_APP: {
         this.events.onPingPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload, //TODO: decode
@@ -1128,7 +1107,7 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.PortNum.IP_TUNNEL_APP: {
+      case Protobuf.Portnums.PortNum.IP_TUNNEL_APP: {
         this.events.onIpTunnelPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
@@ -1136,7 +1115,7 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.PortNum.SERIAL_APP: {
+      case Protobuf.Portnums.PortNum.SERIAL_APP: {
         this.events.onSerialPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
@@ -1144,7 +1123,7 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.PortNum.STORE_FORWARD_APP: {
+      case Protobuf.Portnums.PortNum.STORE_FORWARD_APP: {
         this.events.onStoreForwardPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
@@ -1152,7 +1131,7 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.PortNum.RANGE_TEST_APP: {
+      case Protobuf.Portnums.PortNum.RANGE_TEST_APP: {
         this.events.onRangeTestPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
@@ -1160,15 +1139,15 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.PortNum.TELEMETRY_APP: {
+      case Protobuf.Portnums.PortNum.TELEMETRY_APP: {
         this.events.onTelemetryPacket.emit({
           ...packetMetadata,
-          data: Protobuf.Telemetry.fromBinary(dataPacket.payload),
+          data: Protobuf.Telemetry.Telemetry.fromBinary(dataPacket.payload),
         });
         break;
       }
 
-      case Protobuf.PortNum.PRIVATE_APP: {
+      case Protobuf.Portnums.PortNum.PRIVATE_APP: {
         this.events.onPrivatePacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
@@ -1176,7 +1155,7 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.PortNum.ATAK_FORWARDER: {
+      case Protobuf.Portnums.PortNum.ATAK_FORWARDER: {
         this.events.onAtakPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,

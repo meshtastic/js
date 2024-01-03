@@ -61,7 +61,7 @@ export const transformHandler = (
                 `⚠️ Malformed packet found, discarding: ${byteBuffer
                   .subarray(0, malformedDetectorIndex - 1)
                   .toString()}`,
-                Protobuf.LogRecord_Level.WARNING,
+                Protobuf.Mesh.LogRecord_Level.WARNING,
               );
 
               byteBuffer = byteBuffer.subarray(malformedDetectorIndex);

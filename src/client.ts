@@ -1,6 +1,8 @@
-import { BleConnection } from "./adapters/bleConnection.js";
-import { HttpConnection } from "./adapters/httpConnection.js";
-import { SerialConnection } from "./adapters/serialConnection.js";
+import {
+  BleConnection,
+  HttpConnection,
+  SerialConnection,
+} from "./adapters/index.js";
 import * as Types from "./types.js";
 
 /**

@@ -1,7 +1,9 @@
-import { BleConnection } from './adapters/bleConnection.js';
-import { HttpConnection } from './adapters/httpConnection.js';
-import { SerialConnection } from './adapters/serialConnection.js';
-import * as Protobuf from './protobufs.js';
+import * as Protobuf from "./protobufs.js";
+import {
+  BleConnection,
+  HttpConnection,
+  SerialConnection,
+} from "./adapters/index.js";
 
 export interface QueueItem {
   id: number;
@@ -118,7 +120,7 @@ export interface LogEvent {
   scope: EmitterScope;
   emitter: Emitter;
   message: string;
-  level: Protobuf.LogRecord_Level;
+  level: Protobuf.Mesh.LogRecord_Level;
   packet?: Uint8Array;
 }
 
@@ -141,5 +143,5 @@ export type Destination = number | "self" | "broadcast";
 
 export interface PacketError {
   id: number;
-  error: Protobuf.Routing_Error;
+  error: Protobuf.Mesh.Routing_Error;
 }

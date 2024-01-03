@@ -1,6 +1,6 @@
 import { MeshDevice } from "../meshDevice.js";
 import * as Types from "../types.js";
-import { typedArrayToBuffer } from "../utils/general.js";
+import { typedArrayToBuffer } from "../utils/index.js";
 
 /** Allows to connect to a Meshtastic device over HTTP(S) */
 export class HttpConnection extends MeshDevice {

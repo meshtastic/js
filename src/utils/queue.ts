@@ -42,14 +42,14 @@ export class Queue {
         setTimeout(() => {
           if (this.queue.findIndex((qi) => qi.id === item.id) !== -1) {
             this.remove(item.id);
-            const decoded = Protobuf.ToRadio.fromBinary(item.data);
+            const decoded = Protobuf.Mesh.ToRadio.fromBinary(item.data);
             console.warn(
               `Packet ${item.id} of type ${decoded.payloadVariant.case} timed out`,
             );
 
             reject({
               id: item.id,
-              error: Protobuf.Routing_Error.TIMEOUT,
+              error: Protobuf.Mesh.Routing_Error.TIMEOUT,
             });
           }
         }, this.timeout);
@@ -72,7 +72,9 @@ export class Queue {
 
   public processError(e: PacketError): void {
     console.error(
-      `Error received for packet ${e.id}: ${Protobuf.Routing_Error[e.error]}`,
+      `Error received for packet ${e.id}: ${
+        Protobuf.Mesh.Routing_Error[e.error]
+      }`,
     );
     this.errorNotifier.emit(e);
   }

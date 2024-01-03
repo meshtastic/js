@@ -5,9 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  '@buf/meshtastic_protobufs.bufbuild_es':
-    specifier: 1.6.0-20231227193150-3f9c1dfd2a29.1
-    version: 1.6.0-20231227193150-3f9c1dfd2a29.1(@bufbuild/protobuf@1.6.0)
   crc:
     specifier: ^4.3.2
     version: 4.3.2
@@ -19,6 +16,9 @@ dependencies:
     version: 4.9.2
 
 devDependencies:
+  '@buf/meshtastic_protobufs.bufbuild_es':
+    specifier: 1.6.0-20231227193150-3f9c1dfd2a29.1
+    version: 1.6.0-20231227193150-3f9c1dfd2a29.1(@bufbuild/protobuf@1.6.0)
   '@types/node':
     specifier: ^20.10.6
     version: 20.10.6
@@ -35,8 +35,8 @@ devDependencies:
     specifier: ^8.0.1
     version: 8.0.1(typescript@5.3.3)
   typedoc:
-    specifier: ^0.25.4
-    version: 0.25.4(typescript@5.3.3)
+    specifier: ^0.25.6
+    version: 0.25.6(typescript@5.3.3)
   typescript:
     specifier: ^5.3.3
     version: 5.3.3
@@ -49,11 +49,11 @@ packages:
       '@bufbuild/protobuf': ^1.6.0
     dependencies:
       '@bufbuild/protobuf': 1.6.0
-    dev: false
+    dev: true
 
   /@bufbuild/protobuf@1.6.0:
     resolution: {integrity: sha512-hp19vSFgNw3wBBcVBx5qo5pufCqjaJ0Cfk5H/pfjNOfNWU+4/w0QVOmfAOZNRrNWRrVuaJWxcN8P2vhOkkzbBQ==}
-    dev: false
+    dev: true
 
   /@esbuild/aix-ppc64@0.19.11:
     resolution: {integrity: sha512-FnzU0LyE3ySQk7UntJO4+qIiQgI7KoODnZg5xzXIrFJlKd2P2gwHsHY4927xj9y5PJmJSzULiUCWmv7iWnNa7g==}
@@ -1551,8 +1551,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /shiki@0.14.6:
-    resolution: {integrity: sha512-R4koBBlQP33cC8cpzX0hAoOURBHJILp4Aaduh2eYi+Vj8ZBqtK/5SWNEHBS3qwUMu8dqOtI/ftno3ESfNeVW9g==}
+  /shiki@0.14.7:
+    resolution: {integrity: sha512-dNPAPrxSc87ua2sKJ3H5dQ/6ZaY8RNnaAqK+t0eG7p0Soi2ydiqbGOTaZCqaYvA/uZYfS1LJnemt3Q+mSfcPCg==}
     dependencies:
       ansi-sequence-parser: 1.1.1
       jsonc-parser: 3.2.0
@@ -1775,8 +1775,8 @@ packages:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
     dev: true
 
-  /typedoc@0.25.4(typescript@5.3.3):
-    resolution: {integrity: sha512-Du9ImmpBCw54bX275yJrxPVnjdIyJO/84co0/L9mwe0R3G4FSR6rQ09AlXVRvZEGMUg09+z/usc8mgygQ1aidA==}
+  /typedoc@0.25.6(typescript@5.3.3):
+    resolution: {integrity: sha512-1rdionQMpOkpA58qfym1J+YD+ukyA1IEIa4VZahQI2ZORez7dhOvEyUotQL/8rSoMBopdzOS+vAIsORpQO4cTA==}
     engines: {node: '>= 16'}
     hasBin: true
     peerDependencies:
@@ -1785,7 +1785,7 @@ packages:
       lunr: 2.3.9
       marked: 4.3.0
       minimatch: 9.0.3
-      shiki: 0.14.6
+      shiki: 0.14.7
       typescript: 5.3.3
     dev: true
 

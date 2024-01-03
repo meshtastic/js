@@ -24,7 +24,7 @@ export class Xmodem {
     console.log(filename);
 
     return await this.sendCommand(
-      Protobuf.XModem_Control.STX,
+      Protobuf.Xmodem.XModem_Control.STX,
       this.textEncoder.encode(filename),
       0,
     );
@@ -36,19 +36,19 @@ export class Xmodem {
     }
 
     return await this.sendCommand(
-      Protobuf.XModem_Control.SOH,
+      Protobuf.Xmodem.XModem_Control.SOH,
       this.textEncoder.encode(filename),
       0,
     );
   }
 
   async sendCommand(
-    command: Protobuf.XModem_Control,
+    command: Protobuf.Xmodem.XModem_Control,
     buffer?: Uint8Array,
     sequence?: number,
     crc16?: number,
   ): Promise<number> {
-    const toRadio = new Protobuf.ToRadio({
+    const toRadio = new Protobuf.Mesh.ToRadio({
       payloadVariant: {
         case: "xmodemPacket",
         value: {
@@ -62,31 +62,33 @@ export class Xmodem {
     return await this.sendRaw(toRadio.toBinary());
   }
 
-  async handlePacket(packet: Protobuf.XModem): Promise<number> {
-    console.log(`${Protobuf.XModem_Control[packet.control]} - ${packet.seq}`);
+  async handlePacket(packet: Protobuf.Xmodem.XModem): Promise<number> {
+    console.log(
+      `${Protobuf.Xmodem.XModem_Control[packet.control]} - ${packet.seq}`,
+    );
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     switch (packet.control) {
-      case Protobuf.XModem_Control.NUL: {
+      case Protobuf.Xmodem.XModem_Control.NUL: {
         // nothing
         break;
       }
-      case Protobuf.XModem_Control.SOH: {
+      case Protobuf.Xmodem.XModem_Control.SOH: {
         this.counter = packet.seq;
-        if (this.validateCRC16(packet)) {
+        if (this.validateCrc16(packet)) {
           this.rxBuffer[this.counter] = packet.buffer;
-          return this.sendCommand(Protobuf.XModem_Control.ACK);
+          return this.sendCommand(Protobuf.Xmodem.XModem_Control.ACK);
         }
         return await this.sendCommand(
-          Protobuf.XModem_Control.NAK,
+          Protobuf.Xmodem.XModem_Control.NAK,
           undefined,
           packet.seq,
         );
       }
-      case Protobuf.XModem_Control.STX: {
+      case Protobuf.Xmodem.XModem_Control.STX: {
         break;
       }
-      case Protobuf.XModem_Control.EOT: {
+      case Protobuf.Xmodem.XModem_Control.EOT: {
         console.log(
           this.rxBuffer.reduce(
             (acc: Uint8Array, curr) => new Uint8Array([...acc, ...curr]),
@@ -96,35 +98,35 @@ export class Xmodem {
         // end of transmission
         break;
       }
-      case Protobuf.XModem_Control.ACK: {
+      case Protobuf.Xmodem.XModem_Control.ACK: {
         this.counter++;
         if (this.txBuffer[this.counter - 1]) {
           return this.sendCommand(
-            Protobuf.XModem_Control.SOH,
+            Protobuf.Xmodem.XModem_Control.SOH,
             this.txBuffer[this.counter - 1],
             this.counter,
             crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array()),
           );
         }
         if (this.counter === this.txBuffer.length + 1) {
-          return this.sendCommand(Protobuf.XModem_Control.EOT);
+          return this.sendCommand(Protobuf.Xmodem.XModem_Control.EOT);
         }
         this.clear();
         break;
       }
-      case Protobuf.XModem_Control.NAK: {
+      case Protobuf.Xmodem.XModem_Control.NAK: {
         return this.sendCommand(
-          Protobuf.XModem_Control.SOH,
+          Protobuf.Xmodem.XModem_Control.SOH,
           this.txBuffer[this.counter],
           this.counter,
           crc16ccitt(this.txBuffer[this.counter - 1] ?? new Uint8Array()),
         );
       }
-      case Protobuf.XModem_Control.CAN: {
+      case Protobuf.Xmodem.XModem_Control.CAN: {
         this.clear();
         break;
       }
-      case Protobuf.XModem_Control.CTRLZ: {
+      case Protobuf.Xmodem.XModem_Control.CTRLZ: {
         break;
       }
     }
@@ -132,7 +134,7 @@ export class Xmodem {
     return Promise.resolve(0);
   }
 
-  validateCRC16(packet: Protobuf.XModem): boolean {
+  validateCrc16(packet: Protobuf.Xmodem.XModem): boolean {
     return crc16ccitt(packet.buffer) === packet.crc16;
   }
 

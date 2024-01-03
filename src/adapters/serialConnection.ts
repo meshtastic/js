@@ -2,7 +2,7 @@ import { SubEvent } from "sub-events";
 
 import { MeshDevice } from "../meshDevice.js";
 import * as Types from "../types.js";
-import { transformHandler } from "../utils/transformHandler.js";
+import { transformHandler } from "../utils/index.js";
 
 /** Allows to connect to a Meshtastic device over WebSerial */
 export class SerialConnection extends MeshDevice {
