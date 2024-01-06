@@ -32,7 +32,7 @@ export class HttpConnection extends MeshDevice {
     this.abortController = new AbortController();
 
     this.log.debug(
-      Types.Emitter[Types.Emitter.constructor],
+      Types.Emitter[Types.Emitter.Constructor],
       "🔷 HttpConnection instantiated",
     );
   }
@@ -46,18 +46,18 @@ export class HttpConnection extends MeshDevice {
     receiveBatchRequests = false,
     tls = false,
   }: Types.HttpConnectionParameters): Promise<void> {
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnecting);
 
     this.receiveBatchRequests = receiveBatchRequests;
 
     this.portId = `${tls ? "https://" : "http://"}${address}`;
 
     if (
-      this.deviceStatus === Types.DeviceStatusEnum.DEVICE_CONNECTING &&
+      this.deviceStatus === Types.DeviceStatusEnum.DeviceConnecting &&
       (await this.ping())
     ) {
       this.log.debug(
-        Types.Emitter[Types.Emitter.connect],
+        Types.Emitter[Types.Emitter.Connect],
         "Ping succeeded, starting configuration and request timer.",
       );
       this.configure().catch(() => {
@@ -66,13 +66,13 @@ export class HttpConnection extends MeshDevice {
       this.readLoop = setInterval(() => {
         this.readFromRadio().catch((e: Error) => {
           this.log.error(
-            Types.Emitter[Types.Emitter.connect],
+            Types.Emitter[Types.Emitter.Connect],
             `❌ ${e.message}`,
           );
         });
       }, fetchInterval);
     } else if (
-      this.deviceStatus !== Types.DeviceStatusEnum.DEVICE_DISCONNECTED
+      this.deviceStatus !== Types.DeviceStatusEnum.DeviceDisconnected
     ) {
       setTimeout(() => {
         this.connect({
@@ -88,7 +88,7 @@ export class HttpConnection extends MeshDevice {
   /** Disconnects from the Meshtastic device */
   public disconnect(): void {
     this.abortController.abort();
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceDisconnected);
     if (this.readLoop) {
       clearInterval(this.readLoop);
       this.complete();
@@ -98,7 +98,7 @@ export class HttpConnection extends MeshDevice {
   /** Pings device to check if it is avaliable */
   public async ping(): Promise<boolean> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.ping],
+      Types.Emitter[Types.Emitter.Ping],
       "Attempting device ping.",
     );
 
@@ -112,12 +112,12 @@ export class HttpConnection extends MeshDevice {
     })
       .then(() => {
         pingSuccessful = true;
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
       })
       .catch((e: Error) => {
         pingSuccessful = false;
-        this.log.error(Types.Emitter[Types.Emitter.ping], `❌ ${e.message}`);
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
+        this.log.error(Types.Emitter[Types.Emitter.Ping], `❌ ${e.message}`);
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceReconnecting);
       });
     return pingSuccessful;
   }
@@ -140,13 +140,14 @@ export class HttpConnection extends MeshDevice {
           signal,
           method: "GET",
           headers: {
+            // biome-ignore lint/style/useNamingConvention: "Accept header requires PascalCase"
             Accept: "application/x-protobuf",
           },
         },
       )
         .then(async (response) => {
           this.pendingRequest = false;
-          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
 
           readBuffer = await response.arrayBuffer();
 
@@ -157,11 +158,11 @@ export class HttpConnection extends MeshDevice {
         .catch((e: Error) => {
           this.pendingRequest = false;
           this.log.error(
-            Types.Emitter[Types.Emitter.readFromRadio],
+            Types.Emitter[Types.Emitter.ReadFromRadio],
             `❌ ${e.message}`,
           );
 
-          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceReconnecting);
         });
     }
   }
@@ -181,21 +182,21 @@ export class HttpConnection extends MeshDevice {
       body: typedArrayToBuffer(data),
     })
       .then(async () => {
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
 
         await this.readFromRadio().catch((e: Error) => {
           this.log.error(
-            Types.Emitter[Types.Emitter.writeToRadio],
+            Types.Emitter[Types.Emitter.WriteToRadio],
             `❌ ${e.message}`,
           );
         });
       })
       .catch((e: Error) => {
         this.log.error(
-          Types.Emitter[Types.Emitter.writeToRadio],
+          Types.Emitter[Types.Emitter.WriteToRadio],
           `❌ ${e.message}`,
         );
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_RECONNECTING);
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceReconnecting);
       });
   }
 }

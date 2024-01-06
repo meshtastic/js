@@ -1,9 +1,9 @@
-import * as Protobuf from "./protobufs.js";
 import {
   BleConnection,
   HttpConnection,
   SerialConnection,
 } from "./adapters/index.js";
+import * as Protobuf from "./protobufs.js";
 
 export interface QueueItem {
   id: number;
@@ -14,13 +14,13 @@ export interface QueueItem {
 }
 
 export enum DeviceStatusEnum {
-  DEVICE_RESTARTING = 1,
-  DEVICE_DISCONNECTED = 2,
-  DEVICE_CONNECTING = 3,
-  DEVICE_RECONNECTING = 4,
-  DEVICE_CONNECTED = 5,
-  DEVICE_CONFIGURING = 6,
-  DEVICE_CONFIGURED = 7,
+  DeviceRestarting = 1,
+  DeviceDisconnected = 2,
+  DeviceConnecting = 3,
+  DeviceReconnecting = 4,
+  DeviceConnected = 5,
+  DeviceConfiguring = 6,
+  DeviceConfigured = 7,
 }
 
 export type ConnectionParameters =
@@ -82,38 +82,38 @@ export enum EmitterScope {
 }
 
 export enum Emitter {
-  constructor = 0,
-  sendText = 1,
-  sendWaypoint = 2,
-  sendPacket = 3,
-  sendRaw = 4,
-  setConfig = 5,
-  setModuleConfig = 6,
-  confirmSetConfig = 7,
-  setOwner = 8,
-  setChannel = 9,
-  confirmSetChannel = 10,
-  clearChannel = 11,
-  getChannel = 12,
-  getAllChannels = 13,
-  getConfig = 14,
-  getModuleConfig = 15,
-  getOwner = 16,
-  configure = 17,
-  handleFromRadio = 18,
-  handleMeshPacket = 19,
-  connect = 20,
-  ping = 21,
-  readFromRadio = 22,
-  writeToRadio = 23,
-  setDebugMode = 24,
-  getMetadata = 25,
-  resetPeers = 26,
-  shutdown = 27,
-  reboot = 28,
-  rebootOTA = 29,
-  factoryReset = 30,
-  enterDfuMode = 31,
+  Constructor = 0,
+  SendText = 1,
+  SendWaypoint = 2,
+  SendPacket = 3,
+  SendRaw = 4,
+  SetConfig = 5,
+  SetModuleConfig = 6,
+  ConfirmSetConfig = 7,
+  SetOwner = 8,
+  SetChannel = 9,
+  ConfirmSetChannel = 10,
+  ClearChannel = 11,
+  GetChannel = 12,
+  GetAllChannels = 13,
+  GetConfig = 14,
+  GetModuleConfig = 15,
+  GetOwner = 16,
+  Configure = 17,
+  HandleFromRadio = 18,
+  HandleMeshPacket = 19,
+  Connect = 20,
+  Ping = 21,
+  ReadFromRadio = 22,
+  WriteToRadio = 23,
+  SetDebugMode = 24,
+  GetMetadata = 25,
+  ResetPeers = 26,
+  Shutdown = 27,
+  Reboot = 28,
+  RebootOta = 29,
+  FactoryReset = 30,
+  EnterDfuMode = 31,
 }
 
 export interface LogEvent {
@@ -125,14 +125,14 @@ export interface LogEvent {
 }
 
 export enum ChannelNumber {
-  PRIMARY = 0,
-  CHANNEL1 = 1,
-  CHANNEL2 = 2,
-  CHANNEL3 = 3,
-  CHANNEL4 = 4,
-  CHANNEL5 = 5,
-  CHANNEL6 = 6,
-  ADMIN = 7,
+  Primary = 0,
+  Channel1 = 1,
+  Channel2 = 2,
+  Channel3 = 3,
+  Channel4 = 4,
+  Channel5 = 5,
+  Channel6 = 6,
+  Admin = 7,
 }
 
 export type ConnectionType = BleConnection | HttpConnection | SerialConnection;

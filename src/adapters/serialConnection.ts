@@ -47,7 +47,7 @@ export class SerialConnection extends MeshDevice {
     this.preventLock = false;
 
     this.log.debug(
-      Types.Emitter[Types.Emitter.constructor],
+      Types.Emitter[Types.Emitter.Constructor],
       "🔷 SerialConnection instantiated",
     );
   }
@@ -76,7 +76,7 @@ export class SerialConnection extends MeshDevice {
         })
         .catch(() => {
           this.log.debug(
-            Types.Emitter[Types.Emitter.readFromRadio],
+            Types.Emitter[Types.Emitter.ReadFromRadio],
             "Releasing reader",
           );
         });
@@ -108,7 +108,7 @@ export class SerialConnection extends MeshDevice {
     concurrentLogOutput = false,
   }: Types.SerialConnectionParameters): Promise<void> {
     /** Set device state to connecting */
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnecting);
 
     /** Set device if specified, else request. */
     this.port = port ?? (await this.getPort());
@@ -118,10 +118,10 @@ export class SerialConnection extends MeshDevice {
     /** Setup event listners */
     this.port.addEventListener("disconnect", () => {
       this.log.info(
-        Types.Emitter[Types.Emitter.connect],
+        Types.Emitter[Types.Emitter.Connect],
         "Device disconnected",
       );
-      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+      this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceDisconnected);
       this.complete();
     });
 
@@ -147,7 +147,7 @@ export class SerialConnection extends MeshDevice {
             this.transformer.readable.getReader());
           this.readFromRadio(reader);
 
-          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
 
           this.configure().catch(() => {
             // TODO: FIX, workaround for `wantConfigId` not getting acks.
@@ -157,7 +157,7 @@ export class SerialConnection extends MeshDevice {
         }
       })
       .catch((e: Error) => {
-        this.log.error(Types.Emitter[Types.Emitter.connect], `❌ ${e.message}`);
+        this.log.error(Types.Emitter[Types.Emitter.Connect], `❌ ${e.message}`);
       });
   }
 
@@ -182,7 +182,7 @@ export class SerialConnection extends MeshDevice {
       await this.port?.close();
     }
     // -------
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceDisconnected);
     this.complete();
     // await this.onReleaseEvent.toPromise();
     return this.port;

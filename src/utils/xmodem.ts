@@ -20,9 +20,6 @@ export class Xmodem {
   }
 
   async downloadFile(filename: string): Promise<number> {
-    console.log("XModem - getFile");
-    console.log(filename);
-
     return await this.sendCommand(
       Protobuf.Xmodem.XModem_Control.STX,
       this.textEncoder.encode(filename),
@@ -63,9 +60,6 @@ export class Xmodem {
   }
 
   async handlePacket(packet: Protobuf.Xmodem.XModem): Promise<number> {
-    console.log(
-      `${Protobuf.Xmodem.XModem_Control[packet.control]} - ${packet.seq}`,
-    );
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     switch (packet.control) {
@@ -89,12 +83,6 @@ export class Xmodem {
         break;
       }
       case Protobuf.Xmodem.XModem_Control.EOT: {
-        console.log(
-          this.rxBuffer.reduce(
-            (acc: Uint8Array, curr) => new Uint8Array([...acc, ...curr]),
-          ),
-        );
-
         // end of transmission
         break;
       }

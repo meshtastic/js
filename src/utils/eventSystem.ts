@@ -1,7 +1,7 @@
-import { PacketMetadata } from "../types.js";
 import { SubEvent } from "sub-events";
-import * as Types from "../types.js";
 import * as Protobuf from "../protobufs.js";
+import { PacketMetadata } from "../types.js";
+import * as Types from "../types.js";
 
 export class EventSystem {
   /**

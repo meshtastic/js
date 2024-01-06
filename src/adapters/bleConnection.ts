@@ -52,7 +52,7 @@ export class BleConnection extends MeshDevice {
     // this.pendingRead = false;
 
     this.log.debug(
-      Types.Emitter[Types.Emitter.constructor],
+      Types.Emitter[Types.Emitter.Constructor],
       "🔷 BleConnection instantiated",
     );
   }
@@ -94,7 +94,7 @@ export class BleConnection extends MeshDevice {
     deviceFilter,
   }: Types.BleConnectionParameters): Promise<void> {
     /** Set device state to connecting */
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTING);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnecting);
 
     /** Set device if specified, else request. */
     this.device = device ?? (await this.getDevice(deviceFilter));
@@ -104,10 +104,10 @@ export class BleConnection extends MeshDevice {
     /** Setup event listners */
     this.device.addEventListener("gattserverdisconnected", () => {
       this.log.info(
-        Types.Emitter[Types.Emitter.connect],
+        Types.Emitter[Types.Emitter.Connect],
         "Device disconnected",
       );
-      this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+      this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceDisconnected);
       this.complete();
     });
 
@@ -116,14 +116,14 @@ export class BleConnection extends MeshDevice {
       ?.connect()
       .then((server) => {
         this.log.info(
-          Types.Emitter[Types.Emitter.connect],
+          Types.Emitter[Types.Emitter.Connect],
           `✅ Got GATT Server for device: ${server.device.id}`,
         );
         this.gattServer = server;
       })
       .catch((e: Error) => {
         this.log.error(
-          Types.Emitter[Types.Emitter.connect],
+          Types.Emitter[Types.Emitter.Connect],
           `❌ Failed to connect: ${e.message}`,
         );
       });
@@ -132,14 +132,14 @@ export class BleConnection extends MeshDevice {
       ?.getPrimaryService(ServiceUuid)
       .then((service) => {
         this.log.info(
-          Types.Emitter[Types.Emitter.connect],
+          Types.Emitter[Types.Emitter.Connect],
           `✅ Got GATT Service for device: ${service.device.id}`,
         );
         this.service = service;
       })
       .catch((e: Error) => {
         this.log.error(
-          Types.Emitter[Types.Emitter.connect],
+          Types.Emitter[Types.Emitter.Connect],
           `❌ Failed to get primary service: q${e.message}`,
         );
       });
@@ -149,7 +149,7 @@ export class BleConnection extends MeshDevice {
         ?.getCharacteristic(uuid)
         .then((characteristic) => {
           this.log.info(
-            Types.Emitter[Types.Emitter.connect],
+            Types.Emitter[Types.Emitter.Connect],
             `✅ Got Characteristic ${characteristic.uuid} for device: ${characteristic.uuid}`,
           );
           switch (uuid) {
@@ -169,7 +169,7 @@ export class BleConnection extends MeshDevice {
         })
         .catch((e: Error) => {
           this.log.error(
-            Types.Emitter[Types.Emitter.connect],
+            Types.Emitter[Types.Emitter.Connect],
             `❌ Failed to get toRadio characteristic: q${e.message}`,
           );
         });
@@ -184,7 +184,7 @@ export class BleConnection extends MeshDevice {
       },
     );
 
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
 
     this.configure().catch(() => {
       // TODO: FIX, workaround for `wantConfigId` not getting acks.
@@ -196,7 +196,7 @@ export class BleConnection extends MeshDevice {
   /** Disconnects from the Meshtastic device */
   public disconnect(): void {
     this.device?.gatt?.disconnect();
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_DISCONNECTED);
+    this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceDisconnected);
     this.complete();
     if (this.timerUpdateFromRadio) {
       clearInterval(this.timerUpdateFromRadio);
@@ -230,12 +230,12 @@ export class BleConnection extends MeshDevice {
           if (value.byteLength > 0) {
             this.handleFromRadio(new Uint8Array(readBuffer));
           }
-          this.updateDeviceStatus(Types.DeviceStatusEnum.DEVICE_CONNECTED);
+          this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
         })
         .catch((e: Error) => {
           readBuffer = new ArrayBuffer(0);
           this.log.error(
-            Types.Emitter[Types.Emitter.readFromRadio],
+            Types.Emitter[Types.Emitter.ReadFromRadio],
             `❌ ${e.message}`,
           );
         });
