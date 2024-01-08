@@ -1,9 +1,9 @@
-import {
+import type {
   BleConnection,
   HttpConnection,
   SerialConnection,
 } from "./adapters/index.js";
-import * as Protobuf from "./protobufs.js";
+import type * as Protobuf from "./protobufs.js";
 
 export interface QueueItem {
   id: number;
