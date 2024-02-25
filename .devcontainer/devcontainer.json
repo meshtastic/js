@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "build": {
+    "dockerfile": "Containerfile",
+    "context": ".."
+  },
+  "waitFor": "onCreateCommand",
+  "onCreateCommand": "pnpm install",
+  "customizations": {
+    "vscode": {
+      "extensions": ["biomejs.biome"]
+    }
+  }
+}

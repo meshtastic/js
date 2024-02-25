@@ -24,3 +24,6 @@ src/generated/*.ts
 
 # Misc
 .DS_Store
+
+# PNPM
+.pnpm-store/
