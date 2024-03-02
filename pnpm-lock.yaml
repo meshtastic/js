@@ -20,11 +20,11 @@ devDependencies:
     specifier: ^1.5.3
     version: 1.5.3
   '@buf/meshtastic_protobufs.bufbuild_es':
-    specifier: 1.7.2-20240216123215-6b07c41c68c9.1
-    version: 1.7.2-20240216123215-6b07c41c68c9.1(@bufbuild/protobuf@1.7.2)
+    specifier: 1.7.2-20240228025038-216ffc09a4e9.1
+    version: 1.7.2-20240228025038-216ffc09a4e9.1(@bufbuild/protobuf@1.7.2)
   '@types/node':
-    specifier: ^20.11.19
-    version: 20.11.19
+    specifier: ^20.11.24
+    version: 20.11.24
   '@types/w3c-web-serial':
     specifier: ^1.0.6
     version: 1.0.6
@@ -35,8 +35,8 @@ devDependencies:
     specifier: ^8.0.2
     version: 8.0.2(typescript@5.3.3)
   typedoc:
-    specifier: ^0.25.8
-    version: 0.25.8(typescript@5.3.3)
+    specifier: ^0.25.9
+    version: 0.25.9(typescript@5.3.3)
   typescript:
     specifier: ^5.3.3
     version: 5.3.3
@@ -131,8 +131,8 @@ packages:
     dev: true
     optional: true
 
-  /@buf/meshtastic_protobufs.bufbuild_es@1.7.2-20240216123215-6b07c41c68c9.1(@bufbuild/protobuf@1.7.2):
-    resolution: {tarball: https://buf.build/gen/npm/v1/@buf/meshtastic_protobufs.bufbuild_es/-/meshtastic_protobufs.bufbuild_es-1.7.2-20240216123215-6b07c41c68c9.1.tgz}
+  /@buf/meshtastic_protobufs.bufbuild_es@1.7.2-20240228025038-216ffc09a4e9.1(@bufbuild/protobuf@1.7.2):
+    resolution: {tarball: https://buf.build/gen/npm/v1/@buf/meshtastic_protobufs.bufbuild_es/-/meshtastic_protobufs.bufbuild_es-1.7.2-20240228025038-216ffc09a4e9.1.tgz}
     peerDependencies:
       '@bufbuild/protobuf': ^1.7.2
     dependencies:
@@ -528,8 +528,8 @@ packages:
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
     dev: true
 
-  /@types/node@20.11.19:
-    resolution: {integrity: sha512-7xMnVEcZFu0DikYjWOlRq7NTPETrm7teqUT2WkQjrTIkEgUyyGdWsj/Zg8bEJt5TNklzbPD1X3fqfsHw3SpapQ==}
+  /@types/node@20.11.24:
+    resolution: {integrity: sha512-Kza43ewS3xoLgCEpQrsT+xRo/EJej1y0kVYGiLFE1NEODXGzTfwiC6tXTLMQskn1X4/Rjlh0MQUvx9W+L9long==}
     dependencies:
       undici-types: 5.26.5
     dev: true
@@ -1270,8 +1270,8 @@ packages:
       - ts-node
     dev: true
 
-  /typedoc@0.25.8(typescript@5.3.3):
-    resolution: {integrity: sha512-mh8oLW66nwmeB9uTa0Bdcjfis+48bAjSH3uqdzSuSawfduROQLlXw//WSNZLYDdhmMVB7YcYZicq6e8T0d271A==}
+  /typedoc@0.25.9(typescript@5.3.3):
+    resolution: {integrity: sha512-jVoGmfNw848iW0L313+jqHbsknepwDV6F9nzk1H30oWhKXkw65uaENgR6QtTw9a5KqRWEb6nwNd54KxffBJyWw==}
     engines: {node: '>= 16'}
     hasBin: true
     peerDependencies:

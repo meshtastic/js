@@ -4,6 +4,9 @@
     "dockerfile": "Containerfile",
     "context": ".."
   },
+  "hostRequirements": {
+    "cpus": 2
+  },
   "waitFor": "onCreateCommand",
   "onCreateCommand": "pnpm install",
   "customizations": {

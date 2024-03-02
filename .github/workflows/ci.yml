@@ -50,3 +50,6 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           access: public
+      
+      - name: "Publish to JSR"
+        run: "pnpm dlx jsr publish"
