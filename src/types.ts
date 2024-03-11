@@ -108,7 +108,7 @@ export enum Emitter {
   WriteToRadio = 23,
   SetDebugMode = 24,
   GetMetadata = 25,
-  ResetPeers = 26,
+  ResetNodes = 26,
   Shutdown = 27,
   Reboot = 28,
   RebootOta = 29,
