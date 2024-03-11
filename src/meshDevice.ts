@@ -516,7 +516,7 @@ export abstract class MeshDevice {
   public async resetNodes(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.ResetNodes],
-      "📻 Resetting Nodes",
+      "📻 Resetting NodeDB",
     );
 
     const resetNodes = new Protobuf.Admin.AdminMessage({
