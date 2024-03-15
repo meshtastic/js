@@ -867,7 +867,10 @@ export abstract class MeshDevice {
         break;
       }
       default: {
-        throw new Error(`Unhandled case ${decodedMessage.payloadVariant.case}`);
+        this.log.warn(
+          Types.Emitter[Types.Emitter.HandleFromRadio],
+          `⚠️ Unhandled payload variant: ${decodedMessage.payloadVariant.case}`,
+        );
       }
     }
   }
