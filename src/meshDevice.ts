@@ -513,13 +513,13 @@ export abstract class MeshDevice {
    * Resets the internal NodeDB of the radio, usefull for removing old nodes
    * that no longer exist.
    */
-  public async resetPeers(): Promise<number> {
+  public async resetNodes(): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.ResetPeers],
-      "📻 Resetting Peers",
+      Types.Emitter[Types.Emitter.ResetNodes],
+      "📻 Resetting NodeDB",
     );
 
-    const resetPeers = new Protobuf.Admin.AdminMessage({
+    const resetNodes = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "nodedbReset",
         value: 1,
@@ -527,7 +527,7 @@ export abstract class MeshDevice {
     });
 
     return await this.sendPacket(
-      resetPeers.toBinary(),
+      resetNodes.toBinary(),
       Protobuf.Portnums.PortNum.ADMIN_APP,
       "self",
     );
