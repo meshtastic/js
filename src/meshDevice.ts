@@ -646,7 +646,7 @@ export abstract class MeshDevice {
 
     return await this.sendPacket(
       routeDiscovery.toBinary(),
-      Protobuf.Portnums.PortNum.ROUTING_APP,
+      Protobuf.Portnums.PortNum.TRACEROUTE_APP,
       destination,
     );
   }
@@ -839,8 +839,9 @@ export abstract class MeshDevice {
 
       case "metadata": {
         if (
-          parseFloat(decodedMessage.payloadVariant.value.firmwareVersion) <
-          minFwVer
+          Number.parseFloat(
+            decodedMessage.payloadVariant.value.firmwareVersion,
+          ) < minFwVer
         ) {
           this.log.fatal(
             Types.Emitter[Types.Emitter.HandleFromRadio],
@@ -863,9 +864,11 @@ export abstract class MeshDevice {
         });
         break;
       }
+
       case "mqttClientProxyMessage": {
         break;
       }
+
       default: {
         this.log.warn(
           Types.Emitter[Types.Emitter.HandleFromRadio],
@@ -1083,13 +1086,26 @@ export abstract class MeshDevice {
         break;
       }
 
-      case Protobuf.Portnums.PortNum.TEXT_MESSAGE_COMPRESSED_APP: {
-        break;
-      }
       case Protobuf.Portnums.PortNum.WAYPOINT_APP: {
         this.events.onWaypointPacket.emit({
           ...packetMetadata,
           data: Protobuf.Mesh.Waypoint.fromBinary(dataPacket.payload),
+        });
+        break;
+      }
+
+      case Protobuf.Portnums.PortNum.AUDIO_APP: {
+        this.events.onAudioPacket.emit({
+          ...packetMetadata,
+          data: dataPacket.payload,
+        });
+        break;
+      }
+
+      case Protobuf.Portnums.PortNum.DETECTION_SENSOR_APP: {
+        this.events.onDetectionSensorPacket.emit({
+          ...packetMetadata,
+          data: dataPacket.payload,
         });
         break;
       }
@@ -1106,6 +1122,14 @@ export abstract class MeshDevice {
         this.events.onIpTunnelPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
+        });
+        break;
+      }
+
+      case Protobuf.Portnums.PortNum.PAXCOUNTER_APP: {
+        this.events.onPaxcounterPacket.emit({
+          ...packetMetadata,
+          data: Protobuf.PaxCount.Paxcount.fromBinary(dataPacket.payload),
         });
         break;
       }
@@ -1142,6 +1166,54 @@ export abstract class MeshDevice {
         break;
       }
 
+      case Protobuf.Portnums.PortNum.ZPS_APP: {
+        this.events.onZpsPacket.emit({
+          ...packetMetadata,
+          data: dataPacket.payload,
+        });
+        break;
+      }
+
+      case Protobuf.Portnums.PortNum.SIMULATOR_APP: {
+        this.events.onSimulatorPacket.emit({
+          ...packetMetadata,
+          data: dataPacket.payload,
+        });
+        break;
+      }
+
+      case Protobuf.Portnums.PortNum.TRACEROUTE_APP: {
+        this.events.onTraceRoutePacket.emit({
+          ...packetMetadata,
+          data: Protobuf.Mesh.RouteDiscovery.fromBinary(dataPacket.payload),
+        });
+        break;
+      }
+
+      case Protobuf.Portnums.PortNum.NEIGHBORINFO_APP: {
+        this.events.onNeighborInfoPacket.emit({
+          ...packetMetadata,
+          data: Protobuf.Mesh.NeighborInfo.fromBinary(dataPacket.payload),
+        });
+        break;
+      }
+
+      case Protobuf.Portnums.PortNum.ATAK_PLUGIN: {
+        this.events.onAtakPluginPacket.emit({
+          ...packetMetadata,
+          data: dataPacket.payload,
+        });
+        break;
+      }
+
+      case Protobuf.Portnums.PortNum.MAP_REPORT_APP: {
+        this.events.onMapReportPacket.emit({
+          ...packetMetadata,
+          data: dataPacket.payload,
+        });
+        break;
+      }
+
       case Protobuf.Portnums.PortNum.PRIVATE_APP: {
         this.events.onPrivatePacket.emit({
           ...packetMetadata,
@@ -1151,7 +1223,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.ATAK_FORWARDER: {
-        this.events.onAtakPacket.emit({
+        this.events.onAtakForwarderPacket.emit({
           ...packetMetadata,
           data: dataPacket.payload,
         });

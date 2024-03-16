@@ -3,7 +3,7 @@ import {
   HttpConnection,
   SerialConnection,
 } from "./adapters/index.js";
-import * as Types from "./types.js";
+import type * as Types from "./types.js";
 
 /**
  * Allows to create new connections to devices and manages them. Alternatively,

@@ -1,5 +1,5 @@
-import { SubEvent } from "sub-events";
-import { Logger } from "tslog";
+import type { SubEvent } from "sub-events";
+import type { Logger } from "tslog";
 import * as Protobuf from "../protobufs.js";
 import * as Types from "../types.js";
 

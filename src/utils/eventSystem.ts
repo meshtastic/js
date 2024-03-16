@@ -1,7 +1,7 @@
 import { SubEvent } from "sub-events";
-import * as Protobuf from "../protobufs.js";
-import { PacketMetadata } from "../types.js";
-import * as Types from "../types.js";
+import type * as Protobuf from "../protobufs.js";
+import type { PacketMetadata } from "../types.js";
+import type * as Types from "../types.js";
 
 export class EventSystem {
   /**
@@ -42,16 +42,6 @@ export class EventSystem {
   public readonly onNodeInfoPacket = new SubEvent<Protobuf.Mesh.NodeInfo>();
 
   /**
-   * Fires when a new MeshPacket message containing a User packet has been
-   * received from device
-   *
-   * @event onUserPacket
-   */
-  public readonly onUserPacket = new SubEvent<
-    PacketMetadata<Protobuf.Mesh.User>
-  >();
-
-  /**
    * Fires when a new Channel message is recieved
    *
    * @event onChannelPacket
@@ -74,6 +64,99 @@ export class EventSystem {
     new SubEvent<Protobuf.ModuleConfig.ModuleConfig>();
 
   /**
+   * Fires when a new MeshPacket message containing a ATAK packet has been
+   * received from device
+   *
+   * @event onAtakPacket
+   */
+  public readonly onAtakPacket = new SubEvent<PacketMetadata<Uint8Array>>();
+
+  /**
+   * Fires when a new MeshPacket message containing a Text packet has been
+   * received from device
+   *
+   * @event onMessagePacket
+   */
+  public readonly onMessagePacket = new SubEvent<PacketMetadata<string>>();
+
+  /**
+   * Fires when a new MeshPacket message containing a Remote Hardware packet has
+   * been received from device
+   *
+   * @event onRemoteHardwarePacket
+   */
+  public readonly onRemoteHardwarePacket = new SubEvent<
+    PacketMetadata<Protobuf.RemoteHardware.HardwareMessage>
+  >();
+
+  /**
+   * Fires when a new MeshPacket message containing a Position packet has been
+   * received from device
+   *
+   * @event onPositionPacket
+   */
+  public readonly onPositionPacket = new SubEvent<
+    PacketMetadata<Protobuf.Mesh.Position>
+  >();
+
+  /**
+   * Fires when a new MeshPacket message containing a User packet has been
+   * received from device
+   *
+   * @event onUserPacket
+   */
+  public readonly onUserPacket = new SubEvent<
+    PacketMetadata<Protobuf.Mesh.User>
+  >();
+
+  /**
+   * Fires when a new MeshPacket message containing a Routing packet has been
+   * received from device
+   *
+   * @event onRoutingPacket
+   */
+  public readonly onRoutingPacket = new SubEvent<
+    PacketMetadata<Protobuf.Mesh.Routing>
+  >();
+
+  /**
+   * Fires when the device receives a Metadata packet
+   *
+   * @event onDeviceMetadataPacket
+   */
+  public readonly onDeviceMetadataPacket = new SubEvent<
+    PacketMetadata<Protobuf.Mesh.DeviceMetadata>
+  >();
+
+  /**
+   * Fires when a new MeshPacket message containing a Waypoint packet has been
+   * received from device
+   *
+   * @event onWaypointPacket
+   */
+  public readonly onWaypointPacket = new SubEvent<
+    PacketMetadata<Protobuf.Mesh.Waypoint>
+  >();
+
+  /**
+   * Fires when a new MeshPacket message containing an Audio packet has been
+   * received from device
+   *
+   * @event onAudioPacket
+   */
+  public readonly onAudioPacket = new SubEvent<PacketMetadata<Uint8Array>>();
+
+  /**
+   * Fires when a new MeshPacket message containing a Detection Sensor packet has been
+   * received from device
+   *
+   * @event onDetectionSensorPacket
+   */
+  public readonly onDetectionSensorPacket = new SubEvent<
+    PacketMetadata<Uint8Array>
+  >();
+
+  /**
    * Fires when a new MeshPacket message containing a Ping packet has been
    * received from device
    *
@@ -87,8 +170,17 @@ export class EventSystem {
    *
    * @event onIpTunnelPacket
    */
-
   public readonly onIpTunnelPacket = new SubEvent<PacketMetadata<Uint8Array>>();
+
+  /**
+   * Fires when a new MeshPacket message containing a Paxcounter packet has been
+   * received from device
+   *
+   * @event onPaxcounterPacket
+   */
+  public readonly onPaxcounterPacket = new SubEvent<
+    PacketMetadata<Protobuf.PaxCount.Paxcount>
+  >();
 
   /**
    * Fires when a new MeshPacket message containing a Serial packet has been
@@ -96,8 +188,8 @@ export class EventSystem {
    *
    * @event onSerialPacket
    */
-
   public readonly onSerialPacket = new SubEvent<PacketMetadata<Uint8Array>>();
+
   /**
    * Fires when a new MeshPacket message containing a Store and Forward packet
    * has been received from device
@@ -129,6 +221,64 @@ export class EventSystem {
   >();
 
   /**
+   * Fires when a new MeshPacket message containing a ZPS packet has been
+   * received from device
+   *
+   * @event onZPSPacket
+   */
+  public readonly onZpsPacket = new SubEvent<PacketMetadata<Uint8Array>>();
+
+  /**
+   * Fires when a new MeshPacket message containing a Simulator packet has been
+   * received from device
+   *
+   * @event onSimulatorPacket
+   */
+  public readonly onSimulatorPacket = new SubEvent<
+    PacketMetadata<Uint8Array>
+  >();
+
+  /**
+   * Fires when a new MeshPacket message containing a Trace Route packet has been
+   * received from device
+   *
+   * @event onTraceRoutePacket
+   */
+  public readonly onTraceRoutePacket = new SubEvent<
+    PacketMetadata<Protobuf.Mesh.RouteDiscovery>
+  >();
+
+  /**
+   * Fires when a new MeshPacket message containing a Neighbor Info packet has been
+   * received from device
+   *
+   * @event onNeighborInfoPacket
+   */
+  public readonly onNeighborInfoPacket = new SubEvent<
+    PacketMetadata<Protobuf.Mesh.NeighborInfo>
+  >();
+
+  /**
+   * Fires when a new MeshPacket message containing an ATAK packet has been
+   * received from device
+   *
+   * @event onAtakPluginPacket
+   */
+  public readonly onAtakPluginPacket = new SubEvent<
+    PacketMetadata<Uint8Array>
+  >();
+
+  /**
+   * Fires when a new MeshPacket message containing a Map Report packet has been
+   * received from device
+   *
+   * @event onMapReportPacket
+   */
+  public readonly onMapReportPacket = new SubEvent<
+    PacketMetadata<Uint8Array>
+  >();
+
+  /**
    * Fires when a new MeshPacket message containing a Private packet has been
    * received from device
    *
@@ -137,59 +287,13 @@ export class EventSystem {
   public readonly onPrivatePacket = new SubEvent<PacketMetadata<Uint8Array>>();
 
   /**
-   * Fires when a new MeshPacket message containing a ATAK packet has been
+   * Fires when a new MeshPacket message containing an ATAK Forwarder packet has been
    * received from device
    *
-   * @event onAtakPacket
+   * @event onAtakForwarderPacket
    */
-  public readonly onAtakPacket = new SubEvent<PacketMetadata<Uint8Array>>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Routing packet has been
-   * received from device
-   *
-   * @event onRoutingPacket
-   */
-  public readonly onRoutingPacket = new SubEvent<
-    PacketMetadata<Protobuf.Mesh.Routing>
-  >();
-
-  /**
-   * Fires when a new MeshPacket message containing a Position packet has been
-   * received from device
-   *
-   * @event onPositionPacket
-   */
-  public readonly onPositionPacket = new SubEvent<
-    PacketMetadata<Protobuf.Mesh.Position>
-  >();
-
-  /**
-   * Fires when a new MeshPacket message containing a Text packet has been
-   * received from device
-   *
-   * @event onMessagePacket
-   */
-  public readonly onMessagePacket = new SubEvent<PacketMetadata<string>>();
-
-  /**
-   * Fires when a new MeshPacket message containing a Remote Hardware packet has
-   * been received from device
-   *
-   * @event onRemoteHardwarePacket
-   */
-  public readonly onRemoteHardwarePacket = new SubEvent<
-    PacketMetadata<Protobuf.RemoteHardware.HardwareMessage>
-  >();
-
-  /**
-   * Fires when a new MeshPacket message containing a Waypoint packet has been
-   * received from device
-   *
-   * @event onWaypointPacket
-   */
-  public readonly onWaypointPacket = new SubEvent<
-    PacketMetadata<Protobuf.Mesh.Waypoint>
+  public readonly onAtakForwarderPacket = new SubEvent<
+    PacketMetadata<Uint8Array>
   >();
 
   /**
@@ -220,15 +324,6 @@ export class EventSystem {
    * @event onDeviceDebugLog
    */
   public readonly onDeviceDebugLog = new SubEvent<Uint8Array>();
-
-  /**
-   * Fires when the device receives a Metadata packet
-   *
-   * @event onDeviceMetadataPacket
-   */
-  public readonly onDeviceMetadataPacket = new SubEvent<
-    PacketMetadata<Protobuf.Mesh.DeviceMetadata>
-  >();
 
   /**
    * Outputs status of pending settings changes

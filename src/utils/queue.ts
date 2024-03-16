@@ -1,6 +1,6 @@
 import { SubEvent } from "sub-events";
 import * as Protobuf from "../protobufs.js";
-import { PacketError, QueueItem } from "../types.js";
+import type { PacketError, QueueItem } from "../types.js";
 
 export class Queue {
   private queue: QueueItem[] = [];
