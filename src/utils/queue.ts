@@ -1,12 +1,12 @@
-import { SubEvent } from "sub-events";
+import { SimpleEventDispatcher } from "ste-simple-events";
 import * as Protobuf from "../protobufs.js";
 import type { PacketError, QueueItem } from "../types.js";
 
 export class Queue {
   private queue: QueueItem[] = [];
   private lock = false;
-  private ackNotifier = new SubEvent<number>();
-  private errorNotifier = new SubEvent<PacketError>();
+  private ackNotifier = new SimpleEventDispatcher<number>();
+  private errorNotifier = new SimpleEventDispatcher<PacketError>();
   private timeout: number;
 
   constructor() {
@@ -67,7 +67,7 @@ export class Queue {
   }
 
   public processAck(id: number): void {
-    this.ackNotifier.emit(id);
+    this.ackNotifier.dispatch(id);
   }
 
   public processError(e: PacketError): void {
@@ -76,7 +76,7 @@ export class Queue {
         Protobuf.Mesh.Routing_Error[e.error]
       }`,
     );
-    this.errorNotifier.emit(e);
+    this.errorNotifier.dispatch(e);
   }
 
   public async wait(id: number): Promise<number> {

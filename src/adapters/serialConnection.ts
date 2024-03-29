@@ -1,5 +1,4 @@
-import { SubEvent } from "sub-events";
-
+import { SimpleEventDispatcher } from "ste-simple-events";
 import { MeshDevice } from "../meshDevice.js";
 import * as Types from "../types.js";
 import { transformHandler } from "../utils/index.js";
@@ -32,7 +31,7 @@ export class SerialConnection extends MeshDevice {
    *
    * @event onReleaseEvent
    */
-  private readonly onReleaseEvent: SubEvent<boolean>;
+  private readonly onReleaseEvent: SimpleEventDispatcher<boolean>;
 
   constructor(configId?: number) {
     super(configId);
@@ -43,7 +42,7 @@ export class SerialConnection extends MeshDevice {
     this.portId = "";
     this.port = undefined;
     this.transformer = undefined;
-    this.onReleaseEvent = new SubEvent<boolean>();
+    this.onReleaseEvent = new SimpleEventDispatcher<boolean>();
     this.preventLock = false;
 
     this.log.debug(
@@ -171,7 +170,7 @@ export class SerialConnection extends MeshDevice {
 
   /** Disconnects from the serial port */
   public async disconnect(): Promise<SerialPort | undefined> {
-    // this.onReleaseEvent.emit(true);
+    // this.onReleaseEvent.dispatch(true);
     // HACK: Inline onReleaseEvent
     // -- This should be used as an event, like intened
     this.preventLock = true;

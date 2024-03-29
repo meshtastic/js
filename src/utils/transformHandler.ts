@@ -1,12 +1,12 @@
-import type { SubEvent } from "sub-events";
 import type { Logger } from "tslog";
 import * as Protobuf from "../protobufs.js";
 import * as Types from "../types.js";
+import type { SimpleEventDispatcher } from "ste-simple-events";
 
 export const transformHandler = (
   log: Logger<unknown>,
-  onReleaseEvent: SubEvent<boolean>,
-  onDeviceDebugLog: SubEvent<Uint8Array>,
+  onReleaseEvent: SimpleEventDispatcher<boolean>,
+  onDeviceDebugLog: SimpleEventDispatcher<Uint8Array>,
   concurrentLogOutput: boolean,
 ) => {
   let byteBuffer = new Uint8Array([]);
@@ -24,7 +24,7 @@ export const transformHandler = (
         if (framingByte2 === 0xc3) {
           if (byteBuffer.subarray(0, framingIndex).length) {
             if (concurrentLogOutput) {
-              onDeviceDebugLog.emit(byteBuffer.subarray(0, framingIndex));
+              onDeviceDebugLog.dispatch(byteBuffer.subarray(0, framingIndex));
             } else {
               log.warn(
                 Types.EmitterScope.SerialConnection,

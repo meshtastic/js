@@ -476,7 +476,7 @@ export abstract class MeshDevice {
   }
 
   private async beginEditSettings(): Promise<number> {
-    this.events.onPendingSettingsChange.emit(true);
+    this.events.onPendingSettingsChange.dispatch(true);
 
     const beginEditSettings = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
@@ -493,7 +493,7 @@ export abstract class MeshDevice {
   }
 
   public async commitEditSettings(): Promise<number> {
-    this.events.onPendingSettingsChange.emit(false);
+    this.events.onPendingSettingsChange.dispatch(false);
 
     const commitEditSettings = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
@@ -665,7 +665,7 @@ export abstract class MeshDevice {
    */
   public updateDeviceStatus(status: Types.DeviceStatusEnum): void {
     if (status !== this.deviceStatus) {
-      this.events.onDeviceStatus.emit(status);
+      this.events.onDeviceStatus.dispatch(status);
     }
   }
 
@@ -689,7 +689,7 @@ export abstract class MeshDevice {
    */
   protected handleFromRadio(fromRadio: Uint8Array): void {
     const decodedMessage = Protobuf.Mesh.FromRadio.fromBinary(fromRadio);
-    this.events.onFromRadio.emit(decodedMessage);
+    this.events.onFromRadio.dispatch(decodedMessage);
 
     /** @todo Add map here when `all=true` gets fixed. */
     switch (decodedMessage.payloadVariant.case) {
@@ -699,7 +699,7 @@ export abstract class MeshDevice {
       }
 
       case "myInfo": {
-        this.events.onMyNodeInfo.emit(decodedMessage.payloadVariant.value);
+        this.events.onMyNodeInfo.dispatch(decodedMessage.payloadVariant.value);
         this.log.info(
           Types.Emitter[Types.Emitter.HandleFromRadio],
           "📱 Received Node info for this device",
@@ -713,11 +713,13 @@ export abstract class MeshDevice {
           `📱 Received Node Info packet for node: ${decodedMessage.payloadVariant.value.num}`,
         );
 
-        this.events.onNodeInfoPacket.emit(decodedMessage.payloadVariant.value);
+        this.events.onNodeInfoPacket.dispatch(
+          decodedMessage.payloadVariant.value,
+        );
 
         //TODO: HERE
         if (decodedMessage.payloadVariant.value.position) {
-          this.events.onPositionPacket.emit({
+          this.events.onPositionPacket.dispatch({
             id: decodedMessage.id,
             rxTime: new Date(),
             from: decodedMessage.payloadVariant.value.num,
@@ -730,7 +732,7 @@ export abstract class MeshDevice {
 
         //TODO: HERE
         if (decodedMessage.payloadVariant.value.user) {
-          this.events.onUserPacket.emit({
+          this.events.onUserPacket.dispatch({
             id: decodedMessage.id,
             rxTime: new Date(),
             from: decodedMessage.payloadVariant.value.num,
@@ -756,7 +758,9 @@ export abstract class MeshDevice {
           );
         }
 
-        this.events.onConfigPacket.emit(decodedMessage.payloadVariant.value);
+        this.events.onConfigPacket.dispatch(
+          decodedMessage.payloadVariant.value,
+        );
         break;
       }
 
@@ -765,7 +769,7 @@ export abstract class MeshDevice {
           Types.Emitter[Types.Emitter.HandleFromRadio],
           "Received onLogRecord",
         );
-        this.events.onLogRecord.emit(decodedMessage.payloadVariant.value);
+        this.events.onLogRecord.dispatch(decodedMessage.payloadVariant.value);
         break;
       }
 
@@ -806,7 +810,7 @@ export abstract class MeshDevice {
           );
         }
 
-        this.events.onModuleConfigPacket.emit(
+        this.events.onModuleConfigPacket.dispatch(
           decodedMessage.payloadVariant.value,
         );
         break;
@@ -818,7 +822,9 @@ export abstract class MeshDevice {
           `🔐 Received Channel: ${decodedMessage.payloadVariant.value.index}`,
         );
 
-        this.events.onChannelPacket.emit(decodedMessage.payloadVariant.value);
+        this.events.onChannelPacket.dispatch(
+          decodedMessage.payloadVariant.value,
+        );
         break;
       }
 
@@ -828,7 +834,7 @@ export abstract class MeshDevice {
           `🚧 Received Queue Status: ${decodedMessage.payloadVariant.value}`,
         );
 
-        this.events.onQueueStatus.emit(decodedMessage.payloadVariant.value);
+        this.events.onQueueStatus.dispatch(decodedMessage.payloadVariant.value);
         break;
       }
 
@@ -853,7 +859,7 @@ export abstract class MeshDevice {
           "🏷️ Recieved metadata packet",
         );
 
-        this.events.onDeviceMetadataPacket.emit({
+        this.events.onDeviceMetadataPacket.dispatch({
           id: decodedMessage.id,
           rxTime: new Date(),
           from: 0,
@@ -878,36 +884,8 @@ export abstract class MeshDevice {
     }
   }
 
-  /** Completes all SubEvents */
+  /** Completes all Events */
   public complete(): void {
-    this.events.onLogEvent.cancelAll();
-    this.events.onFromRadio.cancelAll();
-    this.events.onMeshPacket.cancelAll();
-    this.events.onMyNodeInfo.cancelAll();
-    this.events.onNodeInfoPacket.cancelAll();
-    this.events.onUserPacket.cancelAll();
-    this.events.onChannelPacket.cancelAll();
-    this.events.onConfigPacket.cancelAll();
-    this.events.onModuleConfigPacket.cancelAll();
-    this.events.onPingPacket.cancelAll();
-    this.events.onIpTunnelPacket.cancelAll();
-    this.events.onSerialPacket.cancelAll();
-    this.events.onStoreForwardPacket.cancelAll();
-    this.events.onRangeTestPacket.cancelAll();
-    this.events.onTelemetryPacket.cancelAll();
-    this.events.onPrivatePacket.cancelAll();
-    this.events.onAtakPacket.cancelAll();
-    this.events.onRoutingPacket.cancelAll();
-    this.events.onPositionPacket.cancelAll();
-    this.events.onMessagePacket.cancelAll();
-    this.events.onRemoteHardwarePacket.cancelAll();
-    this.events.onWaypointPacket.cancelAll();
-    this.events.onDeviceStatus.cancelAll();
-    this.events.onLogRecord.cancelAll();
-    this.events.onMeshHeartbeat.cancelAll();
-    this.events.onDeviceDebugLog.cancelAll();
-    this.events.onDeviceMetadataPacket.cancelAll();
-    this.events.onPendingSettingsChange.cancelAll();
     this.queue.clear();
   }
 
@@ -915,13 +893,13 @@ export abstract class MeshDevice {
    * Gets called when a MeshPacket is received from device
    */
   private handleMeshPacket(meshPacket: Protobuf.Mesh.MeshPacket): void {
-    this.events.onMeshPacket.emit(meshPacket);
+    this.events.onMeshPacket.dispatch(meshPacket);
     if (meshPacket.from !== this.myNodeInfo.myNodeNum) {
       /**
        * TODO: this shouldn't be called unless the device interracts with the
        * mesh, currently it does.
        */
-      this.events.onMeshHeartbeat.emit(new Date());
+      this.events.onMeshHeartbeat.dispatch(new Date());
     }
 
     switch (meshPacket.payloadVariant.case) {
@@ -966,7 +944,7 @@ export abstract class MeshDevice {
 
     switch (dataPacket.portnum) {
       case Protobuf.Portnums.PortNum.TEXT_MESSAGE_APP: {
-        this.events.onMessagePacket.emit({
+        this.events.onMessagePacket.dispatch({
           ...packetMetadata,
           data: new TextDecoder().decode(dataPacket.payload),
         });
@@ -974,7 +952,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.REMOTE_HARDWARE_APP: {
-        this.events.onRemoteHardwarePacket.emit({
+        this.events.onRemoteHardwarePacket.dispatch({
           ...packetMetadata,
           data: Protobuf.RemoteHardware.HardwareMessage.fromBinary(
             dataPacket.payload,
@@ -984,7 +962,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.POSITION_APP: {
-        this.events.onPositionPacket.emit({
+        this.events.onPositionPacket.dispatch({
           ...packetMetadata,
           data: Protobuf.Mesh.Position.fromBinary(dataPacket.payload),
         });
@@ -992,7 +970,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.NODEINFO_APP: {
-        this.events.onUserPacket.emit({
+        this.events.onUserPacket.dispatch({
           ...packetMetadata,
           data: Protobuf.Mesh.User.fromBinary(dataPacket.payload),
         });
@@ -1002,7 +980,7 @@ export abstract class MeshDevice {
       case Protobuf.Portnums.PortNum.ROUTING_APP: {
         routingPacket = Protobuf.Mesh.Routing.fromBinary(dataPacket.payload);
 
-        this.events.onRoutingPacket.emit({
+        this.events.onRoutingPacket.dispatch({
           ...packetMetadata,
           data: routingPacket,
         });
@@ -1041,22 +1019,26 @@ export abstract class MeshDevice {
         );
         switch (adminMessage.payloadVariant.case) {
           case "getChannelResponse": {
-            this.events.onChannelPacket.emit(adminMessage.payloadVariant.value);
+            this.events.onChannelPacket.dispatch(
+              adminMessage.payloadVariant.value,
+            );
             break;
           }
           case "getOwnerResponse": {
-            this.events.onUserPacket.emit({
+            this.events.onUserPacket.dispatch({
               ...packetMetadata,
               data: adminMessage.payloadVariant.value,
             });
             break;
           }
           case "getConfigResponse": {
-            this.events.onConfigPacket.emit(adminMessage.payloadVariant.value);
+            this.events.onConfigPacket.dispatch(
+              adminMessage.payloadVariant.value,
+            );
             break;
           }
           case "getModuleConfigResponse": {
-            this.events.onModuleConfigPacket.emit(
+            this.events.onModuleConfigPacket.dispatch(
               adminMessage.payloadVariant.value,
             );
             break;
@@ -1067,7 +1049,7 @@ export abstract class MeshDevice {
               `🏷️ Recieved metadata packet from ${dataPacket.source}`,
             );
 
-            this.events.onDeviceMetadataPacket.emit({
+            this.events.onDeviceMetadataPacket.dispatch({
               ...packetMetadata,
               data: adminMessage.payloadVariant.value,
             });
@@ -1087,7 +1069,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.WAYPOINT_APP: {
-        this.events.onWaypointPacket.emit({
+        this.events.onWaypointPacket.dispatch({
           ...packetMetadata,
           data: Protobuf.Mesh.Waypoint.fromBinary(dataPacket.payload),
         });
@@ -1095,7 +1077,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.AUDIO_APP: {
-        this.events.onAudioPacket.emit({
+        this.events.onAudioPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1103,7 +1085,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.DETECTION_SENSOR_APP: {
-        this.events.onDetectionSensorPacket.emit({
+        this.events.onDetectionSensorPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1111,7 +1093,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.REPLY_APP: {
-        this.events.onPingPacket.emit({
+        this.events.onPingPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload, //TODO: decode
         });
@@ -1119,7 +1101,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.IP_TUNNEL_APP: {
-        this.events.onIpTunnelPacket.emit({
+        this.events.onIpTunnelPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1127,7 +1109,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.PAXCOUNTER_APP: {
-        this.events.onPaxcounterPacket.emit({
+        this.events.onPaxcounterPacket.dispatch({
           ...packetMetadata,
           data: Protobuf.PaxCount.Paxcount.fromBinary(dataPacket.payload),
         });
@@ -1135,7 +1117,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.SERIAL_APP: {
-        this.events.onSerialPacket.emit({
+        this.events.onSerialPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1143,7 +1125,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.STORE_FORWARD_APP: {
-        this.events.onStoreForwardPacket.emit({
+        this.events.onStoreForwardPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1151,7 +1133,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.RANGE_TEST_APP: {
-        this.events.onRangeTestPacket.emit({
+        this.events.onRangeTestPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1159,7 +1141,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.TELEMETRY_APP: {
-        this.events.onTelemetryPacket.emit({
+        this.events.onTelemetryPacket.dispatch({
           ...packetMetadata,
           data: Protobuf.Telemetry.Telemetry.fromBinary(dataPacket.payload),
         });
@@ -1167,7 +1149,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.ZPS_APP: {
-        this.events.onZpsPacket.emit({
+        this.events.onZpsPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1175,7 +1157,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.SIMULATOR_APP: {
-        this.events.onSimulatorPacket.emit({
+        this.events.onSimulatorPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1183,7 +1165,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.TRACEROUTE_APP: {
-        this.events.onTraceRoutePacket.emit({
+        this.events.onTraceRoutePacket.dispatch({
           ...packetMetadata,
           data: Protobuf.Mesh.RouteDiscovery.fromBinary(dataPacket.payload),
         });
@@ -1191,7 +1173,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.NEIGHBORINFO_APP: {
-        this.events.onNeighborInfoPacket.emit({
+        this.events.onNeighborInfoPacket.dispatch({
           ...packetMetadata,
           data: Protobuf.Mesh.NeighborInfo.fromBinary(dataPacket.payload),
         });
@@ -1199,7 +1181,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.ATAK_PLUGIN: {
-        this.events.onAtakPluginPacket.emit({
+        this.events.onAtakPluginPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1207,7 +1189,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.MAP_REPORT_APP: {
-        this.events.onMapReportPacket.emit({
+        this.events.onMapReportPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1215,7 +1197,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.PRIVATE_APP: {
-        this.events.onPrivatePacket.emit({
+        this.events.onPrivatePacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
@@ -1223,7 +1205,7 @@ export abstract class MeshDevice {
       }
 
       case Protobuf.Portnums.PortNum.ATAK_FORWARDER: {
-        this.events.onAtakForwarderPacket.emit({
+        this.events.onAtakForwarderPacket.dispatch({
           ...packetMetadata,
           data: dataPacket.payload,
         });
