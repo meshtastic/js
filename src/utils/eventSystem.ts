@@ -47,7 +47,7 @@ export class EventSystem {
     new SimpleEventDispatcher<Protobuf.Mesh.NodeInfo>();
 
   /**
-   * Fires when a new Channel message is recieved
+   * Fires when a new Channel message is received
    *
    * @event onChannelPacket
    */
@@ -55,7 +55,7 @@ export class EventSystem {
     new SimpleEventDispatcher<Protobuf.Channel.Channel>();
 
   /**
-   * Fires when a new Config message is recieved
+   * Fires when a new Config message is received
    *
    * @event onConfigPacket
    */
@@ -63,7 +63,7 @@ export class EventSystem {
     new SimpleEventDispatcher<Protobuf.Config.Config>();
 
   /**
-   * Fires when a new ModuleConfig message is recieved
+   * Fires when a new ModuleConfig message is received
    *
    * @event onModuleConfigPacket
    */
