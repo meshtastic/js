@@ -777,13 +777,13 @@ export abstract class MeshDevice {
         if (decodedMessage.payloadVariant.value !== this.configId) {
           this.log.error(
             Types.Emitter[Types.Emitter.HandleFromRadio],
-            `❌ Invalid config id reveived from device, exptected ${this.configId} but received ${decodedMessage.payloadVariant.value}`,
+            `❌ Invalid config id received from device, expected ${this.configId} but received ${decodedMessage.payloadVariant.value}`,
           );
         }
 
         this.log.info(
           Types.Emitter[Types.Emitter.HandleFromRadio],
-          `⚙️ Valid config id reveived from device: ${this.configId}`,
+          `⚙️ Valid config id received from device: ${this.configId}`,
         );
 
         this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConfigured);
@@ -856,7 +856,7 @@ export abstract class MeshDevice {
         }
         this.log.debug(
           Types.Emitter[Types.Emitter.GetMetadata],
-          "🏷️ Recieved metadata packet",
+          "🏷️ Received metadata packet",
         );
 
         this.events.onDeviceMetadataPacket.dispatch({
@@ -1046,7 +1046,7 @@ export abstract class MeshDevice {
           case "getDeviceMetadataResponse": {
             this.log.debug(
               Types.Emitter[Types.Emitter.GetMetadata],
-              `🏷️ Recieved metadata packet from ${dataPacket.source}`,
+              `🏷️ Received metadata packet from ${dataPacket.source}`,
             );
 
             this.events.onDeviceMetadataPacket.dispatch({
