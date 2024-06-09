@@ -114,6 +114,7 @@ export enum Emitter {
   RebootOta = 29,
   FactoryReset = 30,
   EnterDfuMode = 31,
+  RemoveNodeByNum = 32,
 }
 
 export interface LogEvent {
