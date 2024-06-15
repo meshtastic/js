@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.6.3",
-    "@buf/meshtastic_protobufs.bufbuild_es": "1.8.0-20240325205556-b11811405eea.2",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.10.0-20240613143006-244927bc441a.1",
     "@types/node": "^20.11.30",
     "@types/w3c-web-serial": "^1.0.6",
     "@types/web-bluetooth": "^0.0.20",
