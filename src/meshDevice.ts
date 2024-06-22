@@ -265,7 +265,7 @@ export abstract class MeshDevice {
     const moduleConfigMessage = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
         case: "setModuleConfig",
-        value: moduleConfig,
+        value: moduleConfig.payloadVariant.value,
       },
     });
 
