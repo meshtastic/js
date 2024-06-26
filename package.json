@@ -1,10 +1,10 @@
 {
   "name": "@meshtastic/js",
-  "version": "2.3.5-0",
+  "version": "2.3.6-0",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && pnpm biome format .",
     "generate:docs": "typedoc src/index.ts"
   },
   "keywords": [
@@ -24,9 +24,7 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "bugs": {
     "url": "https://github.com/meshtastic/js/issues"
   },
