@@ -20,7 +20,13 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noAssignInExpressions": "warn"
+      },
+      "style": {
+        "noParameterAssign": "warn"
+      }
     }
   }
 }

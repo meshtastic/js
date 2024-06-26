@@ -1,7 +1,7 @@
+import type { SimpleEventDispatcher } from "ste-simple-events";
 import type { Logger } from "tslog";
 import * as Protobuf from "../protobufs.js";
 import * as Types from "../types.js";
-import type { SimpleEventDispatcher } from "ste-simple-events";
 
 export const transformHandler = (
   log: Logger<unknown>,

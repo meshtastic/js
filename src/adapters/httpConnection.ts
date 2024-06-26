@@ -140,7 +140,6 @@ export class HttpConnection extends MeshDevice {
           signal,
           method: "GET",
           headers: {
-            // biome-ignore lint/style/useNamingConvention: "Accept header requires PascalCase"
             Accept: "application/x-protobuf",
           },
         },
