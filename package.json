@@ -4,7 +4,7 @@
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && pnpm biome format .",
     "generate:docs": "typedoc src/index.ts"
   },
   "keywords": [
