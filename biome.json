@@ -20,7 +20,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "all": true
+      "recommended": true
     }
   }
 }

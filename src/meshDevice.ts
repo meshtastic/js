@@ -533,28 +533,28 @@ export abstract class MeshDevice {
     );
   }
 
-    /**
+  /**
    * Removes a node from the internal NodeDB of the radio by node number
    */
-     public async removeNodeByNum(nodeNum: number): Promise<number> {
-      this.log.debug(
-        Types.Emitter[Types.Emitter.RemoveNodeByNum],
-        `📻 Removing Node ${nodeNum} from NodeDB`,
-      );
-  
-      const removeNodeByNum = new Protobuf.Admin.AdminMessage({
-        payloadVariant: {
-          case: "removeByNodenum",
-          value: nodeNum,
-        },
-      });
-  
-      return await this.sendPacket(
-        removeNodeByNum.toBinary(),
-        Protobuf.Portnums.PortNum.ADMIN_APP,
-        "self",
-      );
-    }
+  public async removeNodeByNum(nodeNum: number): Promise<number> {
+    this.log.debug(
+      Types.Emitter[Types.Emitter.RemoveNodeByNum],
+      `📻 Removing Node ${nodeNum} from NodeDB`,
+    );
+
+    const removeNodeByNum = new Protobuf.Admin.AdminMessage({
+      payloadVariant: {
+        case: "removeByNodenum",
+        value: nodeNum,
+      },
+    });
+
+    return await this.sendPacket(
+      removeNodeByNum.toBinary(),
+      Protobuf.Portnums.PortNum.ADMIN_APP,
+      "self",
+    );
+  }
 
   /** Shuts down the current node after the specified amount of time has elapsed. */
   public async shutdown(time: number): Promise<number> {
