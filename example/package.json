@@ -10,10 +10,9 @@
   "author": "",
   "license": "ISC",
   "type": "module",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "tsx": "^4.16.0"
   },
-  "engines": {"node": ">=19.0.0"}
+  "engines": { "node": ">=19.0.0" }
 }
