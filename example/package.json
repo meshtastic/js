@@ -4,15 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsx example.ts"
+    "start": "tsc && tsx example.ts"
   },
   "keywords": [],
   "author": "",
   "license": "GPL-3.0-only",
   "type": "module",
-  "dependencies": {},
+  "dependencies": {
+    "typescript": "^5.5.2"
+  },
   "devDependencies": {
     "tsx": "^4.16.0"
   },
-  "engines": { "node": ">=19.0.0" }
+  "engines": {
+    "node": ">=19.0.0"
+  }
 }
