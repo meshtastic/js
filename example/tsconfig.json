@@ -24,7 +24,6 @@
     "removeComments": false
   },
   "include": ["../src/**/*"],
-  "ts-node": { "esm": true },
   "typedocOptions": {
     "out": "docs"
   }
