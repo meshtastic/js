@@ -1,0 +1,19 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsx example.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0"
+  },
+  "engines": {"node": ">=19.0.0"}
+}
