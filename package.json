@@ -15,7 +15,7 @@
   },
   "sideEffects": false,
   "type": "module",
-  "packageManager": "pnpm@8.15.5",
+  "packageManager": "pnpm@9.7.1",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -35,16 +35,16 @@
   "dependencies": {
     "crc": "^4.3.2",
     "ste-simple-events": "^3.0.11",
-    "tslog": "^4.9.2"
+    "tslog": "^4.9.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.6.3",
-    "@buf/meshtastic_protobufs.bufbuild_es": "1.10.0-20240613143006-244927bc441a.1",
-    "@types/node": "^20.11.30",
+    "@biomejs/biome": "^1.8.3",
+    "@buf/meshtastic_protobufs.bufbuild_es": "^1.10.0-20240817124710-a1b6e1d8e51a.1",
+    "@types/node": "^22.4.1",
     "@types/w3c-web-serial": "^1.0.6",
     "@types/web-bluetooth": "^0.0.20",
-    "tsup": "^8.0.2",
-    "typedoc": "^0.25.12",
-    "typescript": "^5.4.3"
+    "tsup": "^8.2.4",
+    "typedoc": "^0.26.6",
+    "typescript": "^5.5.4"
   }
 }
