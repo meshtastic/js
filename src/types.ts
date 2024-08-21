@@ -59,6 +59,12 @@ export interface SerialConnectionParameters {
   concurrentLogOutput: boolean;
 }
 
+export interface NodeSerialConnectionParameters {
+  baudRate?: number;
+  portPath: string;
+  concurrentLogOutput: boolean;
+}
+
 export type LogEventPacket = LogEvent & { date: Date };
 
 export type PacketDestination = "broadcast" | "direct";
