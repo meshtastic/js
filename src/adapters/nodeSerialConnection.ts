@@ -76,6 +76,9 @@ export class NodeSerialConnection extends MeshDevice {
     return await navigator.serial.requestPort(filter);
   }
 
+  /**
+   * Initiates the connect process to a Meshtastic device via NodeJS Serial
+   */
   public async connect({
     portPath,
     baudRate = 115200,
