@@ -3,6 +3,7 @@ import { SerialPort } from "serialport";
 
 const Connect = async () => {
   const connection = new NodeSerialConnection();
+  // COM4 is the port that works for me, you'll have to get your path from SerialPort.list()
   await connection.connect({
     portPath: "COM4",
     concurrentLogOutput: false,
