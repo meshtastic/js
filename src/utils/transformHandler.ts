@@ -4,7 +4,7 @@ import * as Protobuf from "../protobufs.js";
 import * as Types from "../types.js";
 
 export const transformHandler = (
-  log: Logger<unknown>,
+  logger: Logger<unknown>,
   onReleaseEvent: SimpleEventDispatcher<boolean>,
   onDeviceDebugLog: SimpleEventDispatcher<Uint8Array>,
   concurrentLogOutput: boolean,
@@ -12,7 +12,7 @@ export const transformHandler = (
   let byteBuffer = new Uint8Array([]);
   return new TransformStream<Uint8Array, Uint8Array>({
     transform(chunk: Uint8Array, controller): void {
-      log = log.getSubLogger({ name: "streamTransformer" });
+      const log = logger.getSubLogger({ name: "streamTransformer" });
       onReleaseEvent.subscribe(() => {
         controller.terminate();
       });

@@ -1,5 +1,5 @@
-import { NodeSerialConnection } from "./dist/index.js";
 import { SerialPort } from "serialport";
+import { NodeSerialConnection } from "./dist/index.js";
 
 const Connect = async () => {
   const connection = new NodeSerialConnection();
@@ -41,8 +41,8 @@ const Connect = async () => {
     console.log("NodeInfo: ", packet);
   });
   const onMessage = (sender, message) => {
-    console.log("Message from: " + sender);
-    console.log("Message was: " + message);
+    console.log(`Message from: ${sender}`);
+    console.log(`Message was: ${message}`);
   };
 
   connection.events.onRemoteHardwarePacket.subscribe((packet) => {
@@ -59,7 +59,6 @@ const Connect = async () => {
 
   // Request configuration data from device (I think this will help trigger other serial events being processed)
   await connection.configure();
-
 };
 
 Connect().catch((err) => {
