@@ -45,7 +45,7 @@ export class NodeSerialConnection extends MeshDevice {
    */
   private async readFromRadio(concurrentLogOutput: boolean): Promise<void> {
     // Put the data received from the serial connection through the transformer
-    const transformedStream = this.port.pipe(
+    const transformedStream = this.port?.pipe(
       nodeTransformHandler(
         this.log,
         this.onReleaseEvent,
@@ -55,25 +55,18 @@ export class NodeSerialConnection extends MeshDevice {
     );
 
     // Consume the transformed data
-    transformedStream.on("data", (data: Buffer) => {
+    transformedStream?.on("data", (data: Buffer) => {
       this.handleFromRadio(data);
     });
 
-    transformedStream.on("error", (err: Error) => {
+    transformedStream?.on("error", (err: Error) => {
       console.log(err);
     });
   }
 
-  /** Gets list of serial ports that can be passed to `connect` */
-  public async getPorts(): Promise<SerialPort[]> {
-    return await navigator.serial.getPorts();
-  }
-
-  /**
-   * Opens browsers connection dialogue to select a serial port
-   */
-  public async getPort(filter?: SerialPortRequestOptions): Promise<SerialPort> {
-    return await navigator.serial.requestPort(filter);
+  /** Gets list of serial ports that can be passed to `connect` as `portPath` */
+  public async getPorts(): Promise<any[]> {
+    return SerialPort.SerialPort.list();
   }
 
   /**
@@ -93,7 +86,7 @@ export class NodeSerialConnection extends MeshDevice {
         baudRate,
       },
       () => {
-        if (this.port.readable && this.port.writable) {
+        if (this.port?.readable && this.port?.writable) {
           this.readFromRadio(concurrentLogOutput);
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
@@ -122,7 +115,7 @@ export class NodeSerialConnection extends MeshDevice {
   }
 
   /** Disconnects from the serial port */
-  public async disconnect(): Promise<SerialPort | undefined> {
+  public async disconnect(): Promise<SerialPort.SerialPort | undefined> {
     // this.onReleaseEvent.dispatch(true);
     // HACK: Inline onReleaseEvent
     // -- This should be used as an event, like intened
@@ -144,12 +137,9 @@ export class NodeSerialConnection extends MeshDevice {
    * Sends supplied protobuf message to the radio
    */
   protected async writeToRadio(data: Uint8Array): Promise<void> {
-    while (this.port?.writable?.locked) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
     const write = (data: Uint8Array): Promise<void> => {
       return new Promise((resolve, reject) => {
-        this.port.write(data, (err: Error) => {
+        this.port?.write(data, (err: Error | null | undefined): void => {
           if (err) {
             reject(err);
           }

@@ -2,6 +2,7 @@ import type {
   BleConnection,
   HttpConnection,
   SerialConnection,
+  NodeSerialConnection,
 } from "./adapters/index.js";
 import type * as Protobuf from "./protobufs.js";
 
@@ -26,7 +27,8 @@ export enum DeviceStatusEnum {
 export type ConnectionParameters =
   | HttpConnectionParameters
   | BleConnectionParameters
-  | SerialConnectionParameters;
+  | SerialConnectionParameters
+  | NodeSerialConnectionParameters;
 
 export interface HttpConnectionParameters {
   /** Address The IP Address/Domain to connect to, without protocol */
@@ -142,7 +144,11 @@ export enum ChannelNumber {
   Admin = 7,
 }
 
-export type ConnectionType = BleConnection | HttpConnection | SerialConnection;
+export type ConnectionType =
+  | BleConnection
+  | HttpConnection
+  | SerialConnection
+  | NodeSerialConnection;
 
 export type ConnectionTypeName = "ble" | "http" | "serial";
 
