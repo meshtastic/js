@@ -13,11 +13,12 @@ export class NodeSerialConnection extends MeshDevice {
   /** Serial port used to communicate with device. */
   public port: any | undefined;
 
+  /**Path to the serial port being opened. */
   private portPath: string | undefined;
 
   /**
    * Fires when `disconnect()` is called, used to instruct serial port and
-   * readers to release there locks
+   * readers to release their locks
    *
    * @event onReleaseEvent
    */
@@ -40,34 +41,27 @@ export class NodeSerialConnection extends MeshDevice {
   }
 
   /**
-   * Reads packets from transformed serial port steam and processes them.
+   * Reads packets from transformed serial port stream and processes them.
    */
-  private async readFromRadio( concurrentLogOutput: boolean): Promise<void> {
-    this.onReleaseEvent.subscribe(async () => {
-      console.log('released?');
-    });
-
+  private async readFromRadio(concurrentLogOutput: boolean): Promise<void> {
+    // Put the data received from the serial connection through the transformer
     const transformedStream = this.port.pipe(
       nodeTransformHandler(
         this.log,
         this.onReleaseEvent,
         this.events.onDeviceDebugLog,
-        concurrentLogOutput
-      ));
+        concurrentLogOutput,
+      ),
+    );
 
-    transformedStream.on('data', (data: Buffer) => {
+    // Consume the transformed data
+    transformedStream.on("data", (data: Buffer) => {
       this.handleFromRadio(data);
-    })
-    /*
-    transformedStream.on('finish', () => {
-      let chunk;
-      while (null !== (chunk = transformedStream.read()))
-      this.handleFromRadio(chunk);
-    })
-      */
-    transformedStream.on('error', (err: any) => {
+    });
+
+    transformedStream.on("error", (err: Error) => {
       console.log(err);
-    })
+    });
   }
 
   /** Gets list of serial ports that can be passed to `connect` */
@@ -85,68 +79,41 @@ export class NodeSerialConnection extends MeshDevice {
   public async connect({
     portPath,
     baudRate = 115200,
-    concurrentLogOutput = false
+    concurrentLogOutput = false,
   }: Types.NodeSerialConnectionParameters) {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnecting);
 
     this.portPath = portPath;
-    this.port = new SerialPort.SerialPort({
-      path: portPath,
-      baudRate,
-    }, () => {
-      console.log('Port opened');
-
-      if (this.port.readable && this.port.writable) {
-        this.readFromRadio(concurrentLogOutput);
-        
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
-      } else {
-        console.log("not readable or writable");
-      }
-    });
-
-    /*
-    const openPort = async () => {
-      this.port.open(() => {
-        Promise.resolve();
-      });
-    };
-
-    this.port.on('open', () => {
-      console.log('Port opened');
-    })
-
-    await openPort().then(() => {
+    this.port = new SerialPort.SerialPort(
+      {
+        path: portPath,
+        baudRate,
+      },
+      () => {
         if (this.port.readable && this.port.writable) {
-          console.log(115);
           this.readFromRadio(concurrentLogOutput);
-          
+
           this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
         } else {
           console.log("not readable or writable");
         }
-      }).catch((e: Error) => {
-        this.log.error(Types.Emitter[Types.Emitter.Connect], `❌ ${e.message}`);
-      });
-    */
-    this.port.on('close', () => {
-      this.log.info(
-        Types.Emitter[20 /* Connect */],
-        'Device disconnected'
-      );
+      },
+    );
+
+    this.port.on("close", () => {
+      this.log.info(Types.Emitter[20 /* Connect */], "Device disconnected");
       this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceDisconnected);
       this.complete();
     });
 
-    this.port.on('error', (err: any) => {
+    this.port.on("error", (err: any) => {
       console.log(err);
     });
-
   }
   /** Disconnects from the serial port */
   public async reconnect(): Promise<void> {
     await this.connect({
-      portPath: this.portPath ?? '',
+      portPath: this.portPath ?? "",
       concurrentLogOutput: false,
     });
   }
@@ -162,7 +129,6 @@ export class NodeSerialConnection extends MeshDevice {
     // -------
     this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceDisconnected);
     this.complete();
-    // await this.onReleaseEvent.toPromise();
     return this.port;
   }
 
@@ -179,15 +145,20 @@ export class NodeSerialConnection extends MeshDevice {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
     const write = (data: Uint8Array): Promise<void> => {
-      return new Promise((resolve) => {
-      this.port.write(data, () => {
-        resolve();
-      })
+      return new Promise((resolve, reject) => {
+        this.port.write(data, (err: Error) => {
+          if (err) {
+            reject(err);
+          }
+          resolve();
+        });
       });
     };
 
-    await write(
-      new Uint8Array([0x94, 0xc3, 0x00, data.length, ...data]),
+    await write(new Uint8Array([0x94, 0xc3, 0x00, data.length, ...data])).catch(
+      (err) => {
+        console.log(err);
+      },
     );
   }
 }

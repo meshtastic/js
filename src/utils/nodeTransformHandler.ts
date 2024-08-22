@@ -2,27 +2,24 @@ import type { SimpleEventDispatcher } from "ste-simple-events";
 import type { Logger } from "tslog";
 import * as Protobuf from "../protobufs.js";
 import * as Types from "../types.js";
-import { Transform } from 'stream';
+import { Transform } from "stream";
 
 export const nodeTransformHandler = (
   log: Logger<unknown>,
   onReleaseEvent: SimpleEventDispatcher<boolean>,
   onDeviceDebugLog: SimpleEventDispatcher<Uint8Array>,
-  concurrentLogOutput: boolean
+  concurrentLogOutput: boolean,
 ) => {
   let byteBuffer = new Uint8Array([]);
-  log = log.getSubLogger({ name: 'streamTransfer'});
+  log = log.getSubLogger({ name: "streamTransfer" });
   return new Transform({
-    transform(chunk: Buffer | Uint8Array, encoding, controller) {
-      if(encoding) {
-
-      }
+    transform(chunk: Buffer | Uint8Array, _encoding, controller) {
       onReleaseEvent.subscribe(() => {
         controller();
       });
       byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
       let processingExhausted = false;
-      while(byteBuffer.length !== 0 && !processingExhausted) {
+      while (byteBuffer.length !== 0 && !processingExhausted) {
         const framingIndex = byteBuffer.findIndex((byte) => byte === 0x94);
         const framingByte2 = byteBuffer[framingIndex + 1];
         if (framingByte2 === 0xc3) {
@@ -37,16 +34,16 @@ export const nodeTransformHandler = (
                   .subarray(0, framingIndex)
                   .toString()}`,
               );
-          }
-          byteBuffer = byteBuffer.subarray(framingIndex);
+            }
+            byteBuffer = byteBuffer.subarray(framingIndex);
           }
           const msb = byteBuffer[2];
           const lsb = byteBuffer[3];
 
           if (
-            (msb !== undefined) &&
-            (lsb !== undefined) &&
-            (byteBuffer.length >= 4 + (msb << 8) + lsb)
+            msb !== undefined &&
+            lsb !== undefined &&
+            byteBuffer.length >= 4 + (msb << 8) + lsb
           ) {
             const packet = byteBuffer.subarray(4, 4 + (msb << 8) + lsb);
 
@@ -74,10 +71,11 @@ export const nodeTransformHandler = (
           } else {
             processingExhausted = true;
           }
-      } else {
+        } else {
           processingExhausted = true;
+        }
       }
-    }
-    controller();
-  }});
+      controller();
+    },
+  });
 };
