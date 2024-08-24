@@ -35,6 +35,7 @@
   "dependencies": {
     "crc": "^4.3.2",
     "ste-simple-events": "^3.0.11",
+    "serialport": "^12.0.0",
     "tslog": "^4.9.3"
   },
   "devDependencies": {

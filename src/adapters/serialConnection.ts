@@ -142,8 +142,8 @@ export class SerialConnection extends MeshDevice {
           this.pipePromise = this.port.readable.pipeTo(
             this.transformer.writable,
           );
-          const reader = (this.readerHack =
-            this.transformer.readable.getReader());
+          this.readerHack = this.transformer.readable.getReader();
+          const reader = this.readerHack;
           this.readFromRadio(reader);
 
           this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);

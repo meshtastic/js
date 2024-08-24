@@ -1,20 +1,21 @@
+import { Transform } from "node:stream";
 import type { SimpleEventDispatcher } from "ste-simple-events";
 import type { Logger } from "tslog";
 import * as Protobuf from "../protobufs.js";
 import * as Types from "../types.js";
 
-export const transformHandler = (
+export const nodeTransformHandler = (
   logger: Logger<unknown>,
   onReleaseEvent: SimpleEventDispatcher<boolean>,
   onDeviceDebugLog: SimpleEventDispatcher<Uint8Array>,
   concurrentLogOutput: boolean,
 ) => {
   let byteBuffer = new Uint8Array([]);
-  return new TransformStream<Uint8Array, Uint8Array>({
-    transform(chunk: Uint8Array, controller): void {
-      const log = logger.getSubLogger({ name: "streamTransformer" });
+  const log = logger.getSubLogger({ name: "streamTransfer" });
+  return new Transform({
+    transform(chunk: Buffer | Uint8Array, _encoding, controller) {
       onReleaseEvent.subscribe(() => {
-        controller.terminate();
+        controller();
       });
       byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
       let processingExhausted = false;
@@ -34,10 +35,8 @@ export const transformHandler = (
                   .toString()}`,
               );
             }
-
             byteBuffer = byteBuffer.subarray(framingIndex);
           }
-
           const msb = byteBuffer[2];
           const lsb = byteBuffer[3];
 
@@ -67,17 +66,16 @@ export const transformHandler = (
               byteBuffer = byteBuffer.subarray(malformedDetectorIndex);
             } else {
               byteBuffer = byteBuffer.subarray(3 + (msb << 8) + lsb + 1);
-              controller.enqueue(packet);
+              this.push(packet);
             }
           } else {
-            /** Only partioal message in buffer, wait for the rest */
             processingExhausted = true;
           }
         } else {
-          /** Message not complete, only 1 byte in buffer */
           processingExhausted = true;
         }
       }
+      controller();
     },
   });
 };
