@@ -65,6 +65,7 @@ export class NodeSerialConnection extends MeshDevice {
   }
 
   /** Gets list of serial ports that can be passed to `connect` as `portPath` */
+  // biome-ignore lint/suspicious/noExplicitAny: serialport/binding-interface
   public async getPorts(): Promise<any[]> {
     return SerialPort.SerialPort.list();
   }
