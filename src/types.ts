@@ -1,8 +1,8 @@
 import type {
   BleConnection,
   HttpConnection,
-  SerialConnection,
   NodeSerialConnection,
+  SerialConnection,
 } from "./adapters/index.js";
 import type * as Protobuf from "./protobufs.js";
 
