@@ -622,16 +622,37 @@ export abstract class MeshDevice {
     );
   }
 
-  /** Factory resets the current node */
-  public async factoryReset(): Promise<number> {
+  /** Factory resets the current device */
+  public async factoryResetDevice(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.FactoryReset],
-      "♻️ Factory resetting node",
+      "♻️ Factory resetting device",
     );
 
     const factoryReset = new Protobuf.Admin.AdminMessage({
       payloadVariant: {
-        case: "factoryReset",
+        case: "factoryResetDevice",
+        value: 1,
+      },
+    });
+
+    return await this.sendPacket(
+      factoryReset.toBinary(),
+      Protobuf.Portnums.PortNum.ADMIN_APP,
+      "self",
+    );
+  }
+
+  /** Factory resets the current config */
+  public async factoryResetConfig(): Promise<number> {
+    this.log.debug(
+      Types.Emitter[Types.Emitter.FactoryReset],
+      "♻️ Factory resetting config",
+    );
+
+    const factoryReset = new Protobuf.Admin.AdminMessage({
+      payloadVariant: {
+        case: "factoryResetConfig",
         value: 1,
       },
     });
