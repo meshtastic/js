@@ -1,7 +1,8 @@
 name: CI
 
 on: push
-
+  branches:
+        - master
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -17,8 +18,29 @@ jobs:
           version: latest
 
       - name: Run Biome
-        run: biome ci .
+        run: biome ci . # https://biomejs.dev/reference/cli/#biome-ci
+
+on:
+  release:
+    types: [released]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v1
+        with:
+          version: latest
+
+      - name: Run Biome
+        run: biome ci . # https://biomejs.dev/reference/cli/#biome-ci
   publish:
+    needs: quality
     runs-on: ubuntu-latest
     permissions:
       contents: read
