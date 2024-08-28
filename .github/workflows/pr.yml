@@ -38,7 +38,7 @@ jobs:
   version-check:
     needs: build
     runs-on: ubuntu-latest
-    if: github.base_ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Check if version has been updated
         if: 
