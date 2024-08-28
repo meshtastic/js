@@ -37,6 +37,7 @@ jobs:
         run: pnpm build
   version-check:
     needs: build
+    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Check if version has been updated
