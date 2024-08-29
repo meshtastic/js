@@ -5,10 +5,8 @@ on:
     branches:
       - master
 
-
 jobs:
   version-check:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Check if version has been updated
