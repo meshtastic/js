@@ -1,0 +1,28 @@
+name: 'Version Bump'
+
+on: pull_request
+  branches:
+    - 'master'
+
+jobs:
+  version-check:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if version has been updated
+        if: 
+        id: check-version-changed
+        uses: EndBug/version-check@v2
+        with:
+          diff-search: true
+
+      - name: Log when changed
+        if: steps.check-version-changed.outputs.changed == 'true'
+        run: |
+          echo "Version change found in commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"
+
+      - name: Log when unchanged
+        if: steps.check-version-changed.outputs.changed == 'false'
+        run: |
+          echo "No version change. Please update the package version in package.json"
+          exit 1
