@@ -1,0 +1,78 @@
+name: 'Release'
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v1
+        with:
+          version: latest
+
+      - name: Run Biome
+        run: biome ci . # https://biomejs.dev/reference/cli/#biome-ci
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if version has been updated
+        if: 
+        id: check-version-changed
+        uses: EndBug/version-check@v2
+        with:
+          diff-search: true
+
+      - name: Log when changed
+        if: steps.check-version-changed.outputs.changed == 'true'
+        run: |
+          echo "Version change found in commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"
+
+      - name: Log when unchanged
+        if: steps.check-version-changed.outputs.changed == 'false'
+        run: |
+          echo "No version change. Please update the package version in package.json"
+          exit 1
+  publish:
+    needs: [quality, version-check]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout code & submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'latest'
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Build Package
+        run: pnpm run build
+
+      - name: "Publish to NPM"
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public
+      
+      - name: "Publish to JSR"
+        run: "pnpm dlx jsr publish"
