@@ -123,6 +123,7 @@ export enum Emitter {
   FactoryReset = 30,
   EnterDfuMode = 31,
   RemoveNodeByNum = 32,
+  SetCannedMessages = 33,
 }
 
 export interface LogEvent {

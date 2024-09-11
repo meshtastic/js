@@ -276,6 +276,29 @@ export abstract class MeshDevice {
     );
   }
 
+  // Write cannedMessages to device
+  public async setCannedMessages(
+    cannedMessages: Protobuf.CannedMessages.CannedMessageModuleConfig,
+  ): Promise<number> {
+    this.log.debug(
+      Types.Emitter[Types.Emitter.SetCannedMessages],
+      "⚙️ Setting CannedMessages",
+    );
+
+    const cannedMessagesMessage = new Protobuf.Admin.AdminMessage({
+      payloadVariant: {
+        case: "setCannedMessageModuleMessages",
+        value: cannedMessages.messages,
+      },
+    });
+
+    return await this.sendPacket(
+      cannedMessagesMessage.toBinary(),
+      Protobuf.Portnums.PortNum.ADMIN_APP,
+      "self",
+    );
+  }
+
   /**
    * Sets devices owner data
    */
