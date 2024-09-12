@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/js",
-  "version": "2.3.7-3",
+  "version": "2.3.7-4",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",
-    "@buf/meshtastic_protobufs.bufbuild_es": "^1.10.0-20240817124710-a1b6e1d8e51a.1",
+    "@buf/meshtastic_protobufs.bufbuild_es": "1.10.0-20240906232734-3da561588c55.1",
     "@types/node": "^22.4.1",
     "@types/w3c-web-serial": "^1.0.6",
     "@types/web-bluetooth": "^0.0.20",
