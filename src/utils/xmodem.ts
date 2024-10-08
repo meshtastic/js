@@ -1,5 +1,6 @@
 import crc16ccitt from "crc/calculators/crc16ccitt";
-import * as Protobuf from "../protobufs.js";
+import { create, toBinary } from "@bufbuild/protobuf";
+import * as Protobuf from "@meshtastic/protobufs";
 
 //if counter > 35 then reset counter/clear/error/reject promise
 type XmodemProps = (toRadio: Uint8Array, id?: number) => Promise<number>;
@@ -45,7 +46,7 @@ export class Xmodem {
     sequence?: number,
     crc16?: number,
   ): Promise<number> {
-    const toRadio = new Protobuf.Mesh.ToRadio({
+    const toRadio = create(Protobuf.Mesh.ToRadioSchema, {
       payloadVariant: {
         case: "xmodemPacket",
         value: {
@@ -56,7 +57,7 @@ export class Xmodem {
         },
       },
     });
-    return await this.sendRaw(toRadio.toBinary());
+    return await this.sendRaw(toBinary(Protobuf.Mesh.ToRadioSchema, toRadio));
   }
 
   async handlePacket(packet: Protobuf.Xmodem.XModem): Promise<number> {

@@ -2,8 +2,8 @@ import type {
   BleConnection,
   HttpConnection,
   SerialConnection,
-} from "./adapters/index.js";
-import type * as Protobuf from "./protobufs.js";
+} from "./adapters/index.ts";
+import type * as Protobuf from "@meshtastic/protobufs";
 
 export interface QueueItem {
   id: number;

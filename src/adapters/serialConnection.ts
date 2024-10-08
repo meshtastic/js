@@ -1,7 +1,7 @@
 import { SimpleEventDispatcher } from "ste-simple-events";
-import { MeshDevice } from "../meshDevice.js";
-import * as Types from "../types.js";
-import { transformHandler } from "../utils/index.js";
+import { MeshDevice } from "../meshDevice.ts";
+import * as Types from "../types.ts";
+import { transformHandler } from "../utils/index.ts";
 
 /** Allows to connect to a Meshtastic device over WebSerial */
 export class SerialConnection extends MeshDevice {

@@ -21,7 +21,8 @@
     "strictPropertyInitialization": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
-    "removeComments": false
+    "removeComments": false,
+    "allowImportingTsExtensions": true
   },
   "include": ["src/**/*"],
   "typedocOptions": {

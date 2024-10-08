@@ -1,6 +1,7 @@
 import { SimpleEventDispatcher } from "ste-simple-events";
-import * as Protobuf from "../protobufs.js";
-import type { PacketError, QueueItem } from "../types.js";
+import { fromBinary } from "@bufbuild/protobuf";
+import * as Protobuf from "@meshtastic/protobufs";
+import type { PacketError, QueueItem } from "../types.ts";
 
 export class Queue {
   private queue: QueueItem[] = [];
@@ -42,7 +43,7 @@ export class Queue {
         setTimeout(() => {
           if (this.queue.findIndex((qi) => qi.id === item.id) !== -1) {
             this.remove(item.id);
-            const decoded = Protobuf.Mesh.ToRadio.fromBinary(item.data);
+            const decoded = fromBinary(Protobuf.Mesh.ToRadioSchema, item.data);
             console.warn(
               `Packet ${item.id} of type ${decoded.payloadVariant.case} timed out`,
             );

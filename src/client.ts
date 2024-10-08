@@ -2,8 +2,8 @@ import {
   BleConnection,
   HttpConnection,
   SerialConnection,
-} from "./adapters/index.js";
-import type * as Types from "./types.js";
+} from "./adapters/index.ts";
+import type * as Types from "./types.ts";
 
 /**
  * Allows to create new connections to devices and manages them. Alternatively,

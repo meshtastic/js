@@ -1,3 +1,3 @@
-export * from "./bleConnection.js";
-export * from "./httpConnection.js";
-export * from "./serialConnection.js";
+export * from "./bleConnection.ts";
+export * from "./httpConnection.ts";
+export * from "./serialConnection.ts";
