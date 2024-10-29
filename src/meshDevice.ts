@@ -1,22 +1,11 @@
-import { Logger } from 'tslog';
+import { Logger } from "tslog";
 
-import {
-  create,
-  fromBinary,
-  toBinary,
-} from '@bufbuild/protobuf';
-import * as Protobuf from '@meshtastic/protobufs';
+import { create, fromBinary, toBinary } from "@bufbuild/protobuf";
+import * as Protobuf from "@meshtastic/protobufs";
 
-import {
-  broadcastNum,
-  minFwVer,
-} from './constants.ts';
-import * as Types from './types.ts';
-import {
-  EventSystem,
-  Queue,
-  Xmodem,
-} from './utils/index.ts';
+import { broadcastNum, minFwVer } from "./constants.ts";
+import * as Types from "./types.ts";
+import { EventSystem, Queue, Xmodem } from "./utils/index.ts";
 
 /** Base class for connection methods to extend */
 export abstract class MeshDevice {
@@ -361,7 +350,7 @@ export abstract class MeshDevice {
   public async enterDfuMode(): Promise<number> {
     this.log.debug(
       Types.Emitter[Types.Emitter.EnterDfuMode],
-      '🔌 Entering DFU mode',
+      "🔌 Entering DFU mode",
     );
 
     const enterDfuModeRequest = create(Protobuf.Admin.AdminMessageSchema, {
@@ -373,7 +362,7 @@ export abstract class MeshDevice {
     return await this.sendPacket(
       toBinary(Protobuf.Admin.AdminMessageSchema, enterDfuModeRequest),
       Protobuf.Portnums.PortNum.ADMIN_APP,
-      "self"
+      "self",
     );
   }
 
