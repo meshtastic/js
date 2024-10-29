@@ -52,4 +52,4 @@ jobs:
           access: public
       
       - name: "Publish to JSR"
-        run: "pnpm dlx jsr publish"
+        run: "pnpm dlx jsr publish --allow-slow-types"
