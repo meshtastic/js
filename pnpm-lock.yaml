@@ -12,8 +12,8 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       '@meshtastic/protobufs':
-        specifier: npm:@jsr/meshtastic__protobufs@^2.5.7
-        version: '@jsr/meshtastic__protobufs@2.5.7'
+        specifier: npm:@jsr/meshtastic__protobufs@^2.5.9
+        version: '@jsr/meshtastic__protobufs@2.5.9'
       crc:
         specifier: ^4.3.2
         version: 4.3.2
@@ -270,8 +270,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@jsr/meshtastic__protobufs@2.5.7':
-    resolution: {integrity: sha512-AP9qUi++bBeD/xrR+KyIVrpECsuxMl0gccUWwlE+LwVA7xyIPAQlY+RQRl44gOgmpKiCFSsMghTrIPqyMCYc9Q==, tarball: https://npm.jsr.io/~/11/@jsr/meshtastic__protobufs/2.5.7.tgz}
+  '@jsr/meshtastic__protobufs@2.5.9':
+    resolution: {integrity: sha512-4peQrF3IfA9/d8u60jPuK6HFar2N8OI5y/CLCvWLS6moS5MVGZy3OGrIGZDndRhyIUf7ZDlYGd4W1WLkxOw3Cg==, tarball: https://npm.jsr.io/~/11/@jsr/meshtastic__protobufs/2.5.9.tgz}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -1082,7 +1082,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@jsr/meshtastic__protobufs@2.5.7':
+  '@jsr/meshtastic__protobufs@2.5.9':
     dependencies:
       '@bufbuild/protobuf': 2.2.1
 
