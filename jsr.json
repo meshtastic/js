@@ -1,5 +1,5 @@
 {
   "name": "@meshtastic/js",
-  "version": "2.5.9-1",
+  "version": "2.5.9-2",
   "exports": "./src/mod.ts"
 }
