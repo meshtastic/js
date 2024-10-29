@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@bufbuild/protobuf':
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^2.2.1
+        version: 2.2.1
       '@meshtastic/protobufs':
         specifier: npm:@jsr/meshtastic__protobufs@^2.5.7
         version: '@jsr/meshtastic__protobufs@2.5.7'
@@ -101,8 +101,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@bufbuild/protobuf@2.1.0':
-    resolution: {integrity: sha512-+2Mx67Y3skJ4NCD/qNSdBJNWtu6x6Qr53jeNg+QcwiL6mt0wK+3jwHH2x1p7xaYH6Ve2JKOVn0OxU35WsmqI9A==}
+  '@bufbuild/protobuf@2.2.1':
+    resolution: {integrity: sha512-gdWzq7eX017a1kZCU/bP/sbk4e0GZ6idjsXOcMrQwODCb/rx985fHJJ8+hCu79KpuG7PfZh7bo3BBjPH37JuZw==}
 
   '@esbuild/aix-ppc64@0.23.1':
     resolution: {integrity: sha512-6VhYk1diRqrhBAqpJEdjASR/+WVRtfjpqKuNw11cLiaWpAT/Uu+nokB+UJnevzy/P9C/ty6AOe0dwueMrGh/iQ==}
@@ -982,7 +982,7 @@ snapshots:
   '@biomejs/cli-win32-x64@1.9.3':
     optional: true
 
-  '@bufbuild/protobuf@2.1.0': {}
+  '@bufbuild/protobuf@2.2.1': {}
 
   '@esbuild/aix-ppc64@0.23.1':
     optional: true
@@ -1084,7 +1084,7 @@ snapshots:
 
   '@jsr/meshtastic__protobufs@2.5.7':
     dependencies:
-      '@bufbuild/protobuf': 2.1.0
+      '@bufbuild/protobuf': 2.2.1
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
