@@ -25,6 +25,9 @@ export class SerialConnection extends MeshDevice {
    *  through a transform stream (https://stackoverflow.com/questions/71262432) */
   private pipePromise?: Promise<void>;
 
+  /* Reference for the heartbeat ping interval so it can be canceled on disconnect. */ 
+  private heartbeatInterval?: ReturnType<typeof setInterval> | undefined;
+
   /**
    * Fires when `disconnect()` is called, used to instruct serial port and
    * readers to release there locks
@@ -44,6 +47,7 @@ export class SerialConnection extends MeshDevice {
     this.transformer = undefined;
     this.onReleaseEvent = new SimpleEventDispatcher<boolean>();
     this.preventLock = false;
+    this.heartbeatInterval = undefined;
 
     this.log.debug(
       Types.Emitter[Types.Emitter.Constructor],
@@ -125,6 +129,7 @@ export class SerialConnection extends MeshDevice {
     });
 
     this.preventLock = false;
+
     /** Connect to device */
     await this.port
       .open({
@@ -151,6 +156,14 @@ export class SerialConnection extends MeshDevice {
           this.configure().catch(() => {
             // TODO: FIX, workaround for `wantConfigId` not getting acks.
           });
+
+          // Set up an interval to send a heartbeat ping once every minute.
+          // The firmware requires at least one ping per 15 minutes, so this should be more than enough.
+          this.heartbeatInterval = setInterval(() => {
+            this.heartbeat().catch((err) => {
+              console.error('Heartbeat error', err);
+            });
+          }, 60*1000);
         } else {
           console.log("not readable or writable");
         }
@@ -179,6 +192,12 @@ export class SerialConnection extends MeshDevice {
     this.readerHack?.releaseLock();
     if (this.port?.readable) {
       await this.port?.close();
+    }
+    
+    // stop the interval when disconnecting.
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = undefined;      
     }
     // -------
     this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceDisconnected);
