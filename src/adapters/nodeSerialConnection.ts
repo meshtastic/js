@@ -106,7 +106,6 @@ export class NodeSerialConnection extends MeshDevice {
               console.error("Heartbeat error", err);
             });
           }, 60 * 1000);
-
         } else {
           console.log("not readable or writable");
         }
