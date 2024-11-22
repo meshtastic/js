@@ -735,6 +735,23 @@ export abstract class MeshDevice {
     return this.sendRaw(toBinary(Protobuf.Mesh.ToRadioSchema, toRadio));
   }
 
+  /** Serial connection requires a heartbeat ping to stay connected, otherwise times out after 15 minutes */
+  public heartbeat(): Promise<number> {
+    this.log.debug(
+      Types.Emitter[Types.Emitter.Ping],
+      "❤️ Send heartbeat ping to radio",
+    );
+
+    const toRadio = create(Protobuf.Mesh.ToRadioSchema, {
+      payloadVariant: {
+        case: "heartbeat",
+        value: {},
+      },
+    });
+
+    return this.sendRaw(toBinary(Protobuf.Mesh.ToRadioSchema, toRadio));
+  }
+
   /** Sends a trace route packet to the designated node */
   public async traceRoute(destination: number): Promise<number> {
     const routeDiscovery = create(Protobuf.Mesh.RouteDiscoverySchema, {
