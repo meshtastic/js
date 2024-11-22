@@ -26,7 +26,7 @@ export class SerialConnection extends MeshDevice {
   private pipePromise?: Promise<void>;
 
   /* Reference for the heartbeat ping interval so it can be canceled on disconnect. */ 
-  private heartbeatInterval?: NodeJS.Timeout | undefined;
+  private heartbeatInterval?: ReturnType<typeof setInterval> | undefined;
 
   /**
    * Fires when `disconnect()` is called, used to instruct serial port and
