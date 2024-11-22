@@ -16,7 +16,7 @@ export class NodeSerialConnection extends MeshDevice {
   /**Path to the serial port being opened. */
   private portPath: string | undefined;
 
-  /* Reference for the heartbeat ping interval so it can be canceled on disconnect. */ 
+  /* Reference for the heartbeat ping interval so it can be canceled on disconnect. */
   private heartbeatInterval?: ReturnType<typeof setInterval> | undefined;
 
   /**
@@ -103,9 +103,9 @@ export class NodeSerialConnection extends MeshDevice {
           // The firmware requires at least one ping per 15 minutes, so this should be more than enough.
           this.heartbeatInterval = setInterval(() => {
             this.heartbeat().catch((err) => {
-              console.error('Heartbeat error', err);
+              console.error("Heartbeat error", err);
             });
-          }, 60*1000);
+          }, 60 * 1000);
 
         } else {
           console.log("not readable or writable");
@@ -139,7 +139,7 @@ export class NodeSerialConnection extends MeshDevice {
     if (this.port?.readable) {
       await this.port?.close();
     }
-   
+
     // stop the interval when disconnecting.
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);

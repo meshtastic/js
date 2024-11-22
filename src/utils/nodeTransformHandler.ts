@@ -25,9 +25,9 @@ export const nodeTransformHandler = (
         controller();
       });
 
-      // add the latest chunk of data into the array 
+      // add the latest chunk of data into the array
       byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
-      
+
       // This loop looks for Meshtastic packets in the stream based on the
       // protocol definition. byteBuffer may contain 0 or more packets at
       // any time.
@@ -49,11 +49,16 @@ export const nodeTransformHandler = (
               onDeviceDebugLog.dispatch(byteBuffer.subarray(0, framingIndex));
             } else {
               // This takes the bytes, translates them into ascii, and logs them
-              const ascii_debug = Array.from(byteBuffer.subarray(0, framingIndex)).map((code)=>String.fromCharCode(code)).join('');
+              const ascii_debug = Array.from(
+                byteBuffer.subarray(0, framingIndex),
+              )
+                .map((code) => String.fromCharCode(code))
+                .join("");
+
               log.trace(
                 Types.EmitterScope.SerialConnection,
                 Types.Emitter.Connect,
-                `Debug from radio:\n ${ ascii_debug }`,
+                `Debug from radio:\n ${ascii_debug}`,
               );
             }
             // Remove everything before the magic byte
