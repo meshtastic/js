@@ -16,7 +16,8 @@ export const transformHandler = (
   // byteBuffer contains the data to be processed
   let byteBuffer = new Uint8Array([]);
 
-  // return the actual transformer
+  // return the actual transformer that will be called for each
+  // new chunk of data...
   return new TransformStream<Uint8Array, Uint8Array>({
     transform(chunk: Uint8Array, controller): void {
       log = log.getSubLogger({ name: "streamTransformer" });
