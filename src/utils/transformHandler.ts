@@ -3,7 +3,6 @@ import type { Logger } from "tslog";
 import * as Protobuf from "@meshtastic/protobufs";
 import * as Types from "../types.ts";
 
-
 // This function takes the raw binary stream from the radio
 // and converts it into usable "packets" that are returned to the
 // adapter for handling
