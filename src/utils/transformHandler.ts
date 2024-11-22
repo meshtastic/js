@@ -25,7 +25,7 @@ export const transformHandler = (
         controller.terminate();
       });
 
-      // add the latest chunk of data into the array 
+      // add the latest chunk of data into the array
       byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
 
       // This loop looks for Meshtastic packets in the stream based on the
@@ -48,12 +48,16 @@ export const transformHandler = (
               // the consumer will have to translate the bytes into ascii
               onDeviceDebugLog.dispatch(byteBuffer.subarray(0, framingIndex));
             } else {
-            // This takes the bytes, translates them into ascii, and logs them
-              const ascii_debug = Array.from(byteBuffer.subarray(0, framingIndex)).map((code)=>String.fromCharCode(code)).join('');
+              // This takes the bytes, translates them into ascii, and logs them
+              const ascii_debug = Array.from(
+                byteBuffer.subarray(0, framingIndex)
+              )
+                .map((code)=>String.fromCharCode(code))
+                .join('');
               log.trace(
                 Types.EmitterScope.SerialConnection,
                 Types.Emitter.Connect,
-                `Debug from radio:\n ${ ascii_debug }`,
+                `Debug from radio:\n ${ascii_debug}`,
               );
             }
 
