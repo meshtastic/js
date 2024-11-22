@@ -24,7 +24,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "bugs": {
     "url": "https://github.com/meshtastic/js/issues"
   },
@@ -36,6 +38,7 @@
     "@bufbuild/protobuf": "^2.2.1",
     "@meshtastic/protobufs": "npm:@jsr/meshtastic__protobufs@^2.5.9",
     "crc": "^4.3.2",
+    "serialport": "^12.0.0",
     "ste-simple-events": "^3.0.11",
     "tslog": "^4.9.3"
   },
