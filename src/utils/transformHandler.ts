@@ -50,10 +50,10 @@ export const transformHandler = (
             } else {
               // This takes the bytes, translates them into ascii, and logs them
               const ascii_debug = Array.from(
-                byteBuffer.subarray(0, framingIndex)
+                byteBuffer.subarray(0, framingIndex),
               )
-                .map((code)=>String.fromCharCode(code))
-                .join('');
+                .map((code) => String.fromCharCode(code))
+                .join("");
               log.trace(
                 Types.EmitterScope.SerialConnection,
                 Types.Emitter.Connect,
