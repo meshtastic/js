@@ -16,11 +16,11 @@
   "sideEffects": false,
   "type": "module",
   "packageManager": "pnpm@9.1.4",
-  "module": "./dist/index.ts",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.ts",
+      "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
