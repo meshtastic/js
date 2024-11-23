@@ -145,7 +145,11 @@ export enum ChannelNumber {
   Admin = 7,
 }
 
-export type ConnectionType = BleConnection | HttpConnection | NodeSerialConnection | SerialConnection;
+export type ConnectionType =
+  | BleConnection
+  | HttpConnection
+  | NodeSerialConnection
+  | SerialConnection;
 
 export type ConnectionTypeName = "ble" | "http" | "serial";
 
