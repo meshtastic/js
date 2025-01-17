@@ -13,6 +13,13 @@ export interface QueueItem {
   promise: Promise<number>;
 }
 
+export interface HttpRetryConfig {
+  maxRetries: number;
+  initialDelayMs: number;
+  maxDelayMs: number;
+  backoffFactor: number;
+}
+
 export enum DeviceStatusEnum {
   DeviceRestarting = 1,
   DeviceDisconnected = 2,
