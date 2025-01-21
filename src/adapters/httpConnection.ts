@@ -156,8 +156,6 @@ export class HttpConnection extends MeshDevice {
     this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnecting);
     this.receiveBatchRequests = receiveBatchRequests;
 
-    console.log("XXXXX Connecting to device");
-
     try {
       // Attempt connection with retries
       await this.withRetry(
