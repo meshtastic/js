@@ -1,6 +1,7 @@
 import type {
   BleConnection,
   HttpConnection,
+  NodeSerialConnection,
   SerialConnection,
 } from "./adapters/index.ts";
 import type * as Protobuf from "@meshtastic/protobufs";
@@ -33,7 +34,8 @@ export enum DeviceStatusEnum {
 export type ConnectionParameters =
   | HttpConnectionParameters
   | BleConnectionParameters
-  | SerialConnectionParameters;
+  | SerialConnectionParameters
+  | NodeSerialConnectionParameters;
 
 export interface HttpConnectionParameters {
   /** Address The IP Address/Domain to connect to, without protocol */
@@ -63,6 +65,12 @@ export interface SerialConnectionParameters {
   baudRate?: number;
   /** Connect directly to a Serial port, obtained from `getPorts()` */
   port?: SerialPort;
+  concurrentLogOutput: boolean;
+}
+
+export interface NodeSerialConnectionParameters {
+  baudRate?: number;
+  portPath: string;
   concurrentLogOutput: boolean;
 }
 
@@ -144,7 +152,11 @@ export enum ChannelNumber {
   Admin = 7,
 }
 
-export type ConnectionType = BleConnection | HttpConnection | SerialConnection;
+export type ConnectionType =
+  | BleConnection
+  | HttpConnection
+  | NodeSerialConnection
+  | SerialConnection;
 
 export type ConnectionTypeName = "ble" | "http" | "serial";
 
