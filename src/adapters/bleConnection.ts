@@ -218,7 +218,6 @@ export class BleConnection extends MeshDevice {
    * @throws Error if reading fails
    */
   protected async readFromRadio(): Promise<void> {
-
     try {
       let hasMoreData = true;
       while (hasMoreData && this.fromRadioCharacteristic) {

@@ -25,7 +25,7 @@ export class SerialConnection extends MeshDevice {
    *  through a transform stream (https://stackoverflow.com/questions/71262432) */
   private pipePromise?: Promise<void>;
 
-  /* Reference for the heartbeat ping interval so it can be canceled on disconnect. */ 
+  /* Reference for the heartbeat ping interval so it can be canceled on disconnect. */
   private heartbeatInterval?: ReturnType<typeof setInterval> | undefined;
 
   /**
@@ -161,9 +161,9 @@ export class SerialConnection extends MeshDevice {
           // The firmware requires at least one ping per 15 minutes, so this should be more than enough.
           this.heartbeatInterval = setInterval(() => {
             this.heartbeat().catch((err) => {
-              console.error('Heartbeat error', err);
+              console.error("Heartbeat error", err);
             });
-          }, 60*1000);
+          }, 60 * 1000);
         } else {
           console.log("not readable or writable");
         }
@@ -193,11 +193,11 @@ export class SerialConnection extends MeshDevice {
     if (this.port?.readable) {
       await this.port?.close();
     }
-    
+
     // stop the interval when disconnecting.
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
-      this.heartbeatInterval = undefined;      
+      this.heartbeatInterval = undefined;
     }
     // -------
     this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceDisconnected);
