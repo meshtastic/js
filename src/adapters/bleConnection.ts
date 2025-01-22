@@ -213,34 +213,33 @@ export class BleConnection extends MeshDevice {
     return await Promise.resolve(true);
   }
 
-  /** Short description */
+  /**
+   * Reads data packets from the radio until empty
+   * @throws Error if reading fails
+   */
   protected async readFromRadio(): Promise<void> {
-    // if (this.pendingRead) {
-    //   return Promise.resolve();
-    // }
-    // this.pendingRead = true;
-    let readBuffer = new ArrayBuffer(1);
+    try {
+      let hasMoreData = true;
+      while (hasMoreData && this.fromRadioCharacteristic) {
+        const value = await this.fromRadioCharacteristic.readValue();
 
-    while (readBuffer.byteLength > 0 && this.fromRadioCharacteristic) {
-      await this.fromRadioCharacteristic
-        .readValue()
-        .then((value) => {
-          readBuffer = value.buffer;
+        if (value.byteLength === 0) {
+          hasMoreData = false;
+          continue;
+        }
 
-          if (value.byteLength > 0) {
-            this.handleFromRadio(new Uint8Array(readBuffer));
-          }
-          this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
-        })
-        .catch((e: Error) => {
-          readBuffer = new ArrayBuffer(0);
-          this.log.error(
-            Types.Emitter[Types.Emitter.ReadFromRadio],
-            `❌ ${e.message}`,
-          );
-        });
+        await this.handleFromRadio(new Uint8Array(value.buffer));
+        this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConnected);
+      }
+    } catch (error) {
+      this.log.error(
+        Types.Emitter[Types.Emitter.ReadFromRadio],
+        `❌ ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      throw error; // Re-throw to let caller handle
+    } finally {
+      // this.pendingRead = false;
     }
-    // this.pendingRead = false;
   }
 
   /**

@@ -1,10 +1,14 @@
 {
   "name": "@meshtastic/js",
-  "version": "2.5.9-2",
+  "version": "2.5.9-3",
   "description": "Browser library for interfacing with meshtastic devices",
   "license": "GPL-3.0-only",
   "scripts": {
     "build": "tsup && pnpm biome format .",
+    "lint": "pnpm biome check",
+    "lint:fix": "pnpm biome check --fix",
+    "format": "pnpm biome format .",
+    "format:fix": "pnpm biome format . --fix",
     "generate:docs": "typedoc src/index.ts"
   },
   "keywords": [
