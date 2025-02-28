@@ -1,5 +1,3 @@
-// @deno-types="npm:@types/w3c-web-serial@^1.0.7"
-
 import { Utils } from "@meshtastic/core";
 import type { Types } from "@meshtastic/core";
 
@@ -13,11 +11,11 @@ export class TransportWebSerial implements Types.Transport {
   }
 
   constructor(connection: SerialPort) {
-    Utils.toDeviceStream.readable.pipeTo(connection.writable);
-
-    if (!connection.readable) {
-      throw new Error("No readable stream available");
+    if (!connection.readable || !connection.writable) {
+      throw new Error("Stream not accessible");
     }
+
+    Utils.toDeviceStream.readable.pipeTo(connection.writable);
 
     this._toDevice = Utils.toDeviceStream.writable;
     this._fromDevice = connection.readable.pipeThrough(
