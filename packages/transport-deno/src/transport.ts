@@ -1,5 +1,5 @@
-import { Utils } from "../../core/mod.ts";
-import type { Types } from "../../core/mod.ts";
+import { Utils } from "@meshtastic/core";
+import type { Types } from "@meshtastic/core";
 
 export class TransportDeno implements Types.Transport {
   private _toDevice: WritableStream<Uint8Array>;
