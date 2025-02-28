@@ -42,42 +42,6 @@ export enum DeviceStatusEnum {
   DeviceConfigured = 7,
 }
 
-export type ConnectionParameters =
-  | HttpConnectionParameters
-  | BleConnectionParameters
-  | SerialConnectionParameters;
-
-export interface HttpConnectionParameters {
-  /** Address The IP Address/Domain to connect to, without protocol */
-  address: string;
-  /**
-   * Enables transport layer security. Notes: Slower, devices' certificate must
-   * be trusted by the browser
-   */
-  tls?: boolean;
-  /** Enables receiving messages all at once, versus one per request */
-  receiveBatchRequests?: boolean;
-  /**
-   * (ms) Sets a fixed interval in that the device is fetched for new messages,
-   * defaults to 5 seconds
-   */
-  fetchInterval: number;
-}
-
-export interface BleConnectionParameters {
-  /** Optional filter options for the web bluetooth api requestDevice() method */
-  deviceFilter?: RequestDeviceOptions;
-  /** Connect directly to a Bluetooth deivce, obtained from `getDevices()` */
-  device?: BluetoothDevice;
-}
-
-export interface SerialConnectionParameters {
-  baudRate?: number;
-  /** Connect directly to a Serial port, obtained from `getPorts()` */
-  port?: SerialPort;
-  concurrentLogOutput: boolean;
-}
-
 export type LogEventPacket = LogEvent & { date: Date };
 
 export type PacketDestination = "broadcast" | "direct";
@@ -155,10 +119,6 @@ export enum ChannelNumber {
   Channel6 = 6,
   Admin = 7,
 }
-
-export type ConnectionType = BleConnection | HttpConnection | SerialConnection;
-
-export type ConnectionTypeName = "ble" | "http" | "serial";
 
 export type Destination = number | "self" | "broadcast";
 

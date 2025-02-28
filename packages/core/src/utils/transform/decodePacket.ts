@@ -1,5 +1,5 @@
 import { fromBinary } from "@bufbuild/protobuf";
-import type { DeviceOutput } from "./fromDevice.ts";
+import type { DeviceOutput } from "../../types.ts";
 import { Constants, Protobuf, Types } from "../../../mod.ts";
 import type { MeshDevice } from "../../../mod.ts";
 
@@ -185,7 +185,7 @@ export const decodePacket = (device: MeshDevice) =>
               ) {
                 device.log.fatal(
                   Types.Emitter[Types.Emitter.HandleFromRadio],
-                  `Device firmware outdated. Min supported: ${minFwVer} got : ${decodedMessage.payloadVariant.value.firmwareVersion}`,
+                  `Device firmware outdated. Min supported: ${Constants.minFwVer} got : ${decodedMessage.payloadVariant.value.firmwareVersion}`,
                 );
               }
               device.log.debug(
