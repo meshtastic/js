@@ -1,4 +1,4 @@
-// @deno-types="npm:@types/w3c-web-serial"
+// @deno-types="npm:@types/w3c-web-serial@^1.0.7"
 
 import { Utils } from "@meshtastic/core";
 import type { Types } from "@meshtastic/core";
