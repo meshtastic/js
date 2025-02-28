@@ -1,21 +1,15 @@
-import type { SimpleEventDispatcher } from "ste-simple-events";
-import type { Logger } from "tslog";
-import * as Protobuf from "@meshtastic/protobufs";
-import * as Types from "../types.ts";
+import type { DeviceOutput } from "../../types.ts";
 
-export const transformHandler = (
-  log: Logger<unknown>,
-  onReleaseEvent: SimpleEventDispatcher<boolean>,
-  onDeviceDebugLog: SimpleEventDispatcher<Uint8Array>,
-  concurrentLogOutput: boolean,
+export const fromDeviceStream = (
+  // onReleaseEvent: SimpleEventDispatcher<boolean>,
 ) => {
   let byteBuffer = new Uint8Array([]);
-  return new TransformStream<Uint8Array, Uint8Array>({
+  const textDecoder = new TextDecoder();
+  return new TransformStream<Uint8Array, DeviceOutput>({
     transform(chunk: Uint8Array, controller): void {
-      log = log.getSubLogger({ name: "streamTransformer" });
-      onReleaseEvent.subscribe(() => {
-        controller.terminate();
-      });
+      // onReleaseEvent.subscribe(() => {
+      //   controller.terminate();
+      // });
       byteBuffer = new Uint8Array([...byteBuffer, ...chunk]);
       let processingExhausted = false;
       while (byteBuffer.length !== 0 && !processingExhausted) {
@@ -23,20 +17,10 @@ export const transformHandler = (
         const framingByte2 = byteBuffer[framingIndex + 1];
         if (framingByte2 === 0xc3) {
           if (byteBuffer.subarray(0, framingIndex).length) {
-            if (concurrentLogOutput) {
-              onDeviceDebugLog.dispatch(byteBuffer.subarray(0, framingIndex));
-            } else {
-              log.warn(
-                Types.EmitterScope.SerialConnection,
-                Types.Emitter.Connect,
-                `⚠️ Found unneccesary message padding, removing: ${
-                  byteBuffer
-                    .subarray(0, framingIndex)
-                    .toString()
-                }`,
-              );
-            }
-
+            controller.enqueue({
+              type: "debug",
+              data: textDecoder.decode(byteBuffer.subarray(0, framingIndex)),
+            });
             byteBuffer = byteBuffer.subarray(framingIndex);
           }
 
@@ -57,21 +41,20 @@ export const transformHandler = (
               malformedDetectorIndex !== -1 &&
               packet[malformedDetectorIndex + 1] === 0xc3
             ) {
-              log.warn(
-                Types.EmitterScope.SerialConnection,
-                Types.Emitter.Connect,
-                `⚠️ Malformed packet found, discarding: ${
-                  byteBuffer
-                    .subarray(0, malformedDetectorIndex - 1)
-                    .toString()
-                }`,
-                Protobuf.Mesh.LogRecord_Level.WARNING,
-              );
+              console.warn(`⚠️ Malformed packet found, discarding: ${
+                byteBuffer
+                  .subarray(0, malformedDetectorIndex - 1)
+                  .toString()
+              }`);
 
               byteBuffer = byteBuffer.subarray(malformedDetectorIndex);
             } else {
               byteBuffer = byteBuffer.subarray(3 + (msb << 8) + lsb + 1);
-              controller.enqueue(packet);
+
+              controller.enqueue({
+                type: "packet",
+                data: packet,
+              });
             }
           } else {
             /** Only partioal message in buffer, wait for the rest */

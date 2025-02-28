@@ -1,9 +1,21 @@
-import type {
-  BleConnection,
-  HttpConnection,
-  SerialConnection,
-} from "./adapters/index.ts";
 import type * as Protobuf from "@meshtastic/protobufs";
+
+interface Packet {
+  type: "packet";
+  data: Uint8Array;
+}
+
+interface DebugLog {
+  type: "debug";
+  data: string;
+}
+
+export type DeviceOutput = Packet | DebugLog;
+
+export interface Transport {
+  toDevice: WritableStream<Uint8Array>;
+  fromDevice: ReadableStream<DeviceOutput>;
+}
 
 export interface QueueItem {
   id: number;

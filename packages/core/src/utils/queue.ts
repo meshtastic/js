@@ -89,24 +89,31 @@ export class Queue {
   }
 
   public async processQueue(
-    writeToRadio: (data: Uint8Array) => Promise<void>,
+    outputStream: WritableStream<Uint8Array>,
   ): Promise<void> {
     if (this.lock) {
       return;
     }
+
     this.lock = true;
-    while (this.queue.filter((p) => !p.sent).length > 0) {
-      const item = this.queue.filter((p) => !p.sent)[0];
-      if (item) {
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        try {
-          await writeToRadio(item.data);
-          item.sent = true;
-        } catch (error) {
-          console.error(`Error sending packet ${item.id}`, error);
+    const writer = outputStream.getWriter();
+
+    try {
+      while (this.queue.filter((p) => !p.sent).length > 0) {
+        const item = this.queue.filter((p) => !p.sent)[0];
+        if (item) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          try {
+            await writer.write(item.data);
+            item.sent = true;
+          } catch (error) {
+            console.error(`Error sending packet ${item.id}`, error);
+          }
         }
       }
+    } finally {
+      writer.releaseLock();
+      this.lock = false;
     }
-    this.lock = false;
   }
 }

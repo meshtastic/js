@@ -3,22 +3,20 @@ import { Logger } from "tslog";
 import { create, fromBinary, toBinary } from "@bufbuild/protobuf";
 import * as Protobuf from "@meshtastic/protobufs";
 
-import { broadcastNum, minFwVer } from "./constants.ts";
-import * as Types from "./types.ts";
-import { EventSystem, Queue, Xmodem } from "./utils/index.ts";
+import { EventSystem, Queue, Xmodem } from "./utils/mod.ts";
+import { decodePacket } from "./utils/transform/decodePacket.ts";
+import { Constants } from "./constants.ts";
+import type { Destination, PacketMetadata, Transport } from "./types.ts";
+import { ChannelNumber, DeviceStatusEnum, Emitter } from "./types.ts";
 
-/** Base class for connection methods to extend */
-export abstract class MeshDevice {
-  /** Abstract property that states the connection type */
-  protected abstract connType: Types.ConnectionTypeName;
-
-  protected abstract portId: string;
+export class MeshDevice {
+  protected transport: Transport;
 
   /** Logs to the console and the logging event emitter */
-  protected log: Logger<unknown>;
+  public log: Logger<unknown>;
 
   /** Describes the current state of the device */
-  protected deviceStatus: Types.DeviceStatusEnum;
+  protected deviceStatus: DeviceStatusEnum;
 
   /** Describes the current state of the device */
   protected isConfigured: boolean;
@@ -42,14 +40,15 @@ export abstract class MeshDevice {
 
   public xModem: Xmodem;
 
-  constructor(configId?: number) {
+  constructor(transport: Transport, configId?: number) {
     this.log = new Logger({
       name: "iMeshDevice",
       prettyLogTemplate:
         "{{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t[{{name}}]\t",
     });
 
-    this.deviceStatus = Types.DeviceStatusEnum.DeviceDisconnected;
+    this.transport = transport;
+    this.deviceStatus = DeviceStatusEnum.DeviceDisconnected;
     this.isConfigured = false;
     this.pendingSettingsChanges = false;
     this.myNodeInfo = create(Protobuf.Mesh.MyNodeInfoSchema);
@@ -60,9 +59,9 @@ export abstract class MeshDevice {
 
     this.events.onDeviceStatus.subscribe((status) => {
       this.deviceStatus = status;
-      if (status === Types.DeviceStatusEnum.DeviceConfigured) {
+      if (status === DeviceStatusEnum.DeviceConfigured) {
         this.isConfigured = true;
-      } else if (status === Types.DeviceStatusEnum.DeviceConfiguring) {
+      } else if (status === DeviceStatusEnum.DeviceConfiguring) {
         this.isConfigured = false;
       }
     });
@@ -74,33 +73,32 @@ export abstract class MeshDevice {
     this.events.onPendingSettingsChange.subscribe((state) => {
       this.pendingSettingsChanges = state;
     });
+
+    this.transport.fromDevice.pipeTo(decodePacket(this));
   }
 
-  /** Abstract method that writes data to the radio */
-  protected abstract writeToRadio(data: Uint8Array): Promise<void>;
-
   /** Abstract method that connects to the radio */
-  protected abstract connect(
-    parameters: Types.ConnectionParameters,
-  ): Promise<void>;
+  // protected abstract connect(
+  //   parameters: Types.ConnectionParameters,
+  // ): Promise<void>;
 
   /** Abstract method that disconnects from the radio */
-  protected abstract disconnect(): void;
+  // protected abstract disconnect(): void;
 
   /** Abstract method that pings the radio */
-  protected abstract ping(): Promise<boolean>;
+  // protected abstract ping(): Promise<boolean>;
 
   /**
    * Sends a text over the radio
    */
   public async sendText(
     text: string,
-    destination?: Types.Destination,
+    destination?: Destination,
     wantAck?: boolean,
-    channel?: Types.ChannelNumber,
+    channel?: ChannelNumber,
   ): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.SendText],
+      Emitter[Emitter.SendText],
       `📤 Sending message to ${destination ?? "broadcast"} on channel ${
         channel?.toString() ?? 0
       }`,
@@ -124,11 +122,11 @@ export abstract class MeshDevice {
    */
   public sendWaypoint(
     waypointMessage: Protobuf.Mesh.Waypoint,
-    destination: Types.Destination,
-    channel?: Types.ChannelNumber,
+    destination: Destination,
+    channel?: ChannelNumber,
   ): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.SendWaypoint],
+      Emitter[Emitter.SendWaypoint],
       `📤 Sending waypoint to ${destination} on channel ${
         channel?.toString() ?? 0
       }`,
@@ -152,8 +150,8 @@ export abstract class MeshDevice {
   public async sendPacket(
     byteData: Uint8Array,
     portNum: Protobuf.Portnums.PortNum,
-    destination: Types.Destination,
-    channel: Types.ChannelNumber = Types.ChannelNumber.Primary,
+    destination: Destination,
+    channel: ChannelNumber = ChannelNumber.Primary,
     wantAck = true,
     wantResponse = true,
     echoResponse = false,
@@ -161,7 +159,7 @@ export abstract class MeshDevice {
     emoji?: number,
   ): Promise<number> {
     this.log.trace(
-      Types.Emitter[Types.Emitter.SendPacket],
+      Emitter[Emitter.SendPacket],
       `📤 Sending ${Protobuf.Portnums.PortNum[portNum]} to ${destination}`,
     );
 
@@ -181,7 +179,7 @@ export abstract class MeshDevice {
       },
       from: this.myNodeInfo.myNodeNum,
       to: destination === "broadcast"
-        ? broadcastNum
+        ? Constants.broadcastNum
         : destination === "self"
         ? this.myNodeInfo.myNodeNum
         : destination,
@@ -222,9 +220,7 @@ export abstract class MeshDevice {
       data: toRadio,
     });
 
-    await this.queue.processQueue(async (data) => {
-      await this.writeToRadio(data);
-    });
+    await this.queue.processQueue(this.transport.toDevice);
 
     return this.queue.wait(id);
   }
@@ -234,7 +230,7 @@ export abstract class MeshDevice {
    */
   public async setConfig(config: Protobuf.Config.Config): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.SetConfig],
+      Emitter[Emitter.SetConfig],
       `⚙️ Setting config, Variant: ${config.payloadVariant.case ?? "Unknown"}`,
     );
 
@@ -263,7 +259,7 @@ export abstract class MeshDevice {
     moduleConfig: Protobuf.ModuleConfig.ModuleConfig,
   ): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.SetModuleConfig],
+      Emitter[Emitter.SetModuleConfig],
       "⚙️ Setting module config",
     );
 
@@ -286,7 +282,7 @@ export abstract class MeshDevice {
     cannedMessages: Protobuf.CannedMessages.CannedMessageModuleConfig,
   ): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.SetCannedMessages],
+      Emitter[Emitter.SetCannedMessages],
       "⚙️ Setting CannedMessages",
     );
 
@@ -308,7 +304,7 @@ export abstract class MeshDevice {
    * Sets devices owner data
    */
   public async setOwner(owner: Protobuf.Mesh.User): Promise<number> {
-    this.log.debug(Types.Emitter[Types.Emitter.SetOwner], "👤 Setting owner");
+    this.log.debug(Emitter[Emitter.SetOwner], "👤 Setting owner");
 
     const setOwnerMessage = create(Protobuf.Admin.AdminMessageSchema, {
       payloadVariant: {
@@ -329,7 +325,7 @@ export abstract class MeshDevice {
    */
   public async setChannel(channel: Protobuf.Channel.Channel): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.SetChannel],
+      Emitter[Emitter.SetChannel],
       `📻 Setting Channel: ${channel.index}`,
     );
 
@@ -346,9 +342,13 @@ export abstract class MeshDevice {
       "self",
     );
   }
+
+  /**
+   * Triggers Device to enter DFU mode
+   */
   public async enterDfuMode(): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.EnterDfuMode],
+      Emitter[Emitter.EnterDfuMode],
       "🔌 Entering DFU mode",
     );
 
@@ -365,6 +365,9 @@ export abstract class MeshDevice {
     );
   }
 
+  /**
+   * Sets static position of device
+   */
   public async setPosition(
     positionMessage: Protobuf.Mesh.Position,
   ): Promise<number> {
@@ -380,7 +383,7 @@ export abstract class MeshDevice {
    */
   public async getChannel(index: number): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.GetChannel],
+      Emitter[Emitter.GetChannel],
       `📻 Requesting Channel: ${index}`,
     );
 
@@ -400,13 +403,12 @@ export abstract class MeshDevice {
 
   /**
    * Gets devices config
-   *   request
    */
   public async getConfig(
     configType: Protobuf.Admin.AdminMessage_ConfigType,
   ): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.GetConfig],
+      Emitter[Emitter.GetConfig],
       "⚙️ Requesting config",
     );
 
@@ -431,7 +433,7 @@ export abstract class MeshDevice {
     moduleConfigType: Protobuf.Admin.AdminMessage_ModuleConfigType,
   ): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.GetModuleConfig],
+      Emitter[Emitter.GetModuleConfig],
       "⚙️ Requesting module config",
     );
 
@@ -452,7 +454,7 @@ export abstract class MeshDevice {
   /** Gets devices Owner */
   public async getOwner(): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.GetOwner],
+      Emitter[Emitter.GetOwner],
       "👤 Requesting owner",
     );
 
@@ -475,7 +477,7 @@ export abstract class MeshDevice {
    */
   public async getMetadata(nodeNum: number): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.GetMetadata],
+      Emitter[Emitter.GetMetadata],
       `🏷️ Requesting metadata from ${nodeNum}`,
     );
 
@@ -496,7 +498,7 @@ export abstract class MeshDevice {
       ),
       Protobuf.Portnums.PortNum.ADMIN_APP,
       nodeNum,
-      Types.ChannelNumber.Admin,
+      ChannelNumber.Admin,
     );
   }
 
@@ -505,7 +507,7 @@ export abstract class MeshDevice {
    */
   public async clearChannel(index: number): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.ClearChannel],
+      Emitter[Emitter.ClearChannel],
       `📻 Clearing Channel ${index}`,
     );
 
@@ -567,7 +569,7 @@ export abstract class MeshDevice {
    */
   public async resetNodes(): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.ResetNodes],
+      Emitter[Emitter.ResetNodes],
       "📻 Resetting NodeDB",
     );
 
@@ -590,7 +592,7 @@ export abstract class MeshDevice {
    */
   public async removeNodeByNum(nodeNum: number): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.RemoveNodeByNum],
+      Emitter[Emitter.RemoveNodeByNum],
       `📻 Removing Node ${nodeNum} from NodeDB`,
     );
 
@@ -611,7 +613,7 @@ export abstract class MeshDevice {
   /** Shuts down the current node after the specified amount of time has elapsed. */
   public async shutdown(time: number): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.Shutdown],
+      Emitter[Emitter.Shutdown],
       `🔌 Shutting down ${time > 2 ? "now" : `in ${time} seconds`}`,
     );
 
@@ -632,7 +634,7 @@ export abstract class MeshDevice {
   /** Reboots the current node after the specified amount of time has elapsed. */
   public async reboot(time: number): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.Reboot],
+      Emitter[Emitter.Reboot],
       `🔌 Rebooting node ${time > 0 ? "now" : `in ${time} seconds`}`,
     );
 
@@ -651,12 +653,11 @@ export abstract class MeshDevice {
   }
 
   /**
-   * Reboots the current node into OTA mode after the specified amount of time
-   * has elapsed.
+   * Reboots the current node into OTA mode after the specified amount of time has elapsed.
    */
   public async rebootOta(time: number): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.RebootOta],
+      Emitter[Emitter.RebootOta],
       `🔌 Rebooting into OTA mode ${time > 0 ? "now" : `in ${time} seconds`}`,
     );
 
@@ -674,10 +675,12 @@ export abstract class MeshDevice {
     );
   }
 
-  /** Factory resets the current device */
+  /**
+   * Factory resets the current device
+   */
   public async factoryResetDevice(): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.FactoryReset],
+      Emitter[Emitter.FactoryReset],
       "♻️ Factory resetting device",
     );
 
@@ -695,10 +698,12 @@ export abstract class MeshDevice {
     );
   }
 
-  /** Factory resets the current config */
+  /**
+   * Factory resets the current config
+   */
   public async factoryResetConfig(): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.FactoryReset],
+      Emitter[Emitter.FactoryReset],
       "♻️ Factory resetting config",
     );
 
@@ -716,13 +721,15 @@ export abstract class MeshDevice {
     );
   }
 
-  /** Triggers the device configure process */
+  /**
+   * Triggers the device configure process
+   */
   public configure(): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.Configure],
+      Emitter[Emitter.Configure],
       "⚙️ Requesting device configuration",
     );
-    this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConfiguring);
+    this.updateDeviceStatus(DeviceStatusEnum.DeviceConfiguring);
 
     const toRadio = create(Protobuf.Mesh.ToRadioSchema, {
       payloadVariant: {
@@ -734,10 +741,12 @@ export abstract class MeshDevice {
     return this.sendRaw(toBinary(Protobuf.Mesh.ToRadioSchema, toRadio));
   }
 
-  /** Serial connection requires a heartbeat ping to stay connected, otherwise times out after 15 minutes */
+  /**
+   * Serial connection requires a heartbeat ping to stay connected, otherwise times out after 15 minutes
+   */
   public heartbeat(): Promise<number> {
     this.log.debug(
-      Types.Emitter[Types.Emitter.Ping],
+      Emitter[Emitter.Ping],
       "❤️ Send heartbeat ping to radio",
     );
 
@@ -751,7 +760,9 @@ export abstract class MeshDevice {
     return this.sendRaw(toBinary(Protobuf.Mesh.ToRadioSchema, toRadio));
   }
 
-  /** Sends a trace route packet to the designated node */
+  /**
+   * Sends a trace route packet to the designated node
+   */
   public async traceRoute(destination: number): Promise<number> {
     const routeDiscovery = create(Protobuf.Mesh.RouteDiscoverySchema, {
       route: [],
@@ -764,7 +775,9 @@ export abstract class MeshDevice {
     );
   }
 
-  /** Requests position from the designated node */
+  /**
+   * Requests position from the designated node
+   */
   public async requestPosition(destination: number): Promise<number> {
     return await this.sendPacket(
       new Uint8Array(),
@@ -776,7 +789,7 @@ export abstract class MeshDevice {
   /**
    * Updates the device status eliminating duplicate status events
    */
-  public updateDeviceStatus(status: Types.DeviceStatusEnum): void {
+  public updateDeviceStatus(status: DeviceStatusEnum): void {
     if (status !== this.deviceStatus) {
       this.events.onDeviceStatus.dispatch(status);
     }
@@ -796,207 +809,6 @@ export abstract class MeshDevice {
     return Math.floor(seed[0] * 2 ** -32 * 1e9);
   }
 
-  /**
-   * Gets called whenever a fromRadio message is received from device, returns
-   * fromRadio data
-   */
-  protected handleFromRadio(fromRadio: Uint8Array): void {
-    const decodedMessage = fromBinary(Protobuf.Mesh.FromRadioSchema, fromRadio);
-    this.events.onFromRadio.dispatch(decodedMessage);
-
-    /** @todo Add map here when `all=true` gets fixed. */
-    switch (decodedMessage.payloadVariant.case) {
-      case "packet": {
-        this.handleMeshPacket(decodedMessage.payloadVariant.value);
-        break;
-      }
-
-      case "myInfo": {
-        this.events.onMyNodeInfo.dispatch(decodedMessage.payloadVariant.value);
-        this.log.info(
-          Types.Emitter[Types.Emitter.HandleFromRadio],
-          "📱 Received Node info for this device",
-        );
-        break;
-      }
-
-      case "nodeInfo": {
-        this.log.info(
-          Types.Emitter[Types.Emitter.HandleFromRadio],
-          `📱 Received Node Info packet for node: ${decodedMessage.payloadVariant.value.num}`,
-        );
-
-        this.events.onNodeInfoPacket.dispatch(
-          decodedMessage.payloadVariant.value,
-        );
-
-        //TODO: HERE
-        if (decodedMessage.payloadVariant.value.position) {
-          this.events.onPositionPacket.dispatch({
-            id: decodedMessage.id,
-            rxTime: new Date(),
-            from: decodedMessage.payloadVariant.value.num,
-            to: decodedMessage.payloadVariant.value.num,
-            type: "direct",
-            channel: Types.ChannelNumber.Primary,
-            data: decodedMessage.payloadVariant.value.position,
-          });
-        }
-
-        //TODO: HERE
-        if (decodedMessage.payloadVariant.value.user) {
-          this.events.onUserPacket.dispatch({
-            id: decodedMessage.id,
-            rxTime: new Date(),
-            from: decodedMessage.payloadVariant.value.num,
-            to: decodedMessage.payloadVariant.value.num,
-            type: "direct",
-            channel: Types.ChannelNumber.Primary,
-            data: decodedMessage.payloadVariant.value.user,
-          });
-        }
-        break;
-      }
-
-      case "config": {
-        if (decodedMessage.payloadVariant.value.payloadVariant.case) {
-          this.log.trace(
-            Types.Emitter[Types.Emitter.HandleFromRadio],
-            `💾 Received Config packet of variant: ${decodedMessage.payloadVariant.value.payloadVariant.case}`,
-          );
-        } else {
-          this.log.warn(
-            Types.Emitter[Types.Emitter.HandleFromRadio],
-            `⚠️ Received Config packet of variant: ${"UNK"}`,
-          );
-        }
-
-        this.events.onConfigPacket.dispatch(
-          decodedMessage.payloadVariant.value,
-        );
-        break;
-      }
-
-      case "logRecord": {
-        this.log.trace(
-          Types.Emitter[Types.Emitter.HandleFromRadio],
-          "Received onLogRecord",
-        );
-        this.events.onLogRecord.dispatch(decodedMessage.payloadVariant.value);
-        break;
-      }
-
-      case "configCompleteId": {
-        if (decodedMessage.payloadVariant.value !== this.configId) {
-          this.log.error(
-            Types.Emitter[Types.Emitter.HandleFromRadio],
-            `❌ Invalid config id received from device, expected ${this.configId} but received ${decodedMessage.payloadVariant.value}`,
-          );
-        }
-
-        this.log.info(
-          Types.Emitter[Types.Emitter.HandleFromRadio],
-          `⚙️ Valid config id received from device: ${this.configId}`,
-        );
-
-        this.updateDeviceStatus(Types.DeviceStatusEnum.DeviceConfigured);
-        break;
-      }
-
-      case "rebooted": {
-        this.configure().catch(() => {
-          // TODO: FIX, workaround for `wantConfigId` not getting acks.
-        });
-        break;
-      }
-
-      case "moduleConfig": {
-        if (decodedMessage.payloadVariant.value.payloadVariant.case) {
-          this.log.trace(
-            Types.Emitter[Types.Emitter.HandleFromRadio],
-            `💾 Received Module Config packet of variant: ${decodedMessage.payloadVariant.value.payloadVariant.case}`,
-          );
-        } else {
-          this.log.warn(
-            Types.Emitter[Types.Emitter.HandleFromRadio],
-            "⚠️ Received Module Config packet of variant: UNK",
-          );
-        }
-
-        this.events.onModuleConfigPacket.dispatch(
-          decodedMessage.payloadVariant.value,
-        );
-        break;
-      }
-
-      case "channel": {
-        this.log.trace(
-          Types.Emitter[Types.Emitter.HandleFromRadio],
-          `🔐 Received Channel: ${decodedMessage.payloadVariant.value.index}`,
-        );
-
-        this.events.onChannelPacket.dispatch(
-          decodedMessage.payloadVariant.value,
-        );
-        break;
-      }
-
-      case "queueStatus": {
-        this.log.trace(
-          Types.Emitter[Types.Emitter.HandleFromRadio],
-          `🚧 Received Queue Status: ${decodedMessage.payloadVariant.value}`,
-        );
-
-        this.events.onQueueStatus.dispatch(decodedMessage.payloadVariant.value);
-        break;
-      }
-
-      case "xmodemPacket": {
-        this.xModem.handlePacket(decodedMessage.payloadVariant.value);
-        break;
-      }
-
-      case "metadata": {
-        if (
-          Number.parseFloat(
-            decodedMessage.payloadVariant.value.firmwareVersion,
-          ) < minFwVer
-        ) {
-          this.log.fatal(
-            Types.Emitter[Types.Emitter.HandleFromRadio],
-            `Device firmware outdated. Min supported: ${minFwVer} got : ${decodedMessage.payloadVariant.value.firmwareVersion}`,
-          );
-        }
-        this.log.debug(
-          Types.Emitter[Types.Emitter.GetMetadata],
-          "🏷️ Received metadata packet",
-        );
-
-        this.events.onDeviceMetadataPacket.dispatch({
-          id: decodedMessage.id,
-          rxTime: new Date(),
-          from: 0,
-          to: 0,
-          type: "direct",
-          channel: Types.ChannelNumber.Primary,
-          data: decodedMessage.payloadVariant.value,
-        });
-        break;
-      }
-
-      case "mqttClientProxyMessage": {
-        break;
-      }
-
-      default: {
-        this.log.warn(
-          Types.Emitter[Types.Emitter.HandleFromRadio],
-          `⚠️ Unhandled payload variant: ${decodedMessage.payloadVariant.case}`,
-        );
-      }
-    }
-  }
-
   /** Completes all Events */
   public complete(): void {
     this.queue.clear();
@@ -1005,7 +817,7 @@ export abstract class MeshDevice {
   /**
    * Gets called when a MeshPacket is received from device
    */
-  private handleMeshPacket(meshPacket: Protobuf.Mesh.MeshPacket): void {
+  public handleMeshPacket(meshPacket: Protobuf.Mesh.MeshPacket): void {
     this.events.onMeshPacket.dispatch(meshPacket);
     if (meshPacket.from !== this.myNodeInfo.myNodeNum) {
       /**
@@ -1023,7 +835,7 @@ export abstract class MeshDevice {
 
       case "encrypted": {
         this.log.debug(
-          Types.Emitter[Types.Emitter.HandleMeshPacket],
+          Emitter[Emitter.HandleMeshPacket],
           "🔐 Device received encrypted data packet, ignoring.",
         );
         break;
@@ -1041,17 +853,17 @@ export abstract class MeshDevice {
     let adminMessage: Protobuf.Admin.AdminMessage | undefined = undefined;
     let routingPacket: Protobuf.Mesh.Routing | undefined = undefined;
 
-    const packetMetadata: Omit<Types.PacketMetadata<unknown>, "data"> = {
+    const packetMetadata: Omit<PacketMetadata<unknown>, "data"> = {
       id: meshPacket.id,
       rxTime: new Date(meshPacket.rxTime * 1000),
-      type: meshPacket.to === broadcastNum ? "broadcast" : "direct",
+      type: meshPacket.to === Constants.broadcastNum ? "broadcast" : "direct",
       from: meshPacket.from,
       to: meshPacket.to,
       channel: meshPacket.channel,
     };
 
     this.log.trace(
-      Types.Emitter[Types.Emitter.HandleMeshPacket],
+      Emitter[Emitter.HandleMeshPacket],
       `📦 Received ${Protobuf.Portnums.PortNum[dataPacket.portnum]} packet`,
     );
 
@@ -1163,7 +975,7 @@ export abstract class MeshDevice {
           }
           case "getDeviceMetadataResponse": {
             this.log.debug(
-              Types.Emitter[Types.Emitter.GetMetadata],
+              Emitter[Emitter.GetMetadata],
               `🏷️ Received metadata packet from ${dataPacket.source}`,
             );
 
@@ -1175,7 +987,7 @@ export abstract class MeshDevice {
           }
           default: {
             this.log.error(
-              Types.Emitter[Types.Emitter.HandleMeshPacket],
+              Emitter[Emitter.HandleMeshPacket],
               `⚠️ Received unhandled AdminMessage, type ${
                 adminMessage.payloadVariant.case ?? "undefined"
               }`,

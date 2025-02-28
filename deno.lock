@@ -3,10 +3,6 @@
   "specifiers": {
     "jsr:@meshtastic/protobufs@^2.6.0": "2.6.0",
     "npm:@bufbuild/protobuf@^2.2.3": "2.2.3",
-    "npm:@types/w3c-web-serial@*": "1.0.7",
-    "npm:@types/w3c-web-serial@^1.0.7": "1.0.7",
-    "npm:@types/web-bluetooth@*": "0.0.20",
-    "npm:@types/web-bluetooth@^0.0.20": "0.0.20",
     "npm:crc@^4.3.2": "4.3.2",
     "npm:ste-simple-events@^3.0.11": "3.0.11",
     "npm:tslog@^4.9.3": "4.9.3"
@@ -22,12 +18,6 @@
   "npm": {
     "@bufbuild/protobuf@2.2.3": {
       "integrity": "sha512-tFQoXHJdkEOSwj5tRIZSPNUuXK3RaR7T1nUrPgbYX1pUbvqqaaZAsfo+NXBPsz5rZMSKVFrgK1WL8Q/MSLvprg=="
-    },
-    "@types/w3c-web-serial@1.0.7": {
-      "integrity": "sha512-jzcwm//EZ0Z306L1/O1GXC3GthRd//9eaNB4/Yagm98UjEQViTzDS8bYvL+y+rTk1r9OFt9Yhp5pprUQFzSiiQ=="
-    },
-    "@types/web-bluetooth@0.0.20": {
-      "integrity": "sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow=="
     },
     "crc@4.3.2": {
       "integrity": "sha512-uGDHf4KLLh2zsHa8D8hIQ1H/HtFQhyHrc0uhHBcoKGol/Xnb+MPYfUMw7cvON6ze/GUESTudKayDcJC5HnJv1A=="
@@ -49,11 +39,15 @@
     "dependencies": [
       "jsr:@meshtastic/protobufs@^2.6.0",
       "npm:@bufbuild/protobuf@^2.2.3",
-      "npm:@types/w3c-web-serial@^1.0.7",
-      "npm:@types/web-bluetooth@^0.0.20",
-      "npm:crc@^4.3.2",
       "npm:ste-simple-events@^3.0.11",
       "npm:tslog@^4.9.3"
-    ]
+    ],
+    "members": {
+      "packages/core": {
+        "dependencies": [
+          "npm:crc@^4.3.2"
+        ]
+      }
+    }
   }
 }
