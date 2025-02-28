@@ -9,7 +9,10 @@
 
 ## Overview
 
-Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic](https://meshtastic.org) devices. It can be used to build applications to interface with [Meshtastic](https://meshtastic.org) networks, via HTTP(S), Web Bluetooth or Web Serial.
+Meshtastic.js is a JavaScript library that provides an interface to
+[Meshtastic](https://meshtastic.org) devices. It can be used to build
+applications to interface with [Meshtastic](https://meshtastic.org) networks,
+via HTTP(S), Web Bluetooth or Web Serial.
 
 **[Getting Started Guide](https://meshtastic.org/docs/development/js)**
 
@@ -21,7 +24,8 @@ Meshtastic.js is a JavaScript library that provides an interface to [Meshtastic]
 
 ## Installation & Usage
 
-The library is available from [NPM](https://www.npmjs.com/package/@meshtastic/js) and can be installed with:
+The library is available from
+[NPM](https://www.npmjs.com/package/@meshtastic/js) and can be installed with:
 
 ```bash
 pnpm config set @buf:registry https://buf.build/gen/npm/v1
@@ -39,8 +43,6 @@ Finally, install the package:
 pnpm add @meshtastic/js
 ```
 
-
-
 ## Development & Building
 
 The project can be built by running:
@@ -57,7 +59,9 @@ pnpm generate:docs
 
 ### Compatibility
 
-The Bluetooth and Serial connections rely on the availability of the Web Bluetooth and Web Serial API's respectively, this is represented in the compatibility matrices below.
+The Bluetooth and Serial connections rely on the availability of the Web
+Bluetooth and Web Serial API's respectively, this is represented in the
+compatibility matrices below.
 
 ![Web Bluetooth compatability matrix](https://caniuse.bitsofco.de/image/web-bluetooth.png)
 ![Web Serial compatability matrix](https://caniuse.bitsofco.de/image/web-serial.png)

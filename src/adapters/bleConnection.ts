@@ -34,7 +34,7 @@ export class BleConnection extends MeshDevice {
   /** Short Description */
   private fromNumCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 
-  private timerUpdateFromRadio: NodeJS.Timeout | null = null;
+  private timerUpdateFromRadio?: number = undefined;
 
   constructor(configId?: number) {
     super(configId);
@@ -201,7 +201,7 @@ export class BleConnection extends MeshDevice {
     if (this.timerUpdateFromRadio) {
       clearInterval(this.timerUpdateFromRadio);
     }
-    this.timerUpdateFromRadio = null;
+    this.timerUpdateFromRadio = undefined;
   }
 
   /**

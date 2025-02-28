@@ -180,12 +180,11 @@ export abstract class MeshDevice {
         },
       },
       from: this.myNodeInfo.myNodeNum,
-      to:
-        destination === "broadcast"
-          ? broadcastNum
-          : destination === "self"
-            ? this.myNodeInfo.myNodeNum
-            : destination,
+      to: destination === "broadcast"
+        ? broadcastNum
+        : destination === "self"
+        ? this.myNodeInfo.myNodeNum
+        : destination,
       id: this.generateRandId(),
       wantAck: wantAck,
       channel,

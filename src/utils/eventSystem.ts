@@ -9,16 +9,18 @@ export class EventSystem {
    *
    * @event onLogEvent
    */
-  public readonly onLogEvent =
-    new SimpleEventDispatcher<Types.LogEventPacket>();
+  public readonly onLogEvent = new SimpleEventDispatcher<
+    Types.LogEventPacket
+  >();
 
   /**
    * Fires when a new FromRadio message has been received from the device
    *
    * @event onFromRadio
    */
-  public readonly onFromRadio =
-    new SimpleEventDispatcher<Protobuf.Mesh.FromRadio>();
+  public readonly onFromRadio = new SimpleEventDispatcher<
+    Protobuf.Mesh.FromRadio
+  >();
 
   /**
    * Fires when a new FromRadio message containing a Data packet has been
@@ -26,16 +28,18 @@ export class EventSystem {
    *
    * @event onMeshPacket
    */
-  public readonly onMeshPacket =
-    new SimpleEventDispatcher<Protobuf.Mesh.MeshPacket>();
+  public readonly onMeshPacket = new SimpleEventDispatcher<
+    Protobuf.Mesh.MeshPacket
+  >();
 
   /**
    * Fires when a new MyNodeInfo message has been received from the device
    *
    * @event onMyNodeInfo
    */
-  public readonly onMyNodeInfo =
-    new SimpleEventDispatcher<Protobuf.Mesh.MyNodeInfo>();
+  public readonly onMyNodeInfo = new SimpleEventDispatcher<
+    Protobuf.Mesh.MyNodeInfo
+  >();
 
   /**
    * Fires when a new MeshPacket message containing a NodeInfo packet has been
@@ -43,32 +47,36 @@ export class EventSystem {
    *
    * @event onNodeInfoPacket
    */
-  public readonly onNodeInfoPacket =
-    new SimpleEventDispatcher<Protobuf.Mesh.NodeInfo>();
+  public readonly onNodeInfoPacket = new SimpleEventDispatcher<
+    Protobuf.Mesh.NodeInfo
+  >();
 
   /**
    * Fires when a new Channel message is received
    *
    * @event onChannelPacket
    */
-  public readonly onChannelPacket =
-    new SimpleEventDispatcher<Protobuf.Channel.Channel>();
+  public readonly onChannelPacket = new SimpleEventDispatcher<
+    Protobuf.Channel.Channel
+  >();
 
   /**
    * Fires when a new Config message is received
    *
    * @event onConfigPacket
    */
-  public readonly onConfigPacket =
-    new SimpleEventDispatcher<Protobuf.Config.Config>();
+  public readonly onConfigPacket = new SimpleEventDispatcher<
+    Protobuf.Config.Config
+  >();
 
   /**
    * Fires when a new ModuleConfig message is received
    *
    * @event onModuleConfigPacket
    */
-  public readonly onModuleConfigPacket =
-    new SimpleEventDispatcher<Protobuf.ModuleConfig.ModuleConfig>();
+  public readonly onModuleConfigPacket = new SimpleEventDispatcher<
+    Protobuf.ModuleConfig.ModuleConfig
+  >();
 
   /**
    * Fires when a new MeshPacket message containing a ATAK packet has been
@@ -324,8 +332,9 @@ export class EventSystem {
    *
    * @event onDeviceStatus
    */
-  public readonly onDeviceStatus =
-    new SimpleEventDispatcher<Types.DeviceStatusEnum>();
+  public readonly onDeviceStatus = new SimpleEventDispatcher<
+    Types.DeviceStatusEnum
+  >();
 
   /**
    * Fires when a new FromRadio message containing a LogRecord packet has been
@@ -333,8 +342,9 @@ export class EventSystem {
    *
    * @event onLogRecord
    */
-  public readonly onLogRecord =
-    new SimpleEventDispatcher<Protobuf.Mesh.LogRecord>();
+  public readonly onLogRecord = new SimpleEventDispatcher<
+    Protobuf.Mesh.LogRecord
+  >();
 
   /**
    * Fires when the device receives a meshPacket, returns a timestamp
@@ -355,14 +365,16 @@ export class EventSystem {
    *
    * @event onpendingSettingsChange
    */
-  public readonly onPendingSettingsChange =
-    new SimpleEventDispatcher<boolean>();
+  public readonly onPendingSettingsChange = new SimpleEventDispatcher<
+    boolean
+  >();
 
   /**
    * Fires when a QueueStatus message is generated
    *
    * @event onQueueStatus
    */
-  public readonly onQueueStatus =
-    new SimpleEventDispatcher<Protobuf.Mesh.QueueStatus>();
+  public readonly onQueueStatus = new SimpleEventDispatcher<
+    Protobuf.Mesh.QueueStatus
+  >();
 }

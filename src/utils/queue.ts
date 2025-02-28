@@ -80,7 +80,7 @@ export class Queue {
     this.errorNotifier.dispatch(e);
   }
 
-  public async wait(id: number): Promise<number> {
+  public wait(id: number): Promise<number> {
     const queueItem = this.queue.find((qi) => qi.id === id);
     if (!queueItem) {
       throw new Error("Packet does not exist");
