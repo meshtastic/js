@@ -1,55 +1,23 @@
-name: CI
+name: Pull Request
 
-on: push
+on: pull_request
 
 jobs:
-  quality:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Biome
-        uses: biomejs/setup-biome@v1
+      - uses: denoland/setup-deno@v2
         with:
-          version: latest
+          deno-version: v2.x
 
-      - name: Run Biome
-        run: biome ci .
-  publish:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Checkout code & submodules
-        uses: actions/checkout@v4
-        with:
-          submodules: true
+      - name: Check formatting
+        run: deno fmt --check
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
+      - name: Check types
+        run: deno lint
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'latest'
-
-      - name: Install Dependencies
-        run: pnpm install
-
-      - name: Build Package
-        run: pnpm run build
-
-      - name: "Publish to NPM"
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          access: public
-      
-      - name: "Publish to JSR"
-        run: "pnpm dlx jsr publish --allow-slow-types"
+      - name: Publish to JSR
+        run: deno publish
