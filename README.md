@@ -28,13 +28,13 @@ The library is available from
 [NPM](https://www.npmjs.com/package/@meshtastic/js) and can be installed with:
 
 ```bash
-pnpm config set @buf:registry https://buf.build/gen/npm/v1
+pnpm config set @jsr:registry https://npm.jsr.io
 ```
 
 Alternatevly, create a `.npmrc` file with the following contents:
 
 ```conf
-@buf:registry=https://buf.build/gen/npm/v1
+@jsr:registry=https://npm.jsr.io
 ```
 
 Finally, install the package:
