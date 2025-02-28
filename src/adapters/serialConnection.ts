@@ -98,7 +98,7 @@ export class SerialConnection extends MeshDevice {
     return await navigator.serial.requestPort(filter);
   }
 
-  public getCurrentPort() {
+  public getCurrentPort(): SerialPort | undefined {
     return this.port;
   }
 

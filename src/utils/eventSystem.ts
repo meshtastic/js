@@ -9,7 +9,9 @@ export class EventSystem {
    *
    * @event onLogEvent
    */
-  public readonly onLogEvent = new SimpleEventDispatcher<
+  public readonly onLogEvent: SimpleEventDispatcher<
+    Types.LogEventPacket
+  > = new SimpleEventDispatcher<
     Types.LogEventPacket
   >();
 
@@ -18,7 +20,9 @@ export class EventSystem {
    *
    * @event onFromRadio
    */
-  public readonly onFromRadio = new SimpleEventDispatcher<
+  public readonly onFromRadio: SimpleEventDispatcher<
+    Protobuf.Mesh.FromRadio
+  > = new SimpleEventDispatcher<
     Protobuf.Mesh.FromRadio
   >();
 
@@ -28,7 +32,9 @@ export class EventSystem {
    *
    * @event onMeshPacket
    */
-  public readonly onMeshPacket = new SimpleEventDispatcher<
+  public readonly onMeshPacket: SimpleEventDispatcher<
+    Protobuf.Mesh.MeshPacket
+  > = new SimpleEventDispatcher<
     Protobuf.Mesh.MeshPacket
   >();
 
@@ -37,7 +43,9 @@ export class EventSystem {
    *
    * @event onMyNodeInfo
    */
-  public readonly onMyNodeInfo = new SimpleEventDispatcher<
+  public readonly onMyNodeInfo: SimpleEventDispatcher<
+    Protobuf.Mesh.MyNodeInfo
+  > = new SimpleEventDispatcher<
     Protobuf.Mesh.MyNodeInfo
   >();
 
@@ -47,7 +55,9 @@ export class EventSystem {
    *
    * @event onNodeInfoPacket
    */
-  public readonly onNodeInfoPacket = new SimpleEventDispatcher<
+  public readonly onNodeInfoPacket: SimpleEventDispatcher<
+    Protobuf.Mesh.NodeInfo
+  > = new SimpleEventDispatcher<
     Protobuf.Mesh.NodeInfo
   >();
 
@@ -56,7 +66,9 @@ export class EventSystem {
    *
    * @event onChannelPacket
    */
-  public readonly onChannelPacket = new SimpleEventDispatcher<
+  public readonly onChannelPacket: SimpleEventDispatcher<
+    Protobuf.Channel.Channel
+  > = new SimpleEventDispatcher<
     Protobuf.Channel.Channel
   >();
 
@@ -65,7 +77,9 @@ export class EventSystem {
    *
    * @event onConfigPacket
    */
-  public readonly onConfigPacket = new SimpleEventDispatcher<
+  public readonly onConfigPacket: SimpleEventDispatcher<
+    Protobuf.Config.Config
+  > = new SimpleEventDispatcher<
     Protobuf.Config.Config
   >();
 
@@ -74,7 +88,9 @@ export class EventSystem {
    *
    * @event onModuleConfigPacket
    */
-  public readonly onModuleConfigPacket = new SimpleEventDispatcher<
+  public readonly onModuleConfigPacket: SimpleEventDispatcher<
+    Protobuf.ModuleConfig.ModuleConfig
+  > = new SimpleEventDispatcher<
     Protobuf.ModuleConfig.ModuleConfig
   >();
 
@@ -84,7 +100,9 @@ export class EventSystem {
    *
    * @event onAtakPacket
    */
-  public readonly onAtakPacket = new SimpleEventDispatcher<
+  public readonly onAtakPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -94,7 +112,9 @@ export class EventSystem {
    *
    * @event onMessagePacket
    */
-  public readonly onMessagePacket = new SimpleEventDispatcher<
+  public readonly onMessagePacket: SimpleEventDispatcher<
+    PacketMetadata<string>
+  > = new SimpleEventDispatcher<
     PacketMetadata<string>
   >();
 
@@ -104,7 +124,9 @@ export class EventSystem {
    *
    * @event onRemoteHardwarePacket
    */
-  public readonly onRemoteHardwarePacket = new SimpleEventDispatcher<
+  public readonly onRemoteHardwarePacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.RemoteHardware.HardwareMessage>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.RemoteHardware.HardwareMessage>
   >();
 
@@ -114,7 +136,9 @@ export class EventSystem {
    *
    * @event onPositionPacket
    */
-  public readonly onPositionPacket = new SimpleEventDispatcher<
+  public readonly onPositionPacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.Mesh.Position>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.Mesh.Position>
   >();
 
@@ -124,7 +148,9 @@ export class EventSystem {
    *
    * @event onUserPacket
    */
-  public readonly onUserPacket = new SimpleEventDispatcher<
+  public readonly onUserPacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.Mesh.User>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.Mesh.User>
   >();
 
@@ -134,7 +160,9 @@ export class EventSystem {
    *
    * @event onRoutingPacket
    */
-  public readonly onRoutingPacket = new SimpleEventDispatcher<
+  public readonly onRoutingPacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.Mesh.Routing>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.Mesh.Routing>
   >();
 
@@ -143,7 +171,9 @@ export class EventSystem {
    *
    * @event onDeviceMetadataPacket
    */
-  public readonly onDeviceMetadataPacket = new SimpleEventDispatcher<
+  public readonly onDeviceMetadataPacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.Mesh.DeviceMetadata>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.Mesh.DeviceMetadata>
   >();
 
@@ -153,7 +183,9 @@ export class EventSystem {
    *
    * @event onWaypointPacket
    */
-  public readonly onWaypointPacket = new SimpleEventDispatcher<
+  public readonly onWaypointPacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.Mesh.Waypoint>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.Mesh.Waypoint>
   >();
 
@@ -163,7 +195,9 @@ export class EventSystem {
    *
    * @event onAudioPacket
    */
-  public readonly onAudioPacket = new SimpleEventDispatcher<
+  public readonly onAudioPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -173,7 +207,9 @@ export class EventSystem {
    *
    * @event onDetectionSensorPacket
    */
-  public readonly onDetectionSensorPacket = new SimpleEventDispatcher<
+  public readonly onDetectionSensorPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -183,7 +219,9 @@ export class EventSystem {
    *
    * @event onPingPacket
    */
-  public readonly onPingPacket = new SimpleEventDispatcher<
+  public readonly onPingPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -193,7 +231,9 @@ export class EventSystem {
    *
    * @event onIpTunnelPacket
    */
-  public readonly onIpTunnelPacket = new SimpleEventDispatcher<
+  public readonly onIpTunnelPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -203,7 +243,9 @@ export class EventSystem {
    *
    * @event onPaxcounterPacket
    */
-  public readonly onPaxcounterPacket = new SimpleEventDispatcher<
+  public readonly onPaxcounterPacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.PaxCount.Paxcount>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.PaxCount.Paxcount>
   >();
 
@@ -213,7 +255,9 @@ export class EventSystem {
    *
    * @event onSerialPacket
    */
-  public readonly onSerialPacket = new SimpleEventDispatcher<
+  public readonly onSerialPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -223,7 +267,9 @@ export class EventSystem {
    *
    * @event onStoreForwardPacket
    */
-  public readonly onStoreForwardPacket = new SimpleEventDispatcher<
+  public readonly onStoreForwardPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -233,7 +279,9 @@ export class EventSystem {
    *
    * @event onRangeTestPacket
    */
-  public readonly onRangeTestPacket = new SimpleEventDispatcher<
+  public readonly onRangeTestPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -243,7 +291,9 @@ export class EventSystem {
    *
    * @event onTelemetryPacket
    */
-  public readonly onTelemetryPacket = new SimpleEventDispatcher<
+  public readonly onTelemetryPacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.Telemetry.Telemetry>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.Telemetry.Telemetry>
   >();
 
@@ -253,7 +303,9 @@ export class EventSystem {
    *
    * @event onZPSPacket
    */
-  public readonly onZpsPacket = new SimpleEventDispatcher<
+  public readonly onZpsPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -263,7 +315,9 @@ export class EventSystem {
    *
    * @event onSimulatorPacket
    */
-  public readonly onSimulatorPacket = new SimpleEventDispatcher<
+  public readonly onSimulatorPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -273,7 +327,9 @@ export class EventSystem {
    *
    * @event onTraceRoutePacket
    */
-  public readonly onTraceRoutePacket = new SimpleEventDispatcher<
+  public readonly onTraceRoutePacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.Mesh.RouteDiscovery>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.Mesh.RouteDiscovery>
   >();
 
@@ -283,7 +339,9 @@ export class EventSystem {
    *
    * @event onNeighborInfoPacket
    */
-  public readonly onNeighborInfoPacket = new SimpleEventDispatcher<
+  public readonly onNeighborInfoPacket: SimpleEventDispatcher<
+    PacketMetadata<Protobuf.Mesh.NeighborInfo>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Protobuf.Mesh.NeighborInfo>
   >();
 
@@ -293,7 +351,9 @@ export class EventSystem {
    *
    * @event onAtakPluginPacket
    */
-  public readonly onAtakPluginPacket = new SimpleEventDispatcher<
+  public readonly onAtakPluginPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -303,7 +363,9 @@ export class EventSystem {
    *
    * @event onMapReportPacket
    */
-  public readonly onMapReportPacket = new SimpleEventDispatcher<
+  public readonly onMapReportPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -313,7 +375,9 @@ export class EventSystem {
    *
    * @event onPrivatePacket
    */
-  public readonly onPrivatePacket = new SimpleEventDispatcher<
+  public readonly onPrivatePacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -323,7 +387,9 @@ export class EventSystem {
    *
    * @event onAtakForwarderPacket
    */
-  public readonly onAtakForwarderPacket = new SimpleEventDispatcher<
+  public readonly onAtakForwarderPacket: SimpleEventDispatcher<
+    PacketMetadata<Uint8Array>
+  > = new SimpleEventDispatcher<
     PacketMetadata<Uint8Array>
   >();
 
@@ -332,7 +398,9 @@ export class EventSystem {
    *
    * @event onDeviceStatus
    */
-  public readonly onDeviceStatus = new SimpleEventDispatcher<
+  public readonly onDeviceStatus: SimpleEventDispatcher<
+    Types.DeviceStatusEnum
+  > = new SimpleEventDispatcher<
     Types.DeviceStatusEnum
   >();
 
@@ -342,7 +410,9 @@ export class EventSystem {
    *
    * @event onLogRecord
    */
-  public readonly onLogRecord = new SimpleEventDispatcher<
+  public readonly onLogRecord: SimpleEventDispatcher<
+    Protobuf.Mesh.LogRecord
+  > = new SimpleEventDispatcher<
     Protobuf.Mesh.LogRecord
   >();
 
@@ -351,21 +421,25 @@ export class EventSystem {
    *
    * @event onMeshHeartbeat
    */
-  public readonly onMeshHeartbeat = new SimpleEventDispatcher<Date>();
+  public readonly onMeshHeartbeat: SimpleEventDispatcher<Date> =
+    new SimpleEventDispatcher<Date>();
 
   /**
    * Outputs any debug log data (currently serial connections only)
    *
    * @event onDeviceDebugLog
    */
-  public readonly onDeviceDebugLog = new SimpleEventDispatcher<Uint8Array>();
+  public readonly onDeviceDebugLog: SimpleEventDispatcher<Uint8Array> =
+    new SimpleEventDispatcher<Uint8Array>();
 
   /**
    * Outputs status of pending settings changes
    *
    * @event onpendingSettingsChange
    */
-  public readonly onPendingSettingsChange = new SimpleEventDispatcher<
+  public readonly onPendingSettingsChange: SimpleEventDispatcher<
+    boolean
+  > = new SimpleEventDispatcher<
     boolean
   >();
 
@@ -374,7 +448,9 @@ export class EventSystem {
    *
    * @event onQueueStatus
    */
-  public readonly onQueueStatus = new SimpleEventDispatcher<
+  public readonly onQueueStatus: SimpleEventDispatcher<
+    Protobuf.Mesh.QueueStatus
+  > = new SimpleEventDispatcher<
     Protobuf.Mesh.QueueStatus
   >();
 }
