@@ -28,9 +28,7 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "bugs": {
     "url": "https://github.com/meshtastic/js/issues"
   },
