@@ -1,7 +1,5 @@
 # Meshtastic.js
 
-[![NPM](https://badgen.net/npm/v/@meshtastic/js)](https://www.npmjs.com/package/@meshtastic/js)
-[![Downloads](https://badgen.net/npm/dt/@meshtastic/js)](https://www.npmjs.com/package/@meshtastic/js)
 [![CI](https://img.shields.io/github/actions/workflow/status/meshtastic/js/ci.yml?branch=master&label=actions&logo=github&color=yellow)](https://github.com/meshtastic/js/actions/workflows/ci.yml)
 [![CLA assistant](https://cla-assistant.io/readme/badge/meshtastic/meshtastic.js)](https://cla-assistant.io/meshtastic/meshtastic.js)
 [![Fiscal Contributors](https://opencollective.com/meshtastic/tiers/badge.svg?label=Fiscal%20Contributors&color=deeppink)](https://opencollective.com/meshtastic/)
@@ -9,59 +7,17 @@
 
 ## Overview
 
-Meshtastic.js is a JavaScript library that provides an interface to
-[Meshtastic](https://meshtastic.org) devices. It can be used to build
-applications to interface with [Meshtastic](https://meshtastic.org) networks,
-via HTTP(S), Web Bluetooth or Web Serial.
+Meshtastic.js is a JavaScript library that provides an API to interact with
+[Meshtastic](https://meshtastic.org) devices.
+All packages are published to [JSR](https://jsr.io/@meshtastic)
 
-**[Getting Started Guide](https://meshtastic.org/docs/development/js)**
-
-**[Documentation/API Reference](https://js.meshtastic.org)**
+Contained within this monorepo are the following packages:
+- `@meshtastic/core`: Core functionality
+- `@meshtastic/transport-deno`: TCP Transport for the Deno runtime
+- `@meshtastic/transport-http`: HTTP Transport
+- `@meshtastic/transport-web-bluetooth`: Web Bluetooth Transport
+- `@meshtastic/transport-web-serial`: Web Serial Transport
 
 ## Stats
 
 ![Alt](https://repobeats.axiom.co/api/embed/5330641586e92a2ec84676fedb98f6d4a7b25d69.svg "Repobeats analytics image")
-
-## Installation & Usage
-
-The library is available from
-[NPM](https://www.npmjs.com/package/@meshtastic/js) and can be installed with:
-
-```bash
-pnpm config set @buf:registry https://buf.build/gen/npm/v1
-```
-
-Alternatevly, create a `.npmrc` file with the following contents:
-
-```conf
-@buf:registry=https://buf.build/gen/npm/v1
-```
-
-Finally, install the package:
-
-```bash
-pnpm add @meshtastic/js
-```
-
-## Development & Building
-
-The project can be built by running:
-
-```bash
-pnpm build
-```
-
-Optionally the doccumentation can be built with:
-
-```bash
-pnpm generate:docs
-```
-
-### Compatibility
-
-The Bluetooth and Serial connections rely on the availability of the Web
-Bluetooth and Web Serial API's respectively, this is represented in the
-compatibility matrices below.
-
-![Web Bluetooth compatability matrix](https://caniuse.bitsofco.de/image/web-bluetooth.png)
-![Web Serial compatability matrix](https://caniuse.bitsofco.de/image/web-serial.png)
