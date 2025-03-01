@@ -12,7 +12,7 @@ export class TransportHTTP implements Types.Transport {
     tls?: boolean,
   ): Promise<TransportHTTP> {
     const connectionUrl = `${tls ? "https" : "http"}://${address}`;
-    // replace with device probe
+    await fetch(`${connectionUrl}/json/report`);
     await Promise.resolve();
     return new TransportHTTP(connectionUrl);
   }
