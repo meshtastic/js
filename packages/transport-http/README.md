@@ -9,13 +9,14 @@
 ## Overview
 
 `@meshtastic/transport-http` Provides HTTP(S) transport for Meshtastic devices.
-Installation instructions are avaliable at [JSR](https://jsr.io/@meshtastic/transport-http)
+Installation instructions are avaliable at
+[JSR](https://jsr.io/@meshtastic/transport-http)
 
 ## Usage
 
 ```ts
-import { MeshDevice } from '@meshtastic/core';
-import { TransportHTTP } from '@meshtastic/transport-http';
+import { MeshDevice } from "@meshtastic/core";
+import { TransportHTTP } from "@meshtastic/transport-http";
 
 const transport = await TransportHTTP.create("10.10.0.57");
 const device = new MeshDevice(transport);

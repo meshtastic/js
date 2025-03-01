@@ -8,10 +8,11 @@
 ## Overview
 
 Meshtastic.js is a JavaScript library that provides an API to interact with
-[Meshtastic](https://meshtastic.org) devices.
-All packages are published to [JSR](https://jsr.io/@meshtastic)
+[Meshtastic](https://meshtastic.org) devices. All packages are published to
+[JSR](https://jsr.io/@meshtastic)
 
 Contained within this monorepo are the following packages:
+
 - `@meshtastic/core`: Core functionality
 - `@meshtastic/transport-deno`: TCP Transport for the Deno runtime
 - `@meshtastic/transport-http`: HTTP Transport

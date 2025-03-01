@@ -8,14 +8,15 @@
 
 ## Overview
 
-`@meshtastic/transport-deno` Provides TCP transport (Deno) for Meshtastic devices.
-Installation instructions are avaliable at [JSR](https://jsr.io/@meshtastic/transport-deno)
+`@meshtastic/transport-deno` Provides TCP transport (Deno) for Meshtastic
+devices. Installation instructions are avaliable at
+[JSR](https://jsr.io/@meshtastic/transport-deno)
 
 ## Usage
 
 ```ts
-import { MeshDevice } from '@meshtastic/core';
-import { TransportDeno } from '@meshtastic/transport-deno';
+import { MeshDevice } from "@meshtastic/core";
+import { TransportDeno } from "@meshtastic/transport-deno";
 
 const transport = await TransportDeno.create("10.10.0.57");
 const device = new MeshDevice(transport);

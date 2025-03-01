@@ -8,14 +8,15 @@
 
 ## Overview
 
-`@meshtastic/transport-web-serial` Provides Web Serial transport for Meshtastic devices.
-Installation instructions are avaliable at [JSR](https://jsr.io/@meshtastic/transport-web-serial)
+`@meshtastic/transport-web-serial` Provides Web Serial transport for Meshtastic
+devices. Installation instructions are avaliable at
+[JSR](https://jsr.io/@meshtastic/transport-web-serial)
 
 ## Usage
 
 ```ts
-import { MeshDevice } from '@meshtastic/core';
-import { TransportWebSerial } from '@meshtastic/transport-web-serial';
+import { MeshDevice } from "@meshtastic/core";
+import { TransportWebSerial } from "@meshtastic/transport-web-serial";
 
 const transport = await TransportWebSerial.create();
 const device = new MeshDevice(transport);
@@ -27,7 +28,7 @@ const device = new MeshDevice(transport);
 
 ### Compatibility
 
-
-The Web Serial API's have limited support in browsers, compatibility is represented in the matrix below.
+The Web Serial API's have limited support in browsers, compatibility is
+represented in the matrix below.
 
 ![Web Serial compatability matrix](https://caniuse.bitsofco.de/image/web-serial.png)

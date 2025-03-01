@@ -8,14 +8,15 @@
 
 ## Overview
 
-`@meshtastic/transport-web-bluetooth` Provides Web Bluetooth transport for Meshtastic devices.
-Installation instructions are avaliable at [JSR](https://jsr.io/@meshtastic/transport-web-bluetooth)
+`@meshtastic/transport-web-bluetooth` Provides Web Bluetooth transport for
+Meshtastic devices. Installation instructions are avaliable at
+[JSR](https://jsr.io/@meshtastic/transport-web-bluetooth)
 
 ## Usage
 
 ```ts
-import { MeshDevice } from '@meshtastic/core';
-import { TransportWebBluetooth } from '@meshtastic/transport-web-bluetooth';
+import { MeshDevice } from "@meshtastic/core";
+import { TransportWebBluetooth } from "@meshtastic/transport-web-bluetooth";
 
 const transport = await TransportWebBluetooth.create();
 const device = new MeshDevice(transport);
@@ -27,7 +28,7 @@ const device = new MeshDevice(transport);
 
 ### Compatibility
 
-
-The Web Bluetooth API's have limited support in browsers, compatibility is represented in the matrix below.
+The Web Bluetooth API's have limited support in browsers, compatibility is
+represented in the matrix below.
 
 ![Web Bluetooth compatability matrix](https://caniuse.bitsofco.de/image/web-bluetooth.png)
