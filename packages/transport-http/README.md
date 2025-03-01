@@ -15,7 +15,7 @@ Installation instructions are avaliable at [JSR](https://jsr.io/@meshtastic/tran
 
 ```ts
 import { MeshDevice } from '@meshtastic/core';
-import { HttpTransport } from '@meshtastic/transport-http';
+import { TransportHTTP } from '@meshtastic/transport-http';
 
 const transport = await TransportHTTP.create("10.10.0.57");
 const device = new MeshDevice(transport);
