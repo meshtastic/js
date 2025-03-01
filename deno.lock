@@ -2,7 +2,9 @@
   "version": "4",
   "specifiers": {
     "jsr:@meshtastic/protobufs@^2.6.0": "2.6.0",
+    "jsr:@std/encoding@*": "1.0.7",
     "npm:@bufbuild/protobuf@^2.2.3": "2.2.3",
+    "npm:@types/w3c-web-serial@^1.0.7": "1.0.8",
     "npm:crc@^4.3.2": "4.3.2",
     "npm:ste-simple-events@^3.0.11": "3.0.11",
     "npm:tslog@^4.9.3": "4.9.3"
@@ -13,11 +15,17 @@
       "dependencies": [
         "npm:@bufbuild/protobuf"
       ]
+    },
+    "@std/encoding@1.0.7": {
+      "integrity": "f631247c1698fef289f2de9e2a33d571e46133b38d042905e3eac3715030a82d"
     }
   },
   "npm": {
     "@bufbuild/protobuf@2.2.3": {
       "integrity": "sha512-tFQoXHJdkEOSwj5tRIZSPNUuXK3RaR7T1nUrPgbYX1pUbvqqaaZAsfo+NXBPsz5rZMSKVFrgK1WL8Q/MSLvprg=="
+    },
+    "@types/w3c-web-serial@1.0.8": {
+      "integrity": "sha512-QQOT+bxQJhRGXoZDZGLs3ksLud1dMNnMiSQtBA0w8KXvLpXX4oM4TZb6J0GgJ8UbCaHo5s9/4VQT8uXy9JER2A=="
     },
     "crc@4.3.2": {
       "integrity": "sha512-uGDHf4KLLh2zsHa8D8hIQ1H/HtFQhyHrc0uhHBcoKGol/Xnb+MPYfUMw7cvON6ze/GUESTudKayDcJC5HnJv1A=="
@@ -46,6 +54,11 @@
       "packages/core": {
         "dependencies": [
           "npm:crc@^4.3.2"
+        ]
+      },
+      "packages/transport-web-serial": {
+        "dependencies": [
+          "npm:@types/w3c-web-serial@^1.0.7"
         ]
       }
     }

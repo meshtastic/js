@@ -2,6 +2,7 @@
   "workspace": [
     "./packages/core",
     "./packages/transport-deno",
+    "./packages/transport-http",
     "./packages/transport-web-serial"
   ],
   "imports": {
