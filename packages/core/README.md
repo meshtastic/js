@@ -8,13 +8,14 @@
 
 ## Overview
 
-`@meshtastic/core` Provides core functionality for interfacing with Meshtastic devices.
-Installation instructions are avaliable at [JSR](https://jsr.io/@meshtastic/core)
+`@meshtastic/core` Provides core functionality for interfacing with Meshtastic
+devices. Installation instructions are avaliable at
+[JSR](https://jsr.io/@meshtastic/core)
 
 ## Usage
 
 ```ts
-import { MeshDevice } from '@meshtastic/core';
+import { MeshDevice } from "@meshtastic/core";
 
 // Transport if provided by one of the available transport adapters
 const device = new MeshDevice(transport);
