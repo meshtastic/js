@@ -5,9 +5,18 @@ export class TransportWebSerial implements Types.Transport {
   private _toDevice: WritableStream<Uint8Array>;
   private _fromDevice: ReadableStream<Types.DeviceOutput>;
 
-  public static async create(): Promise<TransportWebSerial> {
-    const connection = await navigator.serial.requestPort();
-    return new TransportWebSerial(connection);
+  public static async create(baudRate?: number): Promise<TransportWebSerial> {
+    const port = await navigator.serial.requestPort();
+    await port.open({ baudRate: baudRate || 115200 });
+    return new TransportWebSerial(port);
+  }
+
+  public static async createFromPort(
+    port: SerialPort,
+    baudRate?: number,
+  ): Promise<TransportWebSerial> {
+    await port.open({ baudRate: baudRate || 115200 });
+    return new TransportWebSerial(port);
   }
 
   constructor(connection: SerialPort) {
