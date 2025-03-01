@@ -2,9 +2,9 @@
   "version": "4",
   "specifiers": {
     "jsr:@meshtastic/protobufs@^2.6.0": "2.6.0",
-    "jsr:@std/encoding@*": "1.0.7",
     "npm:@bufbuild/protobuf@^2.2.3": "2.2.3",
     "npm:@types/w3c-web-serial@^1.0.7": "1.0.8",
+    "npm:@types/web-bluetooth@^0.0.20": "0.0.20",
     "npm:crc@^4.3.2": "4.3.2",
     "npm:ste-simple-events@^3.0.11": "3.0.11",
     "npm:tslog@^4.9.3": "4.9.3"
@@ -15,9 +15,6 @@
       "dependencies": [
         "npm:@bufbuild/protobuf"
       ]
-    },
-    "@std/encoding@1.0.7": {
-      "integrity": "f631247c1698fef289f2de9e2a33d571e46133b38d042905e3eac3715030a82d"
     }
   },
   "npm": {
@@ -26,6 +23,9 @@
     },
     "@types/w3c-web-serial@1.0.8": {
       "integrity": "sha512-QQOT+bxQJhRGXoZDZGLs3ksLud1dMNnMiSQtBA0w8KXvLpXX4oM4TZb6J0GgJ8UbCaHo5s9/4VQT8uXy9JER2A=="
+    },
+    "@types/web-bluetooth@0.0.20": {
+      "integrity": "sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow=="
     },
     "crc@4.3.2": {
       "integrity": "sha512-uGDHf4KLLh2zsHa8D8hIQ1H/HtFQhyHrc0uhHBcoKGol/Xnb+MPYfUMw7cvON6ze/GUESTudKayDcJC5HnJv1A=="
@@ -54,6 +54,11 @@
       "packages/core": {
         "dependencies": [
           "npm:crc@^4.3.2"
+        ]
+      },
+      "packages/transport-web-bluetooth": {
+        "dependencies": [
+          "npm:@types/web-bluetooth@^0.0.20"
         ]
       },
       "packages/transport-web-serial": {
