@@ -10,7 +10,7 @@ import type { Destination, PacketMetadata, Transport } from "./types.ts";
 import { ChannelNumber, DeviceStatusEnum, Emitter } from "./types.ts";
 
 export class MeshDevice {
-  protected transport: Transport;
+  public transport: Transport;
 
   /** Logs to the console and the logging event emitter */
   public log: Logger<unknown>;
