@@ -1,5 +1,5 @@
 {
-  "name": "@meshtastic/transport-web_bluetooth",
+  "name": "@meshtastic/transport-web-bluetooth",
   "version": "2.6.0-0",
   "exports": {
     ".": "./mod.ts"
