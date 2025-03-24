@@ -1,6 +1,6 @@
 {
   "name": "@meshtastic/core",
-  "version": "2.6.0",
+  "version": "2.6.2",
   "exports": {
     ".": "./mod.ts"
   },
