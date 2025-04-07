@@ -96,11 +96,12 @@ export class MeshDevice {
     destination?: Destination,
     wantAck?: boolean,
     channel?: ChannelNumber,
+    replyId?: number,
+    emoji?: number,
   ): Promise<number> {
     this.log.debug(
       Emitter[Emitter.SendText],
-      `📤 Sending message to ${destination ?? "broadcast"} on channel ${
-        channel?.toString() ?? 0
+      `📤 Sending message to ${destination ?? "broadcast"} on channel ${channel?.toString() ?? 0
       }`,
     );
 
@@ -114,6 +115,8 @@ export class MeshDevice {
       wantAck,
       false,
       true,
+      replyId,
+      emoji,
     );
   }
 
@@ -127,8 +130,7 @@ export class MeshDevice {
   ): Promise<number> {
     this.log.debug(
       Emitter[Emitter.SendWaypoint],
-      `📤 Sending waypoint to ${destination} on channel ${
-        channel?.toString() ?? 0
+      `📤 Sending waypoint to ${destination} on channel ${channel?.toString() ?? 0
       }`,
     );
 
@@ -181,8 +183,8 @@ export class MeshDevice {
       to: destination === "broadcast"
         ? Constants.broadcastNum
         : destination === "self"
-        ? this.myNodeInfo.myNodeNum
-        : destination,
+          ? this.myNodeInfo.myNodeNum
+          : destination,
       id: this.generateRandId(),
       wantAck: wantAck,
       channel,
@@ -988,8 +990,7 @@ export class MeshDevice {
           default: {
             this.log.error(
               Emitter[Emitter.HandleMeshPacket],
-              `⚠️ Received unhandled AdminMessage, type ${
-                adminMessage.payloadVariant.case ?? "undefined"
+              `⚠️ Received unhandled AdminMessage, type ${adminMessage.payloadVariant.case ?? "undefined"
               }`,
               dataPacket.payload,
             );
