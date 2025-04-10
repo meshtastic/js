@@ -96,6 +96,8 @@ export class MeshDevice {
     destination?: Destination,
     wantAck?: boolean,
     channel?: ChannelNumber,
+    replyId?: number,
+    emoji?: number,
   ): Promise<number> {
     this.log.debug(
       Emitter[Emitter.SendText],
@@ -114,6 +116,8 @@ export class MeshDevice {
       wantAck,
       false,
       true,
+      replyId,
+      emoji,
     );
   }
 
