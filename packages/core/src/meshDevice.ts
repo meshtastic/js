@@ -989,6 +989,18 @@ export class MeshDevice {
             });
             break;
           }
+          case "getCannedMessageModuleMessagesResponse": {
+            this.log.debug(
+              Emitter[Emitter.GetMetadata],
+              `🥫 Received CannedMessage Module Messages response packet`,
+            );
+
+            this.events.onCannedMessageModulePacket.dispatch({
+              ...packetMetadata,
+              data: adminMessage.payloadVariant.value,
+            });
+            break;
+          }
           default: {
             this.log.error(
               Emitter[Emitter.HandleMeshPacket],
