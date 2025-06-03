@@ -3,6 +3,11 @@ import type { Types } from "@meshtastic/core";
 export class TransportWebBluetooth implements Types.Transport {
   private _toDevice: WritableStream<Uint8Array>;
   private _fromDevice: ReadableStream<Types.DeviceOutput>;
+  private _fromDeviceController?: ReadableStreamDefaultController<
+    Types.DeviceOutput
+  >;
+  private _isFirstWrite = true;
+
   private toRadioCharacteristic: BluetoothRemoteGATTCharacteristic;
   private fromRadioCharacteristic: BluetoothRemoteGATTCharacteristic;
   private fromNumCharacteristic: BluetoothRemoteGATTCharacteristic;
@@ -22,7 +27,6 @@ export class TransportWebBluetooth implements Types.Transport {
   public static async createFromDevice(
     device: BluetoothDevice,
   ): Promise<TransportWebBluetooth> {
-    console.log("creating from device");
     return await this.prepareConnection(device);
   }
 
@@ -36,7 +40,6 @@ export class TransportWebBluetooth implements Types.Transport {
     }
 
     const service = await gattServer.getPrimaryService(this.ServiceUuid);
-    console.log("service", service);
 
     const toRadioCharacteristic = await service.getCharacteristic(
       this.ToRadioUuid,
@@ -54,8 +57,6 @@ export class TransportWebBluetooth implements Types.Transport {
     ) {
       throw new Error("Failed to find required characteristics");
     }
-
-    await fromNumCharacteristic.startNotifications();
 
     console.log("Connected to device", device.name);
 
@@ -75,24 +76,35 @@ export class TransportWebBluetooth implements Types.Transport {
     this.fromRadioCharacteristic = fromRadioCharacteristic;
     this.fromNumCharacteristic = fromNumCharacteristic;
 
-    this._toDevice = new WritableStream({
-      write: async (chunk) => {
-        await this.toRadioCharacteristic.writeValue(chunk);
+    this._fromDevice = new ReadableStream({
+      start: (ctrl) => {
+        this._fromDeviceController = ctrl;
       },
     });
 
-    let controller: ReadableStreamDefaultController<Types.DeviceOutput>;
+    this._toDevice = new WritableStream({
+      write: async (chunk) => {
+        await this.toRadioCharacteristic.writeValue(chunk);
 
-    this._fromDevice = new ReadableStream({
-      start: (ctrl) => {
-        controller = ctrl;
+        if (this._isFirstWrite && this._fromDeviceController) {
+          this._isFirstWrite = false;
+          setTimeout(() => {
+            this.readFromRadio(this._fromDeviceController!);
+          }, 50);
+        }
       },
     });
 
     this.fromNumCharacteristic.addEventListener(
       "characteristicvaluechanged",
-      () => this.readFromRadio(controller),
+      () => {
+        if (this._fromDeviceController) {
+          this.readFromRadio(this._fromDeviceController);
+        }
+      },
     );
+
+    this.fromNumCharacteristic.startNotifications();
   }
 
   get toDevice(): WritableStream<Uint8Array> {
@@ -106,7 +118,6 @@ export class TransportWebBluetooth implements Types.Transport {
   protected async readFromRadio(
     controller: ReadableStreamDefaultController<Types.DeviceOutput>,
   ): Promise<void> {
-    console.log("reading from radio");
     let hasMoreData = true;
     while (hasMoreData && this.fromRadioCharacteristic) {
       const value = await this.fromRadioCharacteristic.readValue();
