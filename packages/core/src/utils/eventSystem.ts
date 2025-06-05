@@ -178,6 +178,17 @@ export class EventSystem {
   >();
 
   /**
+   * Fires when the device receives a Canned Message Module message packet
+   *
+   * @event onCannedMessageModulePacket
+   */
+  public readonly onCannedMessageModulePacket: SimpleEventDispatcher<
+    PacketMetadata<string>
+  > = new SimpleEventDispatcher<
+    PacketMetadata<string>
+  >();
+
+  /**
    * Fires when a new MeshPacket message containing a Waypoint packet has been
    * received from device
    *
