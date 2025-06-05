@@ -182,7 +182,7 @@ export class EventSystem {
    *
    * @event onCannedMessageModulePacket
    */
-    public readonly onCannedMessageModulePacket: SimpleEventDispatcher<
+  public readonly onCannedMessageModulePacket: SimpleEventDispatcher<
     PacketMetadata<string>
   > = new SimpleEventDispatcher<
     PacketMetadata<string>
