@@ -8,7 +8,8 @@
 ## Overview
 
 > [!IMPORTANT]
-> This repository is no longer actively maintained. The code has been migrated into the [Meshtastic Web monorepo](https://github.com/meshtastic/web).
+> This repository is no longer actively maintained. The code has been migrated
+> into the [Meshtastic Web monorepo](https://github.com/meshtastic/web).
 
 Meshtastic.js is a JavaScript library that provides an API to interact with
 [Meshtastic](https://meshtastic.org) devices. All packages are published to
